@@ -1,0 +1,10 @@
+#ifndef B2C0E3C6_D526_4566_8802_17C1575FE2D1
+#define B2C0E3C6_D526_4566_8802_17C1575FE2D1
+
+void iicSoftInit(void);
+void iicSendByte2Reg(uint8_t regAdd, uint8_t dat);
+uint8_t iicGetByteFromReg(uint8_t regAdd);
+void iicGetBytes(uint8_t startAdd, uint8_t *dat, uint8_t len);
+int i2c_read(unsigned char slave_addr, unsigned char reg_addr, unsigned char length, unsigned char *data);
+int i2c_write(unsigned char slave_addr, unsigned char reg_addr, unsigned char length, unsigned char const *data);
+#endif /* B2C0E3C6_D526_4566_8802_17C1575FE2D1 */

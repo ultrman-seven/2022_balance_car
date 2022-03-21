@@ -1,0 +1,29 @@
+{
+    "files.associations": {
+        "hal_adc.h": "c",
+        "common.h": "c",
+        "hal_exti.h": "c",
+        "hal_syscfg.h": "c",
+        "hal_i2c.h": "c",
+        "hal_rcc.h": "c",
+        "oledio.h": "c",
+        "iicsoft.h": "c",
+        "stdint.h": "c",
+        "inv_mpu_dmp_motion_driver.h": "c",
+        "inv_mpu.h": "c",
+        "menu.h": "c",
+        "mm32spin2xx_p.h": "c",
+        "mpu6050.h": "c",
+        "motor.h": "c",
+        "encoder.h": "c",
+        "oled.h": "c",
+        "stdlib.h": "c",
+        "control.h": "c",
+        "pid.h": "c",
+        "hal_conf.h": "c"
+    },
+    "cSpell.enableFiletypes": [
+        "8051",
+        "matlab"
+    ]
+}
