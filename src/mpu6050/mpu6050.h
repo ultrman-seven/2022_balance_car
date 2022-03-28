@@ -5,8 +5,8 @@
 #include "inv_mpu.h"
 #include "inv_mpu_dmp_motion_driver.h"
 #include "common.h"
-// #define devAddr  0xD0
-#define devAddr  0xD2
+#define devAddr  0xD0
+// #define devAddr  0xD2
 
 #define MPU6050_ADDRESS_AD0_LOW     0x68 // address pin low (GND), default for InvenSense evaluation board
 #define MPU6050_ADDRESS_AD0_HIGH    0x69 // address pin high (VCC)

@@ -51,6 +51,8 @@ void keyInterruptInit(void)
 
 void EXTI4_15_IRQHandler(void)
 {
+    void h_int(void);
+    void v_int(void);
     if (EXTI_GetITStatus(EXTI_Line15) != RESET)
     {
         // screenClear();
@@ -64,6 +66,7 @@ void EXTI4_15_IRQHandler(void)
         // screenClear();
         // OLED_print("\nup:");
         keyUpOption();
+        // printf("jb\n");
         EXTI_ClearITPendingBit(EXTI_Line6);
     }
 
@@ -86,5 +89,16 @@ void EXTI4_15_IRQHandler(void)
         // OLED_print("\nmid:");
         keyMidOption();
         EXTI_ClearITPendingBit(EXTI_Line10);
+    }
+
+    if (EXTI_GetITStatus(EXTI_Line4) == SET)
+    {
+        EXTI_ClearITPendingBit(EXTI_Line4);
+        v_int();
+    }
+    if (EXTI_GetITStatus(EXTI_Line5) == SET)
+    {
+        EXTI_ClearITPendingBit(EXTI_Line5);
+        h_int();
     }
 }

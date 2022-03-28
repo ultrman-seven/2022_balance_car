@@ -499,11 +499,6 @@
           <GroupName>USR</GroupName>
           <Files>
             <File>
-              <FileName>mian.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\mian.c</FilePath>
-            </File>
-            <File>
               <FileName>common.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\common.c</FilePath>
@@ -599,14 +594,24 @@
               <FilePath>.\src\motor\paraMenu.c</FilePath>
             </File>
             <File>
+              <FileName>main.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\main.c</FilePath>
+            </File>
+            <File>
               <FileName>falsh.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\falsh.c</FilePath>
+              <FilePath>.\src\hardware\falsh.c</FilePath>
             </File>
             <File>
               <FileName>uart.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\uart.c</FilePath>
+              <FilePath>.\src\hardware\uart.c</FilePath>
+            </File>
+            <File>
+              <FileName>CH9141.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\hardware\CH9141.c</FilePath>
             </File>
           </Files>
         </Group>

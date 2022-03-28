@@ -30,7 +30,7 @@ void showMenu(MenuTypedef *menuNode)
             if (totalLine <= MAX_DISPLAY_LINE)
             {
                 OLED_printf("%s\n", menuNode->caption);
-                printf("%s\n", menuNode->caption);
+                // printf("%s\n", menuNode->caption);
                 menuNode++;
                 totalLine++;
             }

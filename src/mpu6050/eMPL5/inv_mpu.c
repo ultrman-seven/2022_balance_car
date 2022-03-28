@@ -517,8 +517,8 @@ const struct hw_s hw = {
 };
 */
 const struct hw_s hw={
-//   0x68,	 //addr
-  0x69,
+  0x68,	 //addr
+//   0x69,
   1024,	 //max_fifo
   118,	 //num_reg
   340,	 //temp_sens

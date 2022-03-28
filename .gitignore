@@ -7,4 +7,5 @@ JLinkLog.txt
 EventRecorderStub.scvd
 
 # temp
-tmp.py
+tmp/
+src/*/*.md
