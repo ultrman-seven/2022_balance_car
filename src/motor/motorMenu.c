@@ -5,6 +5,7 @@
 #include "oledio.h"
 #include "control.h"
 #include "pid.h"
+#include <stdio.h>
 
 extern MenuTypedef pwmTestMenu[];
 extern MenuTypedef motorTestMenu[];
@@ -50,6 +51,8 @@ void pwmReset(void)
 void motorPWM_Test(void)
 {
     motorTest(pwmTest);
+    while (EXTI_GetFlagStatus(EXTI_Line15) == RESET)
+        printf("s=%d\r\n", getSpeed(LEFT));
 }
 
 void goToPwmTest(void)

@@ -28,11 +28,12 @@
 #include "motor.h"
 #include "pid.h"
 #include "mpu6050.h"
+#include <stdio.h>
 
 PID_paraTypdef speedPidLeft = {
-    .Kp = 20, .Ki = 1, .Kd = 2, .integral = 0, .proportionLast = 0, .proportionLastLast = 0, .targetVal = 0};
+    .Kp = 15, .Ki = 20, .Kd = 6, .integral = 0, .proportionLast = 0, .proportionLastLast = 0, .targetVal = 0};
 PID_paraTypdef speedPidRight = {
-    .Kp = 20, .Ki = 1, .Kd = 2, .integral = 0, .proportionLast = 0, .proportionLastLast = 0, .targetVal = 0};
+    .Kp = 15, .Ki = 20, .Kd = 6, .integral = 0, .proportionLast = 0, .proportionLastLast = 0, .targetVal = 0};
 PID_paraTypdef anglePid = {
     .Kp = 20, .Ki = 0, .Kd = 1, .integral = 0, .proportionLast = 0, .targetVal = -216};
 
@@ -44,50 +45,77 @@ void motorSetSpeed(MotorChoose motor, int32_t speed)
         speedPidRight.targetVal = speed;
 }
 
-// int velocity(int encoder_left, int encoder_right)
-// {
-//     static float Velocity, Encoder_Least, Encoder, Movement;
-//     static float Encoder_Integral;
-//     //=============速度PI控制器=======================//
-//     Encoder_Least = (encoder_left + encoder_right) - 0;
-//     //===获取最新速度偏差==测量速度（左右编码器之和）-目标速度（此处为零）
-//     Encoder *= 0.7;                 //===一阶低通滤波器
-//     Encoder += Encoder_Least * 0.3; //===一阶低通滤波器
-//     Encoder_Integral += Encoder;    //===积分出位移 积分时间：10ms
-//     if (Encoder_Integral > 10000)
-//         Encoder_Integral = 10000;
-//     //===积分限幅
-//     if (Encoder_Integral < -10000)
-//         Encoder_Integral = -10000;
-//     //===积分限幅
-//     Velocity = Encoder * velocity_KP + Encoder_Integral * velocity_KI;
-//     //===速度控制
-//     if (pitch < -40 || pitch > 40)
-//         Encoder_Integral = 0;
-//     //===电机关闭后清除积分
-//     return Velocity;
-// }
+enum
+{
+    pwmMode,
+    speedMode,
+    angleMode
+} pidMode = pwmMode;
 
-// #define Motor_Speed_PWM_Proportion 1.2
 int32_t pwmRight = 0, pwmLeft = 0;
 // globalPidUpdate
+float lastPitch = 0.0;
 void TIM16_IRQHandler(void)
 {
     float pitch, y, r;
+    uint8_t waitErr = 8;
     Read_DMP(&pitch, &r, &y);
-    speedPidLeft.targetVal = speedPidRight.targetVal = -pidCtrlUpdate(pitch * 10, &anglePid) / 10;
-    // pwmLeft = pwmRight = -pidCtrlUpdate(pitch * 10, &anglePid) / 10;
+    while (pitch < 0.000001 && pitch > -0.000001 && waitErr)
+    {
+        Read_DMP(&pitch, &r, &y);
+        waitErr--;
+    }
+    if (waitErr)
+        lastPitch = pitch;
+    else
+        pitch = lastPitch;
 
-    pwmLeft = pwmLeft + pidIncrementalCtrlUpdate(getSpeed(LEFT), &speedPidLeft) / 10;
-    pwmRight = pwmRight + pidIncrementalCtrlUpdate(getSpeed(RIGHT), &speedPidRight) / 10;
-    setPower(pwmLeft, LEFT);
-    setPower(pwmRight, RIGHT);
-    // setPower(pwmLeft + pidCtrlUpdate(getSpeed(LEFT), &speedPidLeft), LEFT);
-    // setPower(pwmRight + pidCtrlUpdate(getSpeed(RIGHT), &speedPidRight), RIGHT);
-    // setPower(Motor_Speed_PWM_Proportion * speedPidLeft.targetVal + (pidCtrlUpdate(getSpeed(LEFT), &speedPidLeft) / 10), LEFT);
-    // setPower(Motor_Speed_PWM_Proportion * speedPidRight.targetVal + (pidCtrlUpdate(getSpeed(RIGHT), &speedPidRight) / 10), RIGHT);
+    switch (pidMode)
+    {
+    case pwmMode:
+
+        pwmLeft = speedPidLeft.targetVal;
+        pwmRight = speedPidRight.targetVal;
+        setPower(pwmLeft, LEFT);
+        setPower(pwmRight, RIGHT);
+        printf("r=%d,c=%d\r\n", speedPidLeft.targetVal, getSpeed(LEFT));
+        break;
+    case speedMode:
+        pwmLeft = pwmLeft + pidIncrementalCtrlUpdate(getSpeed(LEFT), &speedPidLeft) / 10;
+        pwmRight = pwmRight + pidIncrementalCtrlUpdate(getSpeed(RIGHT), &speedPidRight) / 10;
+        setPower(pwmLeft, LEFT);
+        setPower(pwmRight, RIGHT);
+        printf("r=%d,c=%d\r\n", speedPidLeft.targetVal, getSpeed(LEFT));
+        break;
+    case angleMode:
+        speedPidLeft.targetVal = speedPidRight.targetVal = pidCtrlUpdate(pitch * 10, &anglePid) / 10;
+        pwmLeft = pwmLeft + pidIncrementalCtrlUpdate(getSpeed(LEFT), &speedPidLeft) / 10;
+        pwmRight = pwmRight + pidIncrementalCtrlUpdate(getSpeed(RIGHT), &speedPidRight) / 10;
+        setPower(pwmLeft, LEFT);
+        setPower(pwmRight, RIGHT);
+        float p = anglePid.targetVal / 10.0;
+        printf("p=%f,a=%f\r\n", p, pitch);
+        break;
+    default:
+        break;
+    }
 
     TIM_ClearITPendingBit(TIM16, TIM_FLAG_Update);
+}
+
+void setPidMode(uint8_t m)
+{
+    pidMode = m;
+}
+
+PID_paraTypdef *pidList[] = {&anglePid, &speedPidLeft, &speedPidRight};
+void adjustPara(uint8_t num, uint8_t *pidPara)
+{
+    pidList[num]->Kp = ((uint16_t)(*pidPara)) << 8 + *(pidPara + 1);
+    pidPara += 2;
+    pidList[num]->Ki = ((uint16_t)(*pidPara)) << 8 + *(pidPara + 1);
+    pidPara += 2;
+    pidList[num]->Kd = ((uint16_t)(*pidPara)) << 8 + *(pidPara + 1);
 }
 
 //定时器16用于更新pid控制
@@ -106,7 +134,7 @@ void time16Init(uint16_t period, uint16_t prescaler)
 
     nvic.NVIC_IRQChannel = TIM16_IRQn;
     nvic.NVIC_IRQChannelCmd = ENABLE;
-    nvic.NVIC_IRQChannelPriority = 0;
+    nvic.NVIC_IRQChannelPriority = 1;
     NVIC_Init(&nvic);
 
     TIM_ClearFlag(TIM16, TIM_FLAG_Update);

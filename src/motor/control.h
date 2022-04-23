@@ -1,5 +1,5 @@
-#ifndef A51C7A8B_BEEE_424F_A8D8_477CC09E7978
-#define A51C7A8B_BEEE_424F_A8D8_477CC09E7978
+#ifndef __WY_LIB_CTRL_H__
+#define __WY_LIB_CTRL_H__
 #include "motor.h"
 
 #define pidOff()                 \
@@ -8,4 +8,6 @@
     }
 void motorSetSpeed(MotorChoose motor, int32_t speed);
 void pidCtrlTimeInit(uint16_t us);
-#endif /* A51C7A8B_BEEE_424F_A8D8_477CC09E7978 */
+void setPidMode(uint8_t m);
+void adjustPara(uint8_t num, uint8_t *pidPara);
+#endif /* __WY_LIB_CTRL_H__ */

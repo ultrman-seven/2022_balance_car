@@ -304,7 +304,7 @@ uint8_t DMP_Init(void)
 {
     u8 temp;
     uint8_t err = 0;
-    i2cRead(0x69,0x75,1,&temp);
+    i2cRead(0x68,0x75,1,&temp);
     if (temp != 0x68)
         err = 1;
     if (!mpu_init())

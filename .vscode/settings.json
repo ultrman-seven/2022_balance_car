@@ -21,7 +21,9 @@
         "control.h": "c",
         "pid.h": "c",
         "hal_conf.h": "c",
-        "cstdio": "c"
+        "cstdio": "c",
+        "vector": "cpp",
+        "stdio.h": "c"
     },
     "cSpell.enableFiletypes": [
         "8051",

@@ -22,8 +22,8 @@ def judgeStart(com:serial.Serial)->bool:
     PIC_COL = (int(tmp,16))
     return True
         
-    
 if __name__=='__main__':
+    cnt=0   
     mm32 = openCom('com17',115200)
     mm32.write(bytes([0x97, 0x02, 0xf0,0xa5]))
     while(True):
@@ -38,9 +38,11 @@ if __name__=='__main__':
             for i in range(0,PIC_LINE*PIC_COL,PIC_COL):
                 pic.append(data[i:i+PIC_COL])
             pic = np.array(pic,dtype=np.uint8)
-            pic = cv2.flip(pic,1)
-            pic = cv2.resize(pic,dsize=None,fx=4,fy=4,interpolation=cv2.INTER_LINEAR)
+            # pic = cv2.flip(pic,1)
+            # pic = cv2.resize(pic,dsize=None,fx=4,fy=4,interpolation=cv2.INTER_LINEAR)
             cv2.imshow("img",pic)
+            cv2.imwrite(f'./py/pic/img{cnt}.jpg',pic)
             ch = cv2.waitKey(2)
+            cnt+=1
             if ch == ord('q'):
                 break

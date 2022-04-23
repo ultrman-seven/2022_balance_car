@@ -1,5 +1,5 @@
-#ifndef A37459A3_0F53_4E31_9735_D570718EAE44
-#define A37459A3_0F53_4E31_9735_D570718EAE44
+#ifndef __WY_LIB_OLED_H__
+#define __WY_LIB_OLED_H__
 #include "common.h"
 
 void oledInit(void);
@@ -8,4 +8,4 @@ void Screen_FillClear(uint8_t filler);
 void Picture_display(uint8_t *ptr_pic, uint8_t colStart, uint8_t pageStart, uint8_t line, uint8_t col);
 void PictureContrastDisplay(uint8_t *ptr_pic, uint8_t colStart, uint8_t pageStart, uint8_t line, uint8_t col);
 
-#endif /* A37459A3_0F53_4E31_9735_D570718EAE44 */
+#endif /* __WY_LIB_OLED_H__ */

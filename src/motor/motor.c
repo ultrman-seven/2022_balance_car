@@ -66,6 +66,10 @@ void motorInit(void)
 
 void setPower(int32_t power, MotorChoose side)
 {
+    if (power > PWM_PERIOD)
+        power = PWM_PERIOD;
+    if (power < -PWM_PERIOD)
+        power = -PWM_PERIOD;
     if (side == LEFT)
     {
         if (power > 0)

@@ -79,10 +79,12 @@ uint8_t mpuDmpState;
 void globalInit(void)
 {
     void menuInit(void);
+    void bluetooth_CH9141Init(void);
 
     sysClkState = HSE_SysClock();
     delayInit();
     boardLED_Init();
+    bluetooth_CH9141Init();
     menuInit();
     beepInit();
     encoderInit();
@@ -97,13 +99,12 @@ int main(void)
 {
     void uartInit(void);
     void cameraInit(void);
-    void bluetooth_CH9141Init(void);
     int32_t ledBright = 0;
     globalInit();
-    bluetooth_CH9141Init();
+    
     // uartInit();
     delayMs(2000);
-    cameraInit();
+    // cameraInit();
     while (1)
     {
         (ledBright % 2) ? (ledBright -= 2) : (ledBright += 2);

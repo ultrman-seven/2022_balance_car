@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>MPU6050 EMPL_MM32SPIN27_WY_LIB</Define>
               <Undefine></Undefine>
-              <IncludePath>.\src;.\CMSIS\KEIL_CORE;.\MM32SPIN2xx_p_LIB\Include;.\MM32SPIN2xx_p_LIB\HAL_lib\inc;.\src\oled;.\src\iic;.\src\camera;.\src\hardware;.\src\menu;.\src\motor;.\src\mpu6050;.\src\mpu6050\eMPL5</IncludePath>
+              <IncludePath>.\src;.\CMSIS\KEIL_CORE;.\MM32SPIN2xx_p_LIB\Include;.\MM32SPIN2xx_p_LIB\HAL_lib\inc;.\src\oled;.\src\iic;.\src\camera;.\src\hardware;.\src\menu;.\src\motor;.\src\mpu6050;.\src\mpu6050\eMPL5;.\src\storage</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -599,11 +599,6 @@
               <FilePath>.\src\main.c</FilePath>
             </File>
             <File>
-              <FileName>falsh.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\hardware\falsh.c</FilePath>
-            </File>
-            <File>
               <FileName>uart.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\hardware\uart.c</FilePath>
@@ -612,6 +607,16 @@
               <FileName>CH9141.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\hardware\CH9141.c</FilePath>
+            </File>
+            <File>
+              <FileName>AT93C46.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\storage\AT93C46.c</FilePath>
+            </File>
+            <File>
+              <FileName>falsh.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\storage\falsh.c</FilePath>
             </File>
           </Files>
         </Group>

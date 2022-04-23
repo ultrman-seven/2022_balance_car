@@ -1,8 +1,9 @@
 #include "common.h"
 #include "stdio.h"
 #include "oledio.h"
+#include "control.h"
 
-#define UART_RX_BUF_SIZE 100
+#define UART_RX_BUF_SIZE 10
 uint8_t rxBuf[UART_RX_BUF_SIZE] = {0};
 
 void uartInit(void)
@@ -61,7 +62,22 @@ void uart1SendBytes(uint8_t *dat, uint16_t len)
     }
 }
 
+#define CMD_Start 0x97
+#define CMD_END_0 0xf0
+#define CMD_END_1 0xa5
+
+typedef enum
+{
+    Set_Speed,
+    Get_Mpu6050,
+    Get_Pic,
+    Set_Mode,
+    Para_Adj
+} UART_CMDs;
+
 uint8_t *bufPointer = rxBuf;
+uint8_t uartWaitCmdState = 1;
+void cameraInit(void);
 void UART1_IRQHandler(void)
 {
     if (UART_GetITStatus(UART1, UART_IT_RXIEN) == SET)
@@ -69,24 +85,48 @@ void UART1_IRQHandler(void)
         UART_ClearITPendingBit(UART1, UART_IT_RXIEN);
         // screenClear();
         // OLED_printf("receive:%x\n",UART_ReceiveData(UART1));
-        // if (bufPointer - rxBuf < UART_RX_BUF_SIZE)
-        //     *bufPointer++ = UART_ReceiveData(UART1);
-        // if (*(bufPointer - 1) == '\n')
-        // {
-        //     bufPointer = rxBuf;
-        //     printf("杰宝是:");
-        //     while (*bufPointer != '\n')
-        //     {
-        //         UART_SendData(UART1, *bufPointer++);
-        //         while (!UART_GetFlagStatus(UART1, UART_FLAG_TXEPT))
-        //             ;
-        //     }
-        //     bufPointer = rxBuf;
-        // }
+        if (bufPointer - rxBuf >= UART_RX_BUF_SIZE)
+        {
+            bufPointer = rxBuf;
+            uartWaitCmdState = 1;
+        }
+        *bufPointer++ = UART_ReceiveData(UART1);
+
+        if (uartWaitCmdState)
+        {
+            if (rxBuf[0] == CMD_Start)
+                uartWaitCmdState = 0;
+            else
+                bufPointer = rxBuf;
+        }
+        else if (*(bufPointer - 1) == CMD_END_1 && *(bufPointer - 2) == CMD_END_0)
+        {
+            bufPointer = rxBuf;
+            uartWaitCmdState = 1;
+            switch (rxBuf[1])
+            {
+            case Set_Speed:
+                break;
+            case Get_Mpu6050:
+                break;
+            case Get_Pic:
+                cameraInit();
+                break;
+            case Set_Mode:
+                setPidMode(rxBuf[2]);
+                break;
+            case Para_Adj:
+                adjustPara(rxBuf[2], rxBuf+3);
+                break;
+            default:
+                break;
+            }
+        }
+
         // UART_SendData(UART2, UART_ReceiveData(UART1));
         // while (!UART_GetFlagStatus(UART2, UART_FLAG_TXEPT))
         //     ;
-        // UART_SendData(UART1, 0xff);
+        // UART_SendData(UART1, uartWaitCmdState);
         // while (!UART_GetFlagStatus(UART1, UART_FLAG_TXEPT))
         //     ;
     }

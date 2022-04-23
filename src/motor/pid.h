@@ -6,8 +6,8 @@
  * @Description: 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  * @FilePath: \car_pcb3.0V2\src\motor\pid.h
  */
-#ifndef A92AA3F4_3F86_45B9_9B66_A4249A784C27
-#define A92AA3F4_3F86_45B9_9B66_A4249A784C27
+#ifndef __WY_LIB_PID_H__
+#define __WY_LIB_PID_H__
 typedef struct
 {
     int16_t Kp;
@@ -29,4 +29,4 @@ typedef struct
 #define PIT_UPDATE_TIME 5000 //us
 int32_t pidIncrementalCtrlUpdate(int32_t currentVal, PID_paraTypdef *pid);
 int32_t pidCtrlUpdate(int32_t currentVal, PID_paraTypdef *object);
-#endif /* A92AA3F4_3F86_45B9_9B66_A4249A784C27 */
+#endif /* __WY_LIB_PID_H__ */

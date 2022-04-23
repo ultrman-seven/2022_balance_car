@@ -1,5 +1,5 @@
-#ifndef C26274E2_ABC6_4D8C_86DF_1D58B604AD5B
-#define C26274E2_ABC6_4D8C_86DF_1D58B604AD5B
+#ifndef __WY_LIB_ENCODER_H__
+#define __WY_LIB_ENCODER_H__
 
 typedef enum
 {
@@ -10,4 +10,4 @@ typedef enum
 void encoderInit(void);
 int getCircleCount(MotorChoose side);
 int getSpeed(MotorChoose side);
-#endif /* C26274E2_ABC6_4D8C_86DF_1D58B604AD5B */
+#endif /* __WY_LIB_ */ENCODER_H__

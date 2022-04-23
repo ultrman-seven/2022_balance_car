@@ -28,7 +28,7 @@ void time17Init(uint16_t period, uint16_t prescaler)
     TIM_ITConfig(TIM17, TIM_IT_Update, ENABLE);
     TIM_Cmd(TIM17, ENABLE);
 }
-
+uint32_t timeLast;
 void encoderInit(void)
 {
     GPIO_InitTypeDef gpio;
@@ -82,7 +82,7 @@ void encoderInit(void)
 
     nvic.NVIC_IRQChannel = TIM1_BRK_UP_TRG_COM_IRQn;
     nvic.NVIC_IRQChannelCmd = ENABLE;
-    nvic.NVIC_IRQChannelPriority = 1;
+    nvic.NVIC_IRQChannelPriority = 0;
     NVIC_Init(&nvic);
     nvic.NVIC_IRQChannel = TIM8_BRK_UP_TRG_COM_IRQn;
     NVIC_Init(&nvic);
@@ -92,83 +92,106 @@ void encoderInit(void)
     TIM_Cmd(TIM1, ENABLE);
     TIM_Cmd(TIM8, ENABLE);
     time17Init(100 * SPEED_COMPUT_PERIOD, 960 - 1);
+    getTimeStamp(&timeLast);
 }
 
-int circleCountLeft = 0;
+// 0:正向
+// #define LeftDIR  0x80000000  //-
+// #define RightDIR 0x00000000 //+
+#define LeftDIR -1
+#define RightDIR 1
+int circleCount[2] = {0};
 void TIM1_BRK_UP_TRG_COM_IRQHandler(void)
 {
     if (TIM_GetITStatus(TIM1, TIM_IT_Update) == SET)
     {
         if ((TIM1->CR1 >> 4 & 0x01) == 0) // DIR==0
-            circleCountLeft++;
-        else if ((TIM1->CR1 >> 4 & 0x01) == 1) // DIR==1
-            circleCountLeft--;
+            circleCount[LEFT]++;
+        else
+            circleCount[LEFT]--;
     }
     TIM_ClearITPendingBit(TIM1, TIM_IT_Update);
 }
 
-int circleCountRight = 0;
 void TIM8_BRK_UP_TRG_COM_IRQHandler(void)
 {
     if (TIM_GetITStatus(TIM8, TIM_IT_Update) == SET)
     {
         if ((TIM8->CR1 >> 4 & 0x01) == 0) // DIR==0
-            circleCountRight++;
-        else if ((TIM8->CR1 >> 4 & 0x01) == 1) // DIR==1
-            circleCountRight--;
+            circleCount[RIGHT]++;
+        else
+            circleCount[RIGHT]--;
     }
     TIM_ClearITPendingBit(TIM8, TIM_IT_Update);
 }
 
-int leftSpeed;
-int rightSpeed;
+int motorSpeed[2] = {0};
 #define GearAndDiameter 3
+#define TIM_Left TIM1
+#define TIM_Right TIM8
+int lastCNT[2] = {0};
+// uint32_t ms = 0;
+// int lastLCircle[2] = {0};
 void TIM17_IRQHandler(void)
 {
-    int currentCNT;
+    int32_t currintCnt;
     int speed;
-    static int lastLeftCNT;
-    static int lastRightCNT;
-    static int lastLeftCir;
-    static int lastRightCir;
-    static uint8_t initFlag = 0;
-    if (initFlag == 0)
+    // uint32_t time;
+    currintCnt = circleCount[LEFT] * 1024 * 4 + TIM_Left->CNT;
+    // getTimeStamp(&time);
+    // if (ms++ % 10 == 0)
+        // printf("%d//////%d\n", time, timeLast);
+        // printf("t1=%d,t2=%d,", time, timeLast);
+        // printf("t1=%d\r\n", time- timeLast);
+    // speed = (int32_t)HWDivider_Calc((uint32_t)(currintCnt - lastCNT[LEFT]) * GearAndDiameter, time - timeLast) * LeftDIR;
+    // speed = (time - timeLast) * 10;
+    speed = ((currintCnt - lastCNT[LEFT]) * GearAndDiameter) * LeftDIR;
+    motorSpeed[LEFT] = (motorSpeed[LEFT] * 2 + speed * 8) / 10;
+    // motorSpeed[LEFT] = speed;
+
+    if (currintCnt > 4096)
     {
-        initFlag++;
-        lastLeftCNT = 0;
-        lastRightCNT = 0;
-        lastLeftCir = circleCountLeft;
-        lastRightCir = circleCountRight;
+        circleCount[LEFT]--;
+        lastCNT[LEFT] = currintCnt - 4096;
     }
+    else if (currintCnt < -4096)
+    {
+        circleCount[LEFT]++;
+        lastCNT[LEFT] = currintCnt + 4096;
+    }
+    else
+    lastCNT[LEFT] = currintCnt;
 
-    //计算左轮速度
-    currentCNT = (circleCountLeft - lastLeftCir) * (1024 * 4) + TIM1->CNT;
-    // leftSpeed = (currentCNT - lastLeftCNT) / SPEED_COMPUT_PERIOD;
-    speed = (currentCNT - lastLeftCNT) * GearAndDiameter;
-    leftSpeed = (leftSpeed * 3 + speed * 7) / 10;
-    lastLeftCNT = currentCNT;
-    //计算右轮速度
-    currentCNT = (circleCountRight - lastRightCir) * (1024 * 4) + TIM8->CNT;
-    // rightSpeed = (currentCNT - lastRightCNT) / SPEED_COMPUT_PERIOD;
-    speed = (currentCNT - lastRightCNT) * GearAndDiameter;
-    rightSpeed = (rightSpeed * 3 + speed * 7) / 10;
-    lastRightCNT = currentCNT;
-
+    currintCnt = circleCount[RIGHT] * 1024 * 4 + TIM_Right->CNT;
+    speed = ((currintCnt - lastCNT[RIGHT]) * GearAndDiameter) / RightDIR;
+    motorSpeed[RIGHT] = (motorSpeed[RIGHT] * 2 + speed * 8) / 10;
+    if (currintCnt > 4096)
+    {
+        circleCount[RIGHT]--;
+        lastCNT[RIGHT] = currintCnt - 4096;
+    }
+    else if (currintCnt < -4096)
+    {
+        circleCount[RIGHT]++;
+        lastCNT[RIGHT] = currintCnt + 4096;
+    }
+    else
+        lastCNT[RIGHT] = currintCnt;
+    // currentCNT = (lastLCircle[LEFT] - circleCount[LEFT]) * 1024 * 4 + TIM_Left->CNT;
+    // lastLCircle[LEFT] = circleCount[LEFT];
+    // motorSpeed[LEFT] = (currentCNT - lastCNT[LEFT]) * GearAndDiameter;
+    // lastCNT[LEFT] = currentCNT;
+    // motorSpeed[LEFT] = TIM_Left->CNT;
+    // timeLast = time;
     TIM_ClearITPendingBit(TIM17, TIM_FLAG_Update);
 }
 
 int getCircleCount(MotorChoose side)
 {
-    if (side == LEFT)
-        return circleCountLeft;
-    else
-        return -circleCountRight;
+    return circleCount[side];
 }
 
 int getSpeed(MotorChoose side)
 {
-    if (side == LEFT)
-        return leftSpeed / SPEED_COMPUT_PERIOD;
-    else
-        return -rightSpeed / SPEED_COMPUT_PERIOD;
+    return motorSpeed[side] / SPEED_COMPUT_PERIOD;
 }

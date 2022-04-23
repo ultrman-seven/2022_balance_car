@@ -133,12 +133,12 @@ void pidParaSave(void)
     uint32_t dat[PID_NUM * 3] = {0};
     loadPidPara2Buf(dat, &speedPidLeft);
     loadPidPara2Buf(dat + 3, &anglePid);
-    saveData(dat, PID_NUM * 3);
+    Flash_saveData(dat, PID_NUM * 3);
 }
 void pidParaLoad(void)
 {
     uint32_t buf[PID_NUM * 3] = {0};
-    loadData(buf, PID_NUM * 3);
+    Flash_loadData(buf, PID_NUM * 3);
     loadBuf2PidPara(buf, &speedPidLeft);
     loadBuf2PidPara(buf, &speedPidRight);
     loadBuf2PidPara(buf + 3, &anglePid);

@@ -24,8 +24,10 @@ typedef enum
     SET_DATA         // 寄存器数据命令
 } cameraCMD;
 
-#define PIC_LINE 60
-#define PIC_COL 94
+#define PIC_LINE 65
+#define PIC_COL 95
+// #define PIC_LINE 60
+// #define PIC_COL 94
 struct
 {
     uint8_t state;
@@ -200,7 +202,7 @@ void h_int(void)
 {
 }
 
-uint8_t pic_FLAG_BYTES[8] = {0xff, 0xf0, 0xf0, 0xf0, 0x00, 0xff, 0x00, 0xff};
+uint8_t pic_FLAG_BYTES[8] = {0xff, 0xf0, 0xf0, 0xf0, 0x00, 0xff};//, 0x00, 0xff};
 void v_int(void)
 {
     if (picReceive.state)
@@ -212,7 +214,9 @@ void v_int(void)
     {
         // DMA1_Channel5->CNDTR = PIC_COL * PIC_LINE;
         DMA_Cmd(DMA1_Channel5, ENABLE);
-        uart1SendBytes(pic_FLAG_BYTES, 8);
+        uart1SendBytes(pic_FLAG_BYTES, 6);
+        uart1SendByte(PIC_LINE);
+        uart1SendByte(PIC_COL);
         picReceive.state = 1;
     }
 }

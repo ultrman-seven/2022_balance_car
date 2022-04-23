@@ -1,5 +1,5 @@
-#ifndef AFC08D1C_5F53_4164_ACE3_48E51B5AEC07
-#define AFC08D1C_5F53_4164_ACE3_48E51B5AEC07
+#ifndef __WY_LIB_MENU_H__
+#define __WY_LIB_MENU_H__
 
 #include "common.h"
 typedef struct
@@ -58,4 +58,4 @@ void gotoNextMenu(MenuTypedef *menu);
 
 void valueAdjust_32(KeyChoose key, int32_t *val, int64_t maxVal, int64_t minVal, uint8_t step, void (*menuUpdataCallbackFunction)(void));
 void valueAdjust_u16(KeyChoose key, uint16_t *val, uint64_t maxVal,uint8_t step, void (*menuUpdataCallbackFunction)(void));
-#endif /* AFC08D1C_5F53_4164_ACE3_48E51B5AEC07 */
+#endif /* __WY_LIB_MENU_H__ */
