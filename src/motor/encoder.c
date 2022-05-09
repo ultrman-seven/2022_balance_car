@@ -1,6 +1,7 @@
 #include "common.h"
 #include "encoder.h"
 #include "oledio.h"
+#include "motor/control.h"
 
 //毫秒
 #define SPEED_COMPUT_PERIOD 10
@@ -27,6 +28,7 @@ void time17Init(uint16_t period, uint16_t prescaler)
     TIM_ClearFlag(TIM17, TIM_FLAG_Update);
     TIM_ITConfig(TIM17, TIM_IT_Update, ENABLE);
     TIM_Cmd(TIM17, ENABLE);
+    // TIM_Cmd(TIM17, DISABLE);
 }
 uint32_t timeLast;
 void encoderInit(void)
@@ -183,6 +185,7 @@ void TIM17_IRQHandler(void)
     // lastCNT[LEFT] = currentCNT;
     // motorSpeed[LEFT] = TIM_Left->CNT;
     // timeLast = time;
+    pidUpdateFunction();
     TIM_ClearITPendingBit(TIM17, TIM_FLAG_Update);
 }
 

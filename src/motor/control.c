@@ -28,12 +28,15 @@
 #include "motor.h"
 #include "pid.h"
 #include "mpu6050.h"
+#include "uart.h"
 #include <stdio.h>
 
+int32_t balancePoint = -216;
+
 PID_paraTypdef speedPidLeft = {
-    .Kp = 15, .Ki = 20, .Kd = 6, .integral = 0, .proportionLast = 0, .proportionLastLast = 0, .targetVal = 0};
+    .Kp = 25, .Ki = 25, .Kd = 7, .integral = 0, .proportionLast = 0, .proportionLastLast = 0, .targetVal = 0};
 PID_paraTypdef speedPidRight = {
-    .Kp = 15, .Ki = 20, .Kd = 6, .integral = 0, .proportionLast = 0, .proportionLastLast = 0, .targetVal = 0};
+    .Kp = 25, .Ki = 25, .Kd = 7, .integral = 0, .proportionLast = 0, .proportionLastLast = 0, .targetVal = 0};
 PID_paraTypdef anglePid = {
     .Kp = 20, .Ki = 0, .Kd = 1, .integral = 0, .proportionLast = 0, .targetVal = -216};
 
@@ -47,15 +50,19 @@ void motorSetSpeed(MotorChoose motor, int32_t speed)
 
 enum
 {
-    pwmMode,
-    speedMode,
-    angleMode
-} pidMode = pwmMode;
+    pwmMode,    // pwm测试
+    speedMode,  //速度环测试
+    angleMode,  //角度环测试
+    rockerMode  //老头环测试
+} pidMode = 10; // pwmMode;
 
 int32_t pwmRight = 0, pwmLeft = 0;
+int32_t turnSpeed = 0;
+int32_t linerSpeed = 0;
 // globalPidUpdate
 float lastPitch = 0.0;
-void TIM16_IRQHandler(void)
+// void TIM16_IRQHandler(void)
+void pidUpdateFunction(void)
 {
     float pitch, y, r;
     uint8_t waitErr = 8;
@@ -96,6 +103,15 @@ void TIM16_IRQHandler(void)
         float p = anglePid.targetVal / 10.0;
         printf("p=%f,a=%f\r\n", p, pitch);
         break;
+    case rockerMode:
+        anglePid.targetVal = balancePoint + linerSpeed;
+        speedPidLeft.targetVal = speedPidRight.targetVal = pidCtrlUpdate(pitch * 10, &anglePid) / 10;
+        speedPidLeft.targetVal += turnSpeed;
+        speedPidRight.targetVal -= turnSpeed;
+        pwmLeft = pwmLeft + pidIncrementalCtrlUpdate(getSpeed(LEFT), &speedPidLeft) / 10;
+        pwmRight = pwmRight + pidIncrementalCtrlUpdate(getSpeed(RIGHT), &speedPidRight) / 10;
+        setPower(pwmLeft, LEFT);
+        setPower(pwmRight, RIGHT);
     default:
         break;
     }
@@ -108,14 +124,88 @@ void setPidMode(uint8_t m)
     pidMode = m;
 }
 
+void setLinerSpeed(int8_t speed)
+{
+    linerSpeed = speed;
+}
+
+void setAngularVelocity(int8_t speed)
+{
+    turnSpeed = speed;
+}
+
+void setBalance(uint8_t *dat)
+{
+    uint32_t tmp = 0;
+    uint8_t i = 4;
+    while (i--)
+    {
+        tmp <<= 8;
+        tmp += *dat++;
+    }
+    balancePoint = (int32_t)tmp;
+}
+
+typedef enum
+{
+    g_balance,
+    g_anglePid,
+    g_leftPid,
+    g_rightPid,
+    g_turn,
+    g_liner
+} SendParaTypdef;
+void sendPara(uint8_t p)
+{
+    switch (p)
+    {
+    case g_balance:
+        uart1SendWord((uint32_t)balancePoint);
+        break;
+    case g_anglePid:
+        uart1HalfWord((uint16_t)(anglePid.Kp));
+        uart1HalfWord((uint16_t)(anglePid.Ki));
+        uart1HalfWord((uint16_t)(anglePid.Kd));
+        break;
+    case g_leftPid:
+        uart1HalfWord((uint16_t)(speedPidLeft.Kp));
+        uart1HalfWord((uint16_t)(speedPidLeft.Ki));
+        uart1HalfWord((uint16_t)(speedPidLeft.Kd));
+        break;
+    case g_rightPid:
+        uart1HalfWord((uint16_t)(speedPidRight.Kp));
+        uart1HalfWord((uint16_t)(speedPidRight.Ki));
+        uart1HalfWord((uint16_t)(speedPidRight.Kd));
+        break;
+    case g_turn:
+        uart1SendWord((uint32_t)turnSpeed);
+        break;
+    case g_liner:
+        break;
+    default:
+        break;
+    }
+}
+
 PID_paraTypdef *pidList[] = {&anglePid, &speedPidLeft, &speedPidRight};
 void adjustPara(uint8_t num, uint8_t *pidPara)
 {
-    pidList[num]->Kp = ((uint16_t)(*pidPara)) << 8 + *(pidPara + 1);
-    pidPara += 2;
-    pidList[num]->Ki = ((uint16_t)(*pidPara)) << 8 + *(pidPara + 1);
-    pidPara += 2;
-    pidList[num]->Kd = ((uint16_t)(*pidPara)) << 8 + *(pidPara + 1);
+    uint16_t tmp;
+
+    tmp = *pidPara++;
+    tmp <<= 8;
+    tmp += *pidPara++;
+    pidList[num]->Kp = (int16_t)tmp;
+
+    tmp = *pidPara++;
+    tmp <<= 8;
+    tmp += *pidPara++;
+    pidList[num]->Ki = (int16_t)tmp;
+
+    tmp = *pidPara++;
+    tmp <<= 8;
+    tmp += *pidPara++;
+    pidList[num]->Kd = (int16_t)tmp;
 }
 
 //定时器16用于更新pid控制
@@ -144,5 +234,7 @@ void time16Init(uint16_t period, uint16_t prescaler)
 
 void pidCtrlTimeInit(uint16_t us)
 {
-    time16Init(us, 95);
+    // time16Init(us, 95);
+    // TIM_Cmd(TIM17,ENABLE);
+    pidMode = speedMode;
 }

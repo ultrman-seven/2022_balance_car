@@ -618,6 +618,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\storage\falsh.c</FilePath>
             </File>
+            <File>
+              <FileName>quickSin.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\quickSin.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

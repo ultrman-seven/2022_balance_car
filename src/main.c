@@ -5,11 +5,10 @@
 #include "motor.h"
 #include "encoder.h"
 #include "mpu6050.h"
-#include "stdio.h"
 #include "battery.h"
 #include "inv_mpu.h"
 #include "iicsoft.h"
-#include "stdio.h"
+#include <stdio.h>
 
 ErrorStatus HSE_SysClock(void)
 {

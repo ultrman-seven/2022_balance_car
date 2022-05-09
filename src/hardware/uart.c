@@ -1,9 +1,10 @@
 #include "common.h"
 #include "stdio.h"
 #include "oledio.h"
-#include "control.h"
+#include "motor/control.h"
+#include "uart.h"
 
-#define UART_RX_BUF_SIZE 10
+#define UART_RX_BUF_SIZE 15
 uint8_t rxBuf[UART_RX_BUF_SIZE] = {0};
 
 void uartInit(void)
@@ -18,7 +19,7 @@ void uartInit(void)
 
     nvic.NVIC_IRQChannel = UART1_IRQn;
     nvic.NVIC_IRQChannelCmd = ENABLE;
-    nvic.NVIC_IRQChannelPriority = 2;
+    nvic.NVIC_IRQChannelPriority = 0;
     NVIC_Init(&nvic);
 
     GPIO_PinAFConfig(GPIOB, GPIO_PinSource9, GPIO_AF_0);
@@ -45,6 +46,21 @@ void uartInit(void)
     GPIO_Init(GPIOB, &GPIO_InitStructure);
 }
 
+void uart1SendWord(uint32_t dat)
+{
+    uint8_t i = 4;
+    while (i--)
+    {
+        uart1SendByte((uint8_t)(dat >> 24));
+        dat <<= 8;
+    }
+}
+void uart1HalfWord(uint16_t dat)
+{
+    uart1SendByte((uint8_t)(dat >> 8));
+    uart1SendByte((uint8_t)(dat & 0xff));
+}
+
 void uart1SendByte(uint8_t dat)
 {
     UART_SendData(UART1, dat);
@@ -68,11 +84,15 @@ void uart1SendBytes(uint8_t *dat, uint16_t len)
 
 typedef enum
 {
-    Set_Speed,
+    Hello,
     Get_Mpu6050,
     Get_Pic,
     Set_Mode,
-    Para_Adj
+    Para_Adj,
+    Set_Angle,
+    Set_Turn,
+    Set_Balance,
+    Get_Para
 } UART_CMDs;
 
 uint8_t *bufPointer = rxBuf;
@@ -83,8 +103,6 @@ void UART1_IRQHandler(void)
     if (UART_GetITStatus(UART1, UART_IT_RXIEN) == SET)
     {
         UART_ClearITPendingBit(UART1, UART_IT_RXIEN);
-        // screenClear();
-        // OLED_printf("receive:%x\n",UART_ReceiveData(UART1));
         if (bufPointer - rxBuf >= UART_RX_BUF_SIZE)
         {
             bufPointer = rxBuf;
@@ -105,7 +123,10 @@ void UART1_IRQHandler(void)
             uartWaitCmdState = 1;
             switch (rxBuf[1])
             {
-            case Set_Speed:
+            case Hello:
+                screenClear();
+                OLED_print("Hello World!");
+                printf("Hello World\n");
                 break;
             case Get_Mpu6050:
                 break;
@@ -116,7 +137,27 @@ void UART1_IRQHandler(void)
                 setPidMode(rxBuf[2]);
                 break;
             case Para_Adj:
-                adjustPara(rxBuf[2], rxBuf+3);
+                adjustPara(rxBuf[2], rxBuf + 3);
+                // printf("num:%d\n",rxBuf[2]);
+                break;
+            case Set_Angle:
+                // screenClear();
+                // OLED_printf("angle:%d", (int8_t)rxBuf[2]);
+                setLinerSpeed((int8_t)rxBuf[2]);
+                break;
+            case Set_Turn:
+                setAngularVelocity((int8_t)rxBuf[2]);
+                break;
+            case Set_Balance:
+                setBalance(rxBuf + 2);
+                break;
+            case Get_Para:
+                uart1SendByte(CMD_Start);
+                uart1SendByte(Get_Para);
+                uart1SendByte(rxBuf[2]);
+                sendPara(rxBuf[2]);
+                uart1SendByte(CMD_END_0);
+                uart1SendByte(CMD_END_1);
                 break;
             default:
                 break;

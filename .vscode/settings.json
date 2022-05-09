@@ -23,7 +23,10 @@
         "hal_conf.h": "c",
         "cstdio": "c",
         "vector": "cpp",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "hal_gpio.h": "c",
+        "ios": "c",
+        "xiosbase": "c"
     },
     "cSpell.enableFiletypes": [
         "8051",

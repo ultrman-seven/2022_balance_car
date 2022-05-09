@@ -3,13 +3,13 @@
 #include "menu.h"
 #include "stdio.h"
 #include "flash.h"
+#include "motor/control.h"
 
 extern PID_paraTypdef speedPidLeft;
 extern PID_paraTypdef speedPidRight;
 extern PID_paraTypdef anglePid;
 
 extern MenuTypedef speedParaMenu[];
-
 
 // void generalParaCaptionUpdate(MenuTypedef *menu, PID_paraTypdef *pid)
 // {
@@ -19,11 +19,11 @@ extern MenuTypedef speedParaMenu[];
 // }
 void generalParaCaptionUpdate(MenuTypedef *menu)
 {
-    float value=0;
+    float value = 0;
     sprintf(menu[0].caption, "Kp:  %d", menuVal_32_Buf[0]);
-    value = menuVal_32_Buf[1]/10.0;
+    value = menuVal_32_Buf[1] / 10.0;
     sprintf(menu[1].caption, "Ki:  %.1f", value);
-    value = menuVal_32_Buf[2]/10.0;
+    value = menuVal_32_Buf[2] / 10.0;
     sprintf(menu[2].caption, "Kd:  %.1f", value);
 }
 
@@ -37,18 +37,19 @@ void generalParaSet(PID_paraTypdef *pid)
 void speedParaCaptionUpdate(void)
 {
     generalParaCaptionUpdate(speedParaMenu);
+    sprintf(menuCaptionStr4, "speed:  %d", menuVal_32_Buf[3]);
 }
 
 void speedInc(void)
 {
     // valueAdjust_u16(RIGHT_KEY, menuVal_u16_Buf, 200, 1, speedParaCaptionUpdate);
-    valueAdjust_32(RIGHT_KEY,menuVal_32_Buf,200,-200,1,speedParaCaptionUpdate);
+    valueAdjust_32(RIGHT_KEY, menuVal_32_Buf, 200, -200, 1, speedParaCaptionUpdate);
 }
 
 void speedDec(void)
 {
     // valueAdjust_u16(LEFT_KEY, menuVal_u16_Buf, 200, 1, speedParaCaptionUpdate);
-    valueAdjust_32(LEFT_KEY,menuVal_32_Buf,200,-200,1,speedParaCaptionUpdate);
+    valueAdjust_32(LEFT_KEY, menuVal_32_Buf, 200, -200, 1, speedParaCaptionUpdate);
 }
 
 void speedSet(void)
@@ -65,10 +66,62 @@ void gotoSpeedPara(void)
     speedParaCaptionUpdate();
     gotoNextMenu(speedParaMenu);
 }
+
+void speed_inc(void)
+{
+    valueAdjust_32(RIGHT_KEY, menuVal_32_Buf, 300, -300, 10, speedParaCaptionUpdate);
+}
+void speed_dec(void)
+{
+    valueAdjust_32(LEFT_KEY, menuVal_32_Buf, 300, -300, 10, speedParaCaptionUpdate);
+}
+void setSpeed(void)
+{
+    motorSetSpeed(LEFT, menuVal_32_Buf[3]);
+    // motorSetSpeed(RIGHT,menuVal_32_Buf[3]);
+    setPidMode(1);
+}
+void testStop(void)
+{
+    setPidMode(10);
+    setPower(0, LEFT);
+}
+extern const int8_t sinList[];
+void gotoSine(void)
+{
+    uint32_t i = 0;
+    setPidMode(1);
+    while (EXTI_GetITStatus(MID_KEY_EXTI_LINE) == RESET)
+    {
+        motorSetSpeed(LEFT, sinList[i++] * 3);
+        delayMs(40);
+        if (i >= 360)
+            i = 0;
+    }
+    testStop();
+}
+
+void gotoRamp(void)
+{
+    int32_t i = 0;
+    setPidMode(1);
+    while (EXTI_GetITStatus(MID_KEY_EXTI_LINE) == RESET)
+    {
+        motorSetSpeed(LEFT, i++ * 3);
+        delayMs(40);
+        if (i >= 130)
+            i = -130;
+    }
+    testStop();
+}
 MenuTypedef speedParaMenu[] = {
     {.caption = menuCaptionStr1, .left = speedDec, .mid = NULL, .right = speedInc},
     {.caption = menuCaptionStr2, .left = speedDec, .mid = NULL, .right = speedInc},
     {.caption = menuCaptionStr3, .left = speedDec, .mid = NULL, .right = speedInc},
+    {.caption = menuCaptionStr4, .mid = setSpeed, .left = speed_dec, .right = speed_inc},
+    {.caption = "sine", .left = gotoSine, .right = gotoSine, .mid = NULL},
+    {.caption = "ramp", .left = gotoRamp, .right = gotoRamp, .mid = NULL},
+    {.caption = "stop test", .left = testStop, .right = testStop, .mid = testStop},
     {.caption = "apply", .left = speedSet, .mid = speedSet, .right = speedSet},
     GO_BACK_MENU,
     END_OF_MENU};
@@ -82,13 +135,13 @@ void angleParaCaptionUpdate(void)
 void angleInc(void)
 {
     // valueAdjust_u16(RIGHT_KEY, menuVal_u16_Buf, 200, 1, speedParaCaptionUpdate);
-    valueAdjust_32(RIGHT_KEY, menuVal_32_Buf, 200,-200, 1, speedParaCaptionUpdate);
+    valueAdjust_32(RIGHT_KEY, menuVal_32_Buf, 200, -200, 1, speedParaCaptionUpdate);
 }
 
 void angleDec(void)
 {
     // valueAdjust_u16(LEFT_KEY, menuVal_u16_Buf, 200, 1, speedParaCaptionUpdate);
-    valueAdjust_32(LEFT_KEY, menuVal_32_Buf, 200,-200, 1, speedParaCaptionUpdate);
+    valueAdjust_32(LEFT_KEY, menuVal_32_Buf, 200, -200, 1, speedParaCaptionUpdate);
 }
 
 void angleSet(void)

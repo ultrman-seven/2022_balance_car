@@ -8,6 +8,7 @@
 #include "stdio.h"
 #include "iicsoft.h"
 #include "pid.h"
+#include "motor/control.h"
 
 char menuCaptionStr1[20];
 char menuCaptionStr2[20];
@@ -87,7 +88,7 @@ void mpu6050DmpTest(void)
         // printf("地址:%d\n俯仰角:%f\troll:%f\tyaw:%f\n", MPU_who, p, r, y);
         delayMs(50);
     }
-    anglePid.targetVal = 10 * p;
+    balancePoint = anglePid.targetVal = 10 * p;
     showMenu(menuManager.getCurrentMenu());
 }
 
@@ -191,9 +192,9 @@ void gotoParaMenu(void)
 }
 
 MenuTypedef mainMenu[] = {
+    {.caption = "para adj", .left = gotoParaMenu, .right = gotoParaMenu, .right = gotoParaMenu},
     {.caption = "test", .mid = gotoTests, .right = gotoTests, .left = gotoTests},
     {.caption = "run", .mid = runStart, .right = runStart, .left = runStart},
-    {.caption = "para adj", .left = gotoParaMenu, .right = gotoParaMenu, .right = gotoParaMenu},
     {.caption = "sys state", .left = getSysState, .right = getSysState, .mid = getSysState},
     END_OF_MENU};
 
