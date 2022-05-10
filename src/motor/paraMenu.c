@@ -85,6 +85,7 @@ void testStop(void)
 {
     setPidMode(10);
     setPower(0, LEFT);
+    setPower(0, RIGHT);
 }
 extern const int8_t sinList[];
 void gotoSine(void)
@@ -149,11 +150,19 @@ void angleSet(void)
     generalParaSet(&anglePid);
 }
 
+void angleStart(void)
+{
+    setPidMode(2);
+}
+void mpu6050DmpTest(void);
 MenuTypedef angleParaMenu[] = {
     {.caption = menuCaptionStr1, .left = angleDec, .mid = NULL, .right = angleInc},
     {.caption = menuCaptionStr2, .left = angleDec, .mid = NULL, .right = angleInc},
     {.caption = menuCaptionStr3, .left = angleDec, .mid = NULL, .right = angleInc},
     {.caption = "apply", .left = angleSet, .mid = angleSet, .right = angleSet},
+    {.caption = "balance angle", .left = mpu6050DmpTest, .mid = NULL, .right = mpu6050DmpTest},
+    {.caption = "start", .left = angleStart, .mid = angleStart, .right = angleStart},
+    {.caption = "stop", .left = testStop, .right = testStop, .mid = testStop},
     GO_BACK_MENU,
     END_OF_MENU};
 

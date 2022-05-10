@@ -16,7 +16,7 @@ int32_t pidCtrlUpdate(int32_t currentVal, PID_paraTypdef *object)
 
     diff = proportion - object->proportionLast;
     object->proportionLast = proportion;
-    return (object->Kp * proportion * 10 + object->Ki * object->integral + object->Kd * diff) / 10;
+    return (object->Kp * proportion /* * 10*/ + object->Ki * object->integral + object->Kd * diff) / 10;
 }
 
 int32_t pidIncrementalCtrlUpdate(int32_t currentVal, PID_paraTypdef *pid)

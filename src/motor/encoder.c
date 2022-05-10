@@ -4,7 +4,7 @@
 #include "motor/control.h"
 
 //毫秒
-#define SPEED_COMPUT_PERIOD 10
+#define SPEED_COMPUT_PERIOD 5
 
 //定时器17用于计算速度
 void time17Init(uint16_t period, uint16_t prescaler)

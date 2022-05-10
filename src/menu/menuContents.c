@@ -97,7 +97,8 @@ void mpu6050DataTest(void)
     while (EXTI_GetITStatus(MID_KEY_EXTI_LINE) == RESET)
     {
         screenClear();
-        OLED_printf("t:%d", Read_Temperature());
+        // OLED_printf("t:%d", Read_Temperature());
+        OLED_printf("gy:%d",gyro[1]);
         delayMs(50);
     }
     showMenu(menuManager.getCurrentMenu());
