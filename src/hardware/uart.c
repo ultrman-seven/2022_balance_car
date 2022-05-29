@@ -98,6 +98,7 @@ typedef enum
 uint8_t *bufPointer = rxBuf;
 uint8_t uartWaitCmdState = 1;
 void cameraInit(void);
+void cameraSetOn(void);
 void UART1_IRQHandler(void)
 {
     if (UART_GetITStatus(UART1, UART_IT_RXIEN) == SET)
@@ -131,10 +132,11 @@ void UART1_IRQHandler(void)
             case Get_Mpu6050:
                 break;
             case Get_Pic:
-                cameraInit();
+                // cameraInit();
+                cameraSetOn();
                 break;
             case Set_Mode:
-                setPidMode(rxBuf[2]);
+                setPidMode((enum ctrlModes)rxBuf[2]);
                 break;
             case Para_Adj:
                 adjustPara(rxBuf[2], rxBuf + 3);

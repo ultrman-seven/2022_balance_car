@@ -91,9 +91,9 @@ void EXTI4_15_IRQHandler(void)
         EXTI_ClearITPendingBit(EXTI_Line10);
     }
 
-    if (EXTI_GetITStatus(EXTI_Line4) == SET)
+    if (EXTI_GetITStatus(EXTI_Line7) == SET)
     {
-        EXTI_ClearITPendingBit(EXTI_Line4);
+        EXTI_ClearITPendingBit(EXTI_Line7);
         v_int();
     }
     if (EXTI_GetITStatus(EXTI_Line5) == SET)

@@ -10,4 +10,4 @@ typedef enum
 void encoderInit(void);
 int getCircleCount(MotorChoose side);
 int getSpeed(MotorChoose side);
-#endif /* __WY_LIB_ */ENCODER_H__
+#endif /* __WY_LIB_ ENCODER_H__*/

@@ -34,7 +34,7 @@
 
 #define delay_ms delayMs
 #define get_ms getTimeStamp
-#define myget_ms getTimeStamp
+#define myget_ms getLongTimeStamp
 #define log_i OLED_printf
 #define log_e OLED_printf
 #define i2c_write i2cWrite

@@ -231,7 +231,7 @@ void Screen_FillClear(uint8_t filler)
     }
 }
 
-void Picture_display(uint8_t *ptr_pic, uint8_t colStart, uint8_t pageStart, uint8_t line, uint8_t col)
+void Picture_display(const uint8_t *ptr_pic, uint8_t colStart, uint8_t pageStart, uint8_t line, uint8_t col)
 {
     uint8_t page, column;
 
@@ -244,7 +244,20 @@ void Picture_display(uint8_t *ptr_pic, uint8_t colStart, uint8_t pageStart, uint
     }
 }
 
-void PictureContrastDisplay(uint8_t *ptr_pic, uint8_t colStart, uint8_t pageStart, uint8_t line, uint8_t col)
+void showPic(uint8_t *ptr_pic, uint8_t colStart, uint8_t pageStart, uint8_t line, uint8_t col)
+{
+    uint8_t page, column;
+
+    for (page = pageStart; page < pageStart + (line / 8); page++) // page loop
+    {
+        setCol(colStart);
+        setPage(page);
+        for (column = 0; column < col; column++) // column loop
+            sendData(*ptr_pic++);
+    }
+}
+
+void PictureContrastDisplay(const uint8_t *ptr_pic, uint8_t colStart, uint8_t pageStart, uint8_t line, uint8_t col)
 {
     uint8_t page, column;
 

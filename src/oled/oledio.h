@@ -10,7 +10,7 @@
 //#define __NSS_HARD__ //硬件片选还是软件片选
 #endif
 
-extern char chooseLine;
+extern int16_t chooseLine;
 extern char oled_str[64];
 #define OLED_printf(...)              \
     sprintf(oled_str, ##__VA_ARGS__); \

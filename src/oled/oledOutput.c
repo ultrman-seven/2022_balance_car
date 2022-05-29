@@ -3,7 +3,7 @@
 
 uint8_t line = 0;
 char wordCount = 0;
-char chooseLine = -1;
+int16_t chooseLine = -1;
 char oled_str[64] = {0};
 
 void screenClear(void)
@@ -24,8 +24,8 @@ void OLED_putchar(char ch)
 	{
 	case '\n':
 		line += asciiHigh / 8;
-		wordCount = -1;
-		break;
+		wordCount = 0;
+		return;
 	case '\b':
 		wordCount--;
 		break;
@@ -51,8 +51,8 @@ void OLED_putContrastChar(char ch)
 	{
 	case '\n':
 		line += asciiHigh / 8;
-		wordCount = -1;
-		break;
+		wordCount = 0;
+		return;
 	case '\b':
 		wordCount--;
 		break;

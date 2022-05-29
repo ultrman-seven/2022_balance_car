@@ -30,31 +30,39 @@
 #include "mpu6050.h"
 #include "uart.h"
 #include <stdio.h>
+#include "motor/control.h"
 
 int32_t balancePoint = -216;
+int32_t baseSpeed = 0;
+enum ctrlModes pidMode = NullMode; // pwmMode;
 
 PID_paraTypdef speedPidLeft = {
     .Kp = 25, .Ki = 25, .Kd = 7, .integral = 0, .proportionLast = 0, .proportionLastLast = 0, .targetVal = 0};
 PID_paraTypdef speedPidRight = {
     .Kp = 25, .Ki = 25, .Kd = 7, .integral = 0, .proportionLast = 0, .proportionLastLast = 0, .targetVal = 0};
+// .Kp = 60, .Ki = 5, .Kd = 24, .integral = 0, .proportionLast = 0, .targetVal = -286};
 PID_paraTypdef anglePid = {
-    .Kp = 60, .Ki = 5, .Kd = 24, .integral = 0, .proportionLast = 0, .targetVal = -286};
-
+    .Kp = 105, .Ki = 35, .Kd = 40, .integral = 0, .proportionLast = 0, .targetVal = -286};
+// 105,3.5,4.0
+PID_paraTypdef picTurn = {
+    .Kp = 3, .Ki = 2, .Kd = 6, .targetVal = 0, .integral = 0, .proportionLast = 0, .proportionLastLast = 0};
+PID_paraTypdef findAnglePid = {
+    .Kp = 3, .Ki = 1, .Kd = 1, .targetVal = 0, .integral = 0, .proportionLast = 0, .proportionLastLast = 0};
+PID_paraTypdef speedCtrlPid = {
+    .Kp = 3, .Ki = 1, .Kd = 1, .targetVal = 20, .integral = 0, .proportionLast = 0, .proportionLastLast = 0};
 void motorSetSpeed(MotorChoose motor, int32_t speed)
 {
+    baseSpeed = speed;
     if (motor == LEFT)
         speedPidLeft.targetVal = speed;
     else
         speedPidRight.targetVal = speed;
 }
 
-enum
+void setBaseSpeed(int32_t s)
 {
-    pwmMode,    // pwm测试
-    speedMode,  //速度环测试
-    angleMode,  //角度环测试
-    rockerMode  //老头环测试
-} pidMode = 10; // pwmMode;
+    baseSpeed = s;
+}
 
 int32_t pidCtrlAngle(int32_t currentVal)
 {
@@ -78,11 +86,13 @@ int32_t turnSpeed = 0;
 int32_t linerSpeed = 0;
 // globalPidUpdate
 float lastPitch = 0.0;
+int32_t balanceModify = 0;
+#define MAX_Modify 80
 // void TIM16_IRQHandler(void)
 void pidUpdateFunction(void)
 {
     float pitch, y, r;
-    uint8_t waitErr = 8;
+    // uint8_t waitErr = 8;
     // Read_DMP(&pitch, &r, &y);
     // while (pitch < 0.000001 && pitch > -0.000001 && waitErr)
     // {
@@ -105,6 +115,8 @@ void pidUpdateFunction(void)
         printf("r=%d,c=%d\r\n", speedPidLeft.targetVal, getSpeed(LEFT));
         break;
     case speedMode:
+        speedPidLeft.targetVal = baseSpeed + turnSpeed;
+        speedPidRight.targetVal = baseSpeed - turnSpeed;
         pwmLeft = pwmLeft + pidIncrementalCtrlUpdate(getSpeed(LEFT), &speedPidLeft) / 10;
         pwmRight = pwmRight + pidIncrementalCtrlUpdate(getSpeed(RIGHT), &speedPidRight) / 10;
         setPower(pwmLeft, LEFT);
@@ -117,31 +129,79 @@ void pidUpdateFunction(void)
             Read_DMP(&pitch, &r, &y);
         } while (pitch < 0.000001 && pitch > -0.000001);
         // speedPidLeft.targetVal = speedPidRight.targetVal = pidCtrlUpdate(pitch * 10, &anglePid) / 10;
-        speedPidLeft.targetVal = speedPidRight.targetVal = pidCtrlAngle(pitch * 10) / 10;
-        pwmLeft = pwmLeft + pidIncrementalCtrlUpdate(getSpeed(LEFT), &speedPidLeft) / 10;
-        pwmRight = pwmRight + pidIncrementalCtrlUpdate(getSpeed(RIGHT), &speedPidRight) / 10;
-        setPower(pwmLeft, LEFT);
-        setPower(pwmRight, RIGHT);
-        float p = anglePid.targetVal / 10.0;
-        // printf("p=%.1f,a=%.1f,r=%d\r\n", p, pitch,speedPidLeft.targetVal);
-        break;
-    case rockerMode:
-        anglePid.targetVal = balancePoint + linerSpeed;
-        speedPidLeft.targetVal = speedPidRight.targetVal = pidCtrlUpdate(pitch * 10, &anglePid) / 10;
+
+        // balanceModify += pidIncrementalCtrlUpdate(-1 * (accel[0] - 164 * quickSin(pitch * 10)) / 1000, &findAnglePid) / 4;
+        // balanceModify -= pidIncrementalCtrlUpdate((getSpeed(LEFT) + getSpeed(RIGHT)) / 2, &speedCtrlPid)/10;
+        anglePid.targetVal = balancePoint;
+        speedPidLeft.targetVal =
+            speedPidRight.targetVal =
+                baseSpeed + pidCtrlAngle(pitch * 10) / 10;
         speedPidLeft.targetVal += turnSpeed;
         speedPidRight.targetVal -= turnSpeed;
         pwmLeft = pwmLeft + pidIncrementalCtrlUpdate(getSpeed(LEFT), &speedPidLeft) / 10;
         pwmRight = pwmRight + pidIncrementalCtrlUpdate(getSpeed(RIGHT), &speedPidRight) / 10;
         setPower(pwmLeft, LEFT);
         setPower(pwmRight, RIGHT);
+        // float p = anglePid.targetVal / 10.0;
+        // printf("p=%.1f,a=%.1f,r=%d\r\n", p, pitch,speedPidLeft.targetVal);
+        // printf("p=%.1f,a=%.1f\r\n", p, pitch);
+        break;
+    case rockerMode:
+        do
+        {
+            Read_DMP(&pitch, &r, &y);
+        } while (pitch < 0.000001 && pitch > -0.000001);
+        anglePid.targetVal = balancePoint + linerSpeed;
+        speedPidLeft.targetVal =
+            speedPidRight.targetVal =
+                pidCtrlUpdate(pitch * 10, &anglePid) / 10;
+        speedPidLeft.targetVal += turnSpeed;
+        speedPidRight.targetVal -= turnSpeed;
+        pwmLeft = pwmLeft + pidIncrementalCtrlUpdate(getSpeed(LEFT), &speedPidLeft) / 10;
+        pwmRight = pwmRight + pidIncrementalCtrlUpdate(getSpeed(RIGHT), &speedPidRight) / 10;
+        setPower(pwmLeft, LEFT);
+        setPower(pwmRight, RIGHT);
+    case picAngularSpeedTestMode:
+        speedPidLeft.targetVal = turnSpeed;
+        speedPidRight.targetVal = -turnSpeed;
+        pwmLeft = pwmLeft + pidIncrementalCtrlUpdate(getSpeed(LEFT), &speedPidLeft) / 10;
+        pwmRight = pwmRight + pidIncrementalCtrlUpdate(getSpeed(RIGHT), &speedPidRight) / 10;
+        setPower(pwmLeft, LEFT);
+        setPower(pwmRight, RIGHT);
+        break;
+    case balanceModifyMode:
+        do
+        {
+            Read_DMP(&pitch, &r, &y);
+        } while (pitch < 0.000001 && pitch > -0.000001);
+        // speedPidLeft.targetVal = speedPidRight.targetVal = pidCtrlUpdate(pitch * 10, &anglePid) / 10;
+
+        // balanceModify += pidIncrementalCtrlUpdate(-1 * (accel[0] - 164 * quickSin(pitch * 10)) / 1000, &findAnglePid) / 4;
+        balanceModify -=
+            pidIncrementalCtrlUpdate((getSpeed(LEFT) + getSpeed(RIGHT)) / 2, &speedCtrlPid) /
+            50 ;
+        if (balanceModify > MAX_Modify)
+            balanceModify = MAX_Modify;
+        if (balanceModify < -MAX_Modify)
+            balanceModify = -MAX_Modify;
+        anglePid.targetVal = balancePoint + balanceModify;
+        speedPidLeft.targetVal = speedPidRight.targetVal = pidCtrlAngle(pitch * 10) / 10;
+        speedPidLeft.targetVal += turnSpeed;
+        speedPidRight.targetVal -= turnSpeed;
+        pwmLeft = pwmLeft + pidIncrementalCtrlUpdate(getSpeed(LEFT), &speedPidLeft) / 10;
+        pwmRight = pwmRight + pidIncrementalCtrlUpdate(getSpeed(RIGHT), &speedPidRight) / 10;
+        setPower(pwmLeft, LEFT);
+        setPower(pwmRight, RIGHT);
+        printf("r=%d,s=%d,c=%d\r\n", balanceModify, (getSpeed(LEFT) + getSpeed(RIGHT)) / 2, speedCtrlPid.targetVal);
+        break;
     default:
         break;
     }
 
-    TIM_ClearITPendingBit(TIM16, TIM_FLAG_Update);
+    // TIM_ClearITPendingBit(TIM16, TIM_FLAG_Update);
 }
 
-void setPidMode(uint8_t m)
+void setPidMode(enum ctrlModes m)
 {
     pidMode = m;
 }
@@ -153,6 +213,10 @@ void setLinerSpeed(int8_t speed)
 
 void setAngularVelocity(int8_t speed)
 {
+    if (speed > 50)
+        speed = 50;
+    if (speed < -50)
+        speed = -50;
     turnSpeed = speed;
 }
 

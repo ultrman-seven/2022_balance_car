@@ -9,6 +9,7 @@
 #include "iicsoft.h"
 #include "pid.h"
 #include "motor/control.h"
+#include "quickSin.h"
 
 char menuCaptionStr1[20];
 char menuCaptionStr2[20];
@@ -55,7 +56,7 @@ void getSysState(void)
 {
     screenClear();
     OLED_printf("sys clock: %s\nmpu dmp:%d\n", (sysClkState == SUCCESS) ? "ok" : "error", mpuDmpState);
-    OLED_printf("mpu:%d", I2C_ReadOneByte((0x69 << 1), 0x75));
+    OLED_printf("mpu: 0x%x", I2C_ReadOneByte((0x69 << 1), 0x75));
 }
 
 // test menu callback functions
@@ -94,12 +95,16 @@ void mpu6050DmpTest(void)
 
 void mpu6050DataTest(void)
 {
+    float y, p, r;
     while (EXTI_GetITStatus(MID_KEY_EXTI_LINE) == RESET)
     {
+        Read_DMP(&p, &r, &y);
         screenClear();
         // OLED_printf("t:%d", Read_Temperature());
-        OLED_printf("gy:%d",gyro[1]);
-        delayMs(50);
+        // OLED_printf("gy:%d", gyro[1]);
+        OLED_printf("accel,p:%.2f\nx: %d\ny: %d\nz: %d", p, accel[0] - 164 * quickSin(p * 10), accel[1], accel[2] + 164 * quickCos(p * 10));
+        printf("r=%d\r\n", accel[0] - 164 * quickSin(p * 10));
+        delayMs(10);
     }
     showMenu(menuManager.getCurrentMenu());
 }
@@ -198,12 +203,13 @@ MenuTypedef mainMenu[] = {
     {.caption = "run", .mid = runStart, .right = runStart, .left = runStart},
     {.caption = "sys state", .left = getSysState, .right = getSysState, .mid = getSysState},
     END_OF_MENU};
-
+void cameraSetOn(void);
+void cameraSetOff(void);
 MenuTypedef testMenu[] = {
     {.caption = "beep test", .left = beepTest, .mid = beepTest, .right = beepTest},
     {.caption = "mpu6050 test", .left = gotoMPU6050Test, .right = gotoMPU6050Test, .mid = gotoMPU6050Test},
     {.caption = "motor", .left = gotoMotorRelatedTest, .mid = gotoMotorRelatedTest, .right = gotoMotorRelatedTest},
-
+    {.caption = "camera", .left = cameraSetOn, .right = cameraSetOn, .mid = cameraSetOff},
     GO_BACK_MENU,
     END_OF_MENU};
 

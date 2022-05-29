@@ -8,4 +8,5 @@ void delay(__IO uint32_t time);
 void delayInit(void);
 void delayMs(uint32_t time);
 int getTimeStamp(uint32_t *t);
+int getLongTimeStamp(unsigned long *t);
 #endif /* __WY_LIB_COMMON_H__ */

@@ -26,6 +26,11 @@ int getTimeStamp(uint32_t *t)
     *t = msTimeStamp;
     return 0;
 }
+int getLongTimeStamp(unsigned long *t)
+{
+    *t = msTimeStamp;
+    return 0;
+}
 
 void SysTick_Handler(void)
 {

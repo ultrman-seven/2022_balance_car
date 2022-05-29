@@ -6,6 +6,9 @@ typedef struct
     int16_t Kp;
     int16_t Ki;
     int16_t Kd;
+    uint8_t p_times;
+    uint8_t i_times;
+    uint8_t d_times;
     // uint8_t Kp;
     // uint8_t Ki;
     // uint8_t Kd;

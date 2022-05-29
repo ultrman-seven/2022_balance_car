@@ -1,7 +1,8 @@
 #include "common.h"
 #include "stdio.h"
 #include "uart.h"
-
+#include "pid.h"
+#include "motor/control.h"
 typedef enum
 {
     INIT = 0,      // 摄像头初始化命令
@@ -24,8 +25,8 @@ typedef enum
     SET_DATA         // 寄存器数据命令
 } cameraCMD;
 
-#define PIC_LINE 65
-#define PIC_COL 95
+#define PIC_LINE 64
+#define PIC_COL 100
 // #define PIC_LINE 60
 // #define PIC_COL 94
 struct
@@ -83,7 +84,7 @@ void __DMA_init(void)
 
     nvic.NVIC_IRQChannel = DMA1_Channel4_5_IRQn;
     nvic.NVIC_IRQChannelCmd = ENABLE;
-    nvic.NVIC_IRQChannelPriority = 1;
+    nvic.NVIC_IRQChannelPriority = 2;
     NVIC_Init(&nvic);
 
     dma.DMA_M2M = DISABLE;
@@ -163,10 +164,10 @@ void cameraInit(void)
     NVIC_InitTypeDef nvic;
     EXTI_InitTypeDef exti;
     __uart1Init();
-    __cameraConfig(SET_COL,PIC_COL);
-    __cameraConfig(SET_ROW,PIC_LINE);
-    __cameraConfig(FPS,2);
-    __cameraConfig(INIT,0);
+    __cameraConfig(SET_COL, PIC_COL);
+    __cameraConfig(SET_ROW, PIC_LINE);
+    __cameraConfig(FPS, 2);
+    __cameraConfig(INIT, 0);
     __DMA_init();
     __TIM2PclkInit();
 
@@ -175,16 +176,17 @@ void cameraInit(void)
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
 
     nvic.NVIC_IRQChannelCmd = ENABLE;
-    nvic.NVIC_IRQChannelPriority = 0;
+    nvic.NVIC_IRQChannelPriority = 1;
     nvic.NVIC_IRQChannel = EXTI4_15_IRQn;
     NVIC_Init(&nvic);
 
-    SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOD, EXTI_PinSource4);
+    SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOD, EXTI_PinSource7);
     SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOD, EXTI_PinSource5);
 
     gpio.GPIO_Speed = GPIO_Speed_50MHz;
     gpio.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-    gpio.GPIO_Pin = GPIO_Pin_4 | GPIO_Pin_5;
+    // gpio.GPIO_Mode = GPIO_Mode_IPU;
+    gpio.GPIO_Pin = GPIO_Pin_7 | GPIO_Pin_5;
     GPIO_Init(GPIOD, &gpio);
 
     //接收数据
@@ -194,17 +196,35 @@ void cameraInit(void)
     exti.EXTI_LineCmd = ENABLE;
     exti.EXTI_Mode = EXTI_Mode_Interrupt;
     exti.EXTI_Trigger = EXTI_Trigger_Falling;
-    exti.EXTI_Line = EXTI_Line4 | EXTI_Line5;
+    exti.EXTI_Line = EXTI_Line7 | EXTI_Line5;
     EXTI_Init(&exti);
 }
 
 void h_int(void)
 {
 }
+#include "oledio.h"
+uint8_t pic_FLAG_BYTES[8] = {0xff, 0xf0, 0xf0, 0xf0, 0x00, 0xff}; //, 0x00, 0xff};
+uint8_t cameraFlag = 0;
+void cameraSetOnOff(uint8_t f)
+{
+    cameraFlag = f;
+}
+void cameraSetOn(void)
+{
+    cameraInit();
+    // screenClear();
+    cameraFlag = 1;
+}
+void cameraSetOff(void)
+{
+    cameraFlag = 0;
+}
 
-uint8_t pic_FLAG_BYTES[8] = {0xff, 0xf0, 0xf0, 0xf0, 0x00, 0xff};//, 0x00, 0xff};
 void v_int(void)
 {
+    // screenClear();
+    // OLED_print("v\n");
     if (picReceive.state)
     {
         __DMA_init();
@@ -214,19 +234,39 @@ void v_int(void)
     {
         // DMA1_Channel5->CNDTR = PIC_COL * PIC_LINE;
         DMA_Cmd(DMA1_Channel5, ENABLE);
-        uart1SendBytes(pic_FLAG_BYTES, 6);
-        uart1SendByte(PIC_LINE);
-        uart1SendByte(PIC_COL);
-        picReceive.state = 1;
+        // uart1SendBytes(pic_FLAG_BYTES, 6);
+        // uart1SendByte(PIC_LINE);
+        // uart1SendByte(PIC_COL);
+        if (cameraFlag)
+            picReceive.state = 1;
     }
 }
 
+void imgGray2Bin(uint8_t *img, uint8_t l, uint8_t c);
+void printPic(void);
+uint32_t findPointCenter(uint8_t *img, uint8_t l, uint8_t c);
+const uint8_t blankPic[8] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+extern PID_paraTypdef picTurn;
 void DMA1_Channel4_5_IRQHandler(void)
 {
     if (DMA_GetITStatus(DMA1_IT_TC5) == SET)
     {
+        uint32_t l;
+        cameraFlag = 0;
         DMA_ClearITPendingBit(DMA1_IT_TC5);
         DMA_Cmd(DMA1_Channel5, DISABLE);
-        uart1SendBytes(picReceive.pic, PIC_COL * PIC_LINE);
+        imgGray2Bin(picReceive.pic, PIC_LINE, PIC_COL);
+        printPic();
+        l = findPointCenter(picReceive.pic, PIC_LINE, PIC_COL);
+        l = (l & 0xff);
+        Picture_display(blankPic, l, 0, 64, 1);
+        setAngularVelocity(pidCtrlUpdate(l - (PIC_COL / 2), &picTurn));
+        // uart1SendBytes(pic_FLAG_BYTES, 6);
+        // uart1SendByte(PIC_LINE);
+        // uart1SendByte(PIC_COL);
+        // uart1SendBytes(picReceive.pic, PIC_COL * PIC_LINE);
+        // screenClear();
+        // OLED_printf("ok");
+        cameraFlag = 1;
     }
 }

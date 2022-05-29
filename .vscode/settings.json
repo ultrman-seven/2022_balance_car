@@ -26,7 +26,9 @@
         "stdio.h": "c",
         "hal_gpio.h": "c",
         "ios": "c",
-        "xiosbase": "c"
+        "xiosbase": "c",
+        "font.h": "c",
+        "cmath": "c"
     },
     "cSpell.enableFiletypes": [
         "8051",

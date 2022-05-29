@@ -43,7 +43,7 @@
 #include "mpu6050.h"
 
 #define delay_ms delayMs
-#define get_ms getTimeStamp
+#define get_ms getLongTimeStamp
 #define log_i OLED_printf
 #define log_e OLED_printf
 #define min(a,b) ((a<b)?a:b)

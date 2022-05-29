@@ -12,7 +12,7 @@
 
 ErrorStatus HSE_SysClock(void)
 {
-    __IO uint32_t HSE_StartUpState = 0;
+    ErrorStatus HSE_StartUpState = ERROR;
     RCC_DeInit();
     RCC_HSEConfig(RCC_HSE_ON);
 
@@ -93,14 +93,14 @@ void globalInit(void)
     mpuDmpState = DMP_Init();
     // batteryInit();
 }
-
+extern const int8_t sinList[];
 int main(void)
 {
     void uartInit(void);
     void cameraInit(void);
     int32_t ledBright = 0;
     globalInit();
-    
+
     // uartInit();
     delayMs(2000);
     // cameraInit();
@@ -110,8 +110,9 @@ int main(void)
         if (ledBright > 10000 || ledBright == 1)
             ledBright--;
         TIM2->CCR2 = ledBright;
-        // printf("wy\n");
-        // printf("我们都爱小杰宝\r\n");
+        // if (ledBright++ == 3600)
+        //     ledBright = 0;
+        // TIM2->CCR2 = sinList[ledBright / 10] * 100;
         delay(1000);
     }
 }

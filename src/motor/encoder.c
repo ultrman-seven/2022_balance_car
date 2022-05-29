@@ -2,6 +2,7 @@
 #include "encoder.h"
 #include "oledio.h"
 #include "motor/control.h"
+#include "pid.h"
 
 //毫秒
 #define SPEED_COMPUT_PERIOD 5
