@@ -1,4 +1,4 @@
-#include "menu.h"
+﻿#include "menu.h"
 #include "motor.h"
 #include "encoder.h"
 #include "stdlib.h"
@@ -17,8 +17,8 @@ void showMotorSpeedInScreen(void) // encoder test callback function
     while (EXTI_GetITStatus(MID_KEY_EXTI_LINE) == RESET)
     {
         screenClear();
-        OLED_printf("speed:\nl:%d/r:%d", getSpeed(LEFT), getSpeed(RIGHT));
-        OLED_printf("\ncircles:\nl:%dr:%d", getCircleCount(LEFT), getCircleCount(RIGHT));
+        OLED_printf("速度:\n左:%d/右:%d", getSpeed(LEFT), getSpeed(RIGHT));
+        OLED_printf("\n圈数:\n左:%d右:%d", getCircleCount(LEFT), getCircleCount(RIGHT));
         delayMs(50);
     }
     showMenu(menuManager.getCurrentMenu());
@@ -70,8 +70,8 @@ void motorSpeedTest(void)
 }
 void motorMenuCaptionUpdate(void)
 {
-    sprintf(motorTestMenu[LEFT].caption, "left:   %d", menuVal_Speed[LEFT]);
-    sprintf(motorTestMenu[RIGHT].caption, "right:  %d", menuVal_Speed[RIGHT]);
+    sprintf(motorTestMenu[LEFT].caption, "左:  %d", menuVal_Speed[LEFT]);
+    sprintf(motorTestMenu[RIGHT].caption, "右:  %d", menuVal_Speed[RIGHT]);
 }
 
 void motorInc(void)
@@ -102,8 +102,8 @@ void speedPIDCaptionUpdate(void)
 {
     // sprintf(speedPIDMenu[LEFT].caption, "left:%d,r:%d", speedTarget[LEFT],getSpeed(LEFT));
     // sprintf(speedPIDMenu[RIGHT].caption, "right:%d,r:%d", speedTarget[RIGHT],getSpeed(RIGHT));
-    sprintf(speedPIDMenu[LEFT].caption, "left:    %d", speedTarget[LEFT]);
-    sprintf(speedPIDMenu[RIGHT].caption, "right:  %d", speedTarget[RIGHT]);
+    sprintf(speedPIDMenu[LEFT].caption, "左:  %d", speedTarget[LEFT]);
+    sprintf(speedPIDMenu[RIGHT].caption, "右:  %d", speedTarget[RIGHT]);
 }
 
 void speedPidInc(void)
@@ -138,10 +138,10 @@ void gotoSpeedPidTest(void)
 }
 
 MenuTypedef motorRelatedMenu[] = {
-    {.caption = "encoder test", .left = showMotorSpeedInScreen, .mid = NULL, .right = showMotorSpeedInScreen},
-    {.caption = "PWM test", .left = goToPwmTest, .right = goToPwmTest, .mid = goToPwmTest},
-    {.caption = "motor test", .left = gotoMotorTest, .right = gotoMotorTest, .mid = gotoMotorTest},
-    {.caption = "speed test", .left = gotoSpeedPidTest, .right = gotoSpeedPidTest, .mid = gotoSpeedPidTest},
+    {.caption = "编码器", .left = showMotorSpeedInScreen, .mid = NULL, .right = showMotorSpeedInScreen},
+    {.caption = "PWM测试", .left = goToPwmTest, .right = goToPwmTest, .mid = goToPwmTest},
+    {.caption = "开环速度", .left = gotoMotorTest, .right = gotoMotorTest, .mid = gotoMotorTest},
+    {.caption = "闭环速度", .left = gotoSpeedPidTest, .right = gotoSpeedPidTest, .mid = gotoSpeedPidTest},
     GO_BACK_MENU,
     END_OF_MENU};
 
@@ -150,21 +150,21 @@ MenuTypedef pwmTestMenu[] = {
     {.caption = menuCaptionStr2, .left = pwmDown, .right = pwmUp, .mid = motorPWM_Test},
     {.caption = menuCaptionStr3, .left = pwmDown, .right = pwmUp, .mid = motorPWM_Test},
     {.caption = menuCaptionStr4, .left = pwmDown, .right = pwmUp, .mid = motorPWM_Test},
-    {.caption = "value reset", .left = pwmReset, .right = pwmReset, .mid = pwmReset},
+    {.caption = "重置", .left = pwmReset, .right = pwmReset, .mid = pwmReset},
     GO_BACK_MENU,
     END_OF_MENU};
 
 MenuTypedef motorTestMenu[] = {
     {.caption = menuCaptionStr1, .left = motorDec, .right = motorInc, .mid = motorSpeedTest},
     {.caption = menuCaptionStr2, .left = motorDec, .right = motorInc, .mid = motorSpeedTest},
-    {.caption = "value reset", .left = motorValReset, .right = motorValReset, .mid = motorValReset},
+    {.caption = "重置", .left = motorValReset, .right = motorValReset, .mid = motorValReset},
     GO_BACK_MENU,
     END_OF_MENU};
 
 MenuTypedef speedPIDMenu[] = {
     {.caption = menuCaptionStr1, .left = speedPidDec, .right = speedPidInc, .mid = NULL},
     {.caption = menuCaptionStr2, .left = speedPidDec, .right = speedPidInc, .mid = NULL},
-    {.caption = "set speed", .left = speedPidSet, .right = speedPidSet, .mid = speedPidSet},
-    {.caption = "reset speed", .left = speedPidReset, .right = speedPidReset, .mid = speedPidReset},
+    {.caption = "设置速度", .left = speedPidSet, .right = speedPidSet, .mid = speedPidSet},
+    {.caption = "重置速度", .left = speedPidReset, .right = speedPidReset, .mid = speedPidReset},
     GO_BACK_MENU,
     END_OF_MENU};

@@ -18,6 +18,10 @@
 #endif
 #define RCC_CS RCC_AHBPeriph_GPIOB
 
+#define Flash_CS_PORT GPIOC
+#define Flash_CS_PIN GPIO_Pin_3
+#define Flash_CS Flash_CS_PORT, Flash_CS_PIN
+
 void dc_res_Init(void)
 {
     GPIO_InitTypeDef gpio;
@@ -32,13 +36,15 @@ void dc_res_Init(void)
     gpio.GPIO_Pin = RES_PIN;
     GPIO_Init(RES_PORT, &gpio);
 
-    #ifndef __NSS_HARD__
+#ifndef __NSS_HARD__
     gpio.GPIO_Pin = CS_PIN;
     GPIO_Init(CS_PORT, &gpio);
-    #endif
+#endif
 
     gpio.GPIO_Pin = DC_PIN;
     GPIO_Init(DC_PORT, &gpio);
+    gpio.GPIO_Pin = Flash_CS_PIN;
+    GPIO_Init(Flash_CS_PORT, &gpio);
 }
 
 #ifdef __SPI_HARD__
@@ -49,6 +55,7 @@ void oledInit(void)
     SPI_InitTypeDef init_spi;
 
     RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOC, ENABLE);
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);
 
     dc_res_Init();
@@ -57,25 +64,30 @@ void oledInit(void)
     GPIO_PinAFConfig(GPIOB, GPIO_PinSource14, GPIO_AF_3);
     // mosi
     GPIO_PinAFConfig(GPIOB, GPIO_PinSource13, GPIO_AF_4);
-    #ifdef __NSS_HARD__
+    // miso
+    GPIO_PinAFConfig(GPIOC, GPIO_PinSource2, GPIO_AF_1);
+#ifdef __NSS_HARD__
     // nss
     GPIO_PinAFConfig(GPIOB, GPIO_PinSource12, GPIO_AF_0);
     init_gpio.GPIO_Pin = GPIO_Pin_14 | GPIO_Pin_13 | GPIO_Pin_12;
-    #else
+#else
     init_gpio.GPIO_Pin = GPIO_Pin_14 | GPIO_Pin_13;
-    #endif
+#endif
     init_gpio.GPIO_Speed = GPIO_Speed_50MHz;
     init_gpio.GPIO_Mode = GPIO_Mode_AF_PP;
     GPIO_Init(GPIOB, &init_gpio);
+    init_gpio.GPIO_Pin = GPIO_Pin_2;
+    init_gpio.GPIO_Mode = GPIO_Mode_IPU;
+    GPIO_Init(GPIOC, &init_gpio);
 
     init_spi.SPI_Mode = SPI_Mode_Master;
     init_spi.SPI_DataSize = SPI_DataSize_8b;
     init_spi.SPI_DataWidth = SPI_DataWidth_8b;
-    #ifndef __NSS_HARD__
+#ifndef __NSS_HARD__
     init_spi.SPI_NSS = SPI_NSS_Soft;
-    #else
+#else
     init_spi.SPI_NSS = SPI_NSS_Hard;
-    #endif
+#endif
     init_spi.SPI_CPOL = SPI_CPOL_Low;
     init_spi.SPI_CPHA = SPI_CPHA_1Edge;
     init_spi.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_2;
@@ -87,32 +99,44 @@ void oledInit(void)
     SPI_BiDirectionalLineConfig(SPI2, SPI_Direction_Rx);
 }
 
+uint32_t __readWrite(uint8_t dat)
+{
+    SPI2->TXREG = dat;
+    while (!(SPI2->CSTAT & SPI_FLAG_TXEPT))
+        ;
+    while (!(SPI2->CSTAT & SPI_CSTAT_RXAVL))
+        ;
+    return (u32)SPI2->RXREG;
+}
+
 void sendCMD(uint8_t cmd)
 {
-    #ifndef __NSS_HARD__
+#ifndef __NSS_HARD__
     GPIO_ResetBits(CS);
-    #endif
+#endif
     GPIO_ResetBits(DC);
 
-    SPI_SendData(SPI2, cmd);
+    // SPI_SendData(SPI2, cmd);
+    __readWrite(cmd);
 
-    #ifndef __NSS_HARD__
+#ifndef __NSS_HARD__
     GPIO_SetBits(CS);
-    #endif
+#endif
 }
 
 void sendData(uint8_t dat)
 {
-    #ifndef __NSS_HARD__
+#ifndef __NSS_HARD__
     GPIO_ResetBits(CS);
-    #endif
+#endif
     GPIO_SetBits(DC);
 
-    SPI_SendData(SPI2, dat);
+    // SPI_SendData(SPI2, dat);
+    __readWrite(dat);
 
-    #ifndef __NSS_HARD__
+#ifndef __NSS_HARD__
     GPIO_SetBits(CS);
-    #endif
+#endif
 }
 
 #else
@@ -268,4 +292,19 @@ void PictureContrastDisplay(const uint8_t *ptr_pic, uint8_t colStart, uint8_t pa
         for (column = 0; column < col; column++) // column loop
             sendData(~*ptr_pic++);
     }
+}
+
+void w25qRead(uint32_t add, uint8_t *buf, uint16_t len)
+{
+    u32_split address;
+    address.val = add;
+
+    GPIO_ResetBits(Flash_CS);
+    __readWrite(0x03);
+    __readWrite(address.unit[2]);
+    __readWrite(address.unit[1]);
+    __readWrite(address.unit[0]);
+    while (len--)
+        *buf++ = __readWrite(0xff);
+    GPIO_SetBits(Flash_CS);
 }

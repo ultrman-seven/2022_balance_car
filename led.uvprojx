@@ -609,11 +609,6 @@
               <FilePath>.\src\hardware\CH9141.c</FilePath>
             </File>
             <File>
-              <FileName>AT93C46.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\storage\AT93C46.c</FilePath>
-            </File>
-            <File>
               <FileName>falsh.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\storage\falsh.c</FilePath>

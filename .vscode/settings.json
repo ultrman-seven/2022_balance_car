@@ -28,7 +28,8 @@
         "ios": "c",
         "xiosbase": "c",
         "font.h": "c",
-        "cmath": "c"
+        "cmath": "c",
+        "flash.h": "c"
     },
     "cSpell.enableFiletypes": [
         "8051",

@@ -1,4 +1,4 @@
-#include "common.h"
+﻿#include "common.h"
 #include "pid.h"
 #include "menu.h"
 #include "stdio.h"
@@ -29,7 +29,7 @@ void generalParaCaptionUpdate(void)
     sprintf(menu[1].caption, "Ki:  %.1f", value);
     value = menuVal_32_Buf[2] / 10.0;
     sprintf(menu[2].caption, "Kd:  %.1f", value);
-    sprintf(menu[3].caption, "val:  %d", menuVal_32_Buf[3]);
+    sprintf(menu[3].caption, "值:  %d", menuVal_32_Buf[3]);
 }
 
 void generalParaSet(PID_paraTypdef *pid)
@@ -117,10 +117,10 @@ void gotoRamp(void)
 MenuTypedef speedParaMenu[] = {
     GeneralPidParaAdjMenu,
     {.caption = menuCaptionStr4, .mid = setSpeed, .left = generalDec, .right = generalInc},
-    {.caption = "apply", .left = speedSet, .mid = speedSet, .right = speedSet},
-    {.caption = "sine", .left = gotoSine, .right = gotoSine, .mid = NULL},
-    {.caption = "ramp", .left = gotoRamp, .right = gotoRamp, .mid = NULL},
-    {.caption = "stop test", .left = testStop, .right = testStop, .mid = testStop},
+    {.caption = "参数应用", .left = speedSet, .mid = speedSet, .right = speedSet},
+    {.caption = "正弦输入", .left = gotoSine, .right = gotoSine, .mid = NULL},
+    {.caption = "斜坡输入", .left = gotoRamp, .right = gotoRamp, .mid = NULL},
+    {.caption = "停止测试", .left = testStop, .right = testStop, .mid = testStop},
     GO_BACK_MENU,
     END_OF_MENU};
 
@@ -144,10 +144,10 @@ void mpu6050DmpTest(void);
 MenuTypedef angleParaMenu[] = {
    GeneralPidParaAdjMenu,
     {.caption = menuCaptionStr4, .left = generalDec, .mid = b_s_set, .right = generalInc},
-    {.caption = "apply", .left = angleSet, .mid = angleSet, .right = angleSet},
-    {.caption = "balance angle", .left = mpu6050DmpTest, .mid = NULL, .right = mpu6050DmpTest},
-    {.caption = "start", .left = angleStart, .mid = angleStart, .right = angleStart},
-    {.caption = "stop", .left = testStop, .right = testStop, .mid = testStop},
+    {.caption = "参数应用", .left = angleSet, .mid = angleSet, .right = angleSet},
+    {.caption = "平衡点调整", .left = mpu6050DmpTest, .mid = NULL, .right = mpu6050DmpTest},
+    {.caption = "开始", .left = angleStart, .mid = angleStart, .right = angleStart},
+    {.caption = "结束", .left = testStop, .right = testStop, .mid = testStop},
     GO_BACK_MENU,
     END_OF_MENU};
 
@@ -178,9 +178,9 @@ void picStart(void)
 MenuTypedef picMenu[] = {
    GeneralPidParaAdjMenu,
     {.caption = menuCaptionStr4, .left = NULL, .mid = NULL, .right = NULL},
-    {.caption = "apply", .left = picSet, .mid = picSet, .right = picSet},
-    {.caption = "start", .left = picStart, .mid = testStop, .right = picStart},
-    {.caption = "stop", .left = testStop, .right = testStop, .mid = testStop},
+    {.caption = "参数应用", .left = picSet, .mid = picSet, .right = picSet},
+    {.caption = "开始测试", .left = picStart, .mid = testStop, .right = picStart},
+    {.caption = "停止测试", .left = testStop, .right = testStop, .mid = testStop},
     GO_BACK_MENU,
     END_OF_MENU};
 
@@ -216,10 +216,10 @@ void s_h_set_speed(void)
 MenuTypedef speedHoldMenu[] = {
     GeneralPidParaAdjMenu,
     {.caption = menuCaptionStr4, .left = generalDec, .right = generalInc, .mid = s_h_set_speed},
-    {.caption = "apply", .left = s_h_Set, .mid = s_h_Set, .right = s_h_Set},
-    {.caption = "balance angle", .left = mpu6050DmpTest, .mid = NULL, .right = mpu6050DmpTest},
-    {.caption = "start", .left = s_h_Start, .mid = s_h_Start, .right = s_h_Start},
-    {.caption = "stop", .left = testStop, .right = testStop, .mid = testStop},
+    {.caption = "参数应用", .left = s_h_Set, .mid = s_h_Set, .right = s_h_Set},
+    {.caption = "平衡点调整", .left = mpu6050DmpTest, .mid = NULL, .right = mpu6050DmpTest},
+    {.caption = "开始", .left = s_h_Start, .mid = s_h_Start, .right = s_h_Start},
+    {.caption = "停止", .left = testStop, .right = testStop, .mid = testStop},
     GO_BACK_MENU,
     END_OF_MENU};
 
@@ -253,10 +253,10 @@ void accTest(void)
 MenuTypedef accPidMenu[] = {
    GeneralPidParaAdjMenu,
     {.caption = menuCaptionStr4, .left = generalDec, .right = generalInc, .mid = accSet},
-    {.caption = "apply", .left = accSet, .mid = accSet, .right = accSet},
+    {.caption = "参数应用", .left = accSet, .mid = accSet, .right = accSet},
     // {.caption = "balance angle", .left = mpu6050DmpTest, .mid = NULL, .right = mpu6050DmpTest},
-    {.caption = "start", .left = accTest, .mid = accTest, .right = accTest},
-    {.caption = "stop", .left = testStop, .right = testStop, .mid = testStop},
+    {.caption = "开始", .left = accTest, .mid = accTest, .right = accTest},
+    {.caption = "停止", .left = testStop, .right = testStop, .mid = testStop},
     GO_BACK_MENU,
     END_OF_MENU};
 
@@ -309,12 +309,12 @@ void pidParaLoad(void)
 }
 
 MenuTypedef paraAdjMenu[] = {
-    {.caption = "speed", .left = gotoSpeedPara, .mid = gotoSpeedPara, .right = gotoSpeedPara},
-    {.caption = "acceleration", .left = gotoAccMenu, .mid = gotoAccMenu, .right = gotoAccMenu},
-    {.caption = "angle", .left = gotoAnglePara, .mid = gotoAnglePara, .right = gotoAnglePara},
-    {.caption = "camera", .left = gotoPicPara, .mid = gotoPicPara, .right = gotoPicPara},
-    {.caption = "speed hold", .left = gotoSpeedHold, .mid = gotoSpeedHold, .right = gotoSpeedHold},
-    {.caption = "data save", .left = pidParaSave, .right = pidParaSave, .mid = pidParaSave},
-    {.caption = "data load", .left = pidParaLoad, .right = pidParaLoad, .mid = pidParaLoad},
+    {.caption = "速度环", .left = gotoSpeedPara, .mid = gotoSpeedPara, .right = gotoSpeedPara},
+    {.caption = "加速度环", .left = gotoAccMenu, .mid = gotoAccMenu, .right = gotoAccMenu},
+    {.caption = "角度环", .left = gotoAnglePara, .mid = gotoAnglePara, .right = gotoAnglePara},
+    {.caption = "摄像头", .left = gotoPicPara, .mid = gotoPicPara, .right = gotoPicPara},
+    {.caption = "平衡调速环", .left = gotoSpeedHold, .mid = gotoSpeedHold, .right = gotoSpeedHold},
+    {.caption = "保存", .left = pidParaSave, .right = pidParaSave, .mid = pidParaSave},
+    {.caption = "载入", .left = pidParaLoad, .right = pidParaLoad, .mid = pidParaLoad},
     GO_BACK_MENU,
     END_OF_MENU};

@@ -1,4 +1,4 @@
-#include "menu.h"
+﻿#include "menu.h"
 #include "stdlib.h"
 #include "oledio.h"
 #include "beep.h"
@@ -201,24 +201,24 @@ void gotoParaMenu(void)
 }
 
 MenuTypedef mainMenu[] = {
-    {.caption = "para adj", .left = gotoParaMenu, .right = gotoParaMenu, .right = gotoParaMenu},
-    {.caption = "test", .mid = gotoTests, .right = gotoTests, .left = gotoTests},
+    {.caption = "调参", .left = gotoParaMenu, .right = gotoParaMenu, .right = gotoParaMenu},
+    {.caption = "功能测试", .mid = gotoTests, .right = gotoTests, .left = gotoTests},
     {.caption = "run", .mid = runStart, .right = runStart, .left = runStart},
-    {.caption = "sys state", .left = getSysState, .right = getSysState, .mid = getSysState},
+    {.caption = "系统状态", .left = getSysState, .right = getSysState, .mid = getSysState},
     END_OF_MENU};
 void cameraSetOn(void);
 void cameraSetOff(void);
 MenuTypedef testMenu[] = {
-    {.caption = "beep test", .left = beepTest, .mid = beepTest, .right = beepTest},
-    {.caption = "mpu6050 test", .left = gotoMPU6050Test, .right = gotoMPU6050Test, .mid = gotoMPU6050Test},
-    {.caption = "motor", .left = gotoMotorRelatedTest, .mid = gotoMotorRelatedTest, .right = gotoMotorRelatedTest},
-    {.caption = "camera", .left = cameraSetOn, .right = cameraSetOn, .mid = cameraSetOff},
+    {.caption = "蜂鸣器", .left = beepTest, .mid = beepTest, .right = beepTest},
+    {.caption = "mpu6050测试", .left = gotoMPU6050Test, .right = gotoMPU6050Test, .mid = gotoMPU6050Test},
+    {.caption = "电机", .left = gotoMotorRelatedTest, .mid = gotoMotorRelatedTest, .right = gotoMotorRelatedTest},
+    {.caption = "摄像头", .left = cameraSetOn, .right = cameraSetOn, .mid = cameraSetOff},
     GO_BACK_MENU,
     END_OF_MENU};
 
 MenuTypedef mpuTestMenu[] = {
     {.caption = "mpu state:", .left = NULL, .mid = NULL, .right = NULL},
-    {.caption = "DMP test", .left = mpu6050DmpTest, .right = mpu6050DmpTest, .mid = NULL},
-    {.caption = "Data test", .left = mpu6050DataTest, .right = mpu6050DataTest, .mid = NULL},
+    {.caption = "DMP 测试", .left = mpu6050DmpTest, .right = mpu6050DmpTest, .mid = NULL},
+    {.caption = "基础数据读写", .left = mpu6050DataTest, .right = mpu6050DataTest, .mid = NULL},
     GO_BACK_MENU,
     END_OF_MENU};

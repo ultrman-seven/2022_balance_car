@@ -1,4 +1,4 @@
-#ifndef __WY_LIB_MENU_H__
+﻿#ifndef __WY_LIB_MENU_H__
 #define __WY_LIB_MENU_H__
 
 #include "common.h"
@@ -19,7 +19,7 @@ typedef struct
 
 #define GO_BACK_MENU                                                                                       \
     {                                                                                                      \
-        .caption = "go back", .mid = goBackToLastMenu, .right = goBackToLastMenu, .left = goBackToLastMenu \
+        .caption = "返回上一级", .mid = goBackToLastMenu, .right = goBackToLastMenu, .left = goBackToLastMenu \
     }
 #define END_OF_MENU                                               \
     {                                                             \
