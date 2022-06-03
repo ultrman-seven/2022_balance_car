@@ -15,6 +15,8 @@ enum ctrlModes
     rockerMode, //老头环测试
     picAngularSpeedTestMode,
     balanceModifyMode,
+    accPidMode,
+    accPhysicalMode,
     NullMode = 20
 };
 extern enum ctrlModes pidMode;

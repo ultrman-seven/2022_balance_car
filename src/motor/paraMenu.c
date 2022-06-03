@@ -20,14 +20,16 @@ extern MenuTypedef speedParaMenu[];
 //     sprintf(menu[1].caption, "Ki:  %d", pid->Ki);
 //     sprintf(menu[2].caption, "Kd:  %d", pid->Kd);
 // }
-void generalParaCaptionUpdate(MenuTypedef *menu)
+void generalParaCaptionUpdate(void)
 {
     float value = 0;
+    MenuTypedef *menu = menuManager.getCurrentMenu();
     sprintf(menu[0].caption, "Kp:  %d", menuVal_32_Buf[0]);
     value = menuVal_32_Buf[1] / 10.0;
     sprintf(menu[1].caption, "Ki:  %.1f", value);
     value = menuVal_32_Buf[2] / 10.0;
     sprintf(menu[2].caption, "Kd:  %.1f", value);
+    sprintf(menu[3].caption, "val:  %d", menuVal_32_Buf[3]);
 }
 
 void generalParaSet(PID_paraTypdef *pid)
@@ -37,23 +39,22 @@ void generalParaSet(PID_paraTypdef *pid)
     pid->Kd = menuVal_32_Buf[2];
 }
 
-void speedParaCaptionUpdate(void)
+void generalInc(void)
 {
-    generalParaCaptionUpdate(speedParaMenu);
-    sprintf(menuCaptionStr4, "speed:  %d", menuVal_32_Buf[3]);
+    valueAdjust_32(RIGHT_KEY, menuVal_32_Buf, 300, -300, 1, generalParaCaptionUpdate);
 }
 
-void speedInc(void)
+void generalDec(void)
 {
-    // valueAdjust_u16(RIGHT_KEY, menuVal_u16_Buf, 200, 1, speedParaCaptionUpdate);
-    valueAdjust_32(RIGHT_KEY, menuVal_32_Buf, 200, -200, 1, speedParaCaptionUpdate);
+    valueAdjust_32(LEFT_KEY, menuVal_32_Buf, 300, -300, 1, generalParaCaptionUpdate);
 }
 
-void speedDec(void)
-{
-    // valueAdjust_u16(LEFT_KEY, menuVal_u16_Buf, 200, 1, speedParaCaptionUpdate);
-    valueAdjust_32(LEFT_KEY, menuVal_32_Buf, 200, -200, 1, speedParaCaptionUpdate);
-}
+#define GeneralPidParaAdjMenu                                                               \
+    {.caption = menuCaptionStr1, .left = generalDec, .mid = NULL, .right = generalInc},     \
+        {.caption = menuCaptionStr2, .left = generalDec, .mid = NULL, .right = generalInc}, \
+    {                                                                                       \
+        .caption = menuCaptionStr3, .left = generalDec, .mid = NULL, .right = generalInc    \
+    }
 
 void speedSet(void)
 {
@@ -63,21 +64,14 @@ void speedSet(void)
 
 void gotoSpeedPara(void)
 {
+    gotoNextMenu(speedParaMenu);
     menuVal_32_Buf[0] = speedPidLeft.Kp;
     menuVal_32_Buf[1] = speedPidLeft.Ki;
     menuVal_32_Buf[2] = speedPidLeft.Kd;
-    speedParaCaptionUpdate();
-    gotoNextMenu(speedParaMenu);
+    generalParaCaptionUpdate();
+    showMenu(menuManager.getCurrentMenu());
 }
 
-void speed_inc(void)
-{
-    valueAdjust_32(RIGHT_KEY, menuVal_32_Buf, 300, -300, 10, speedParaCaptionUpdate);
-}
-void speed_dec(void)
-{
-    valueAdjust_32(LEFT_KEY, menuVal_32_Buf, 300, -300, 10, speedParaCaptionUpdate);
-}
 void setSpeed(void)
 {
     motorSetSpeed(LEFT, menuVal_32_Buf[3]);
@@ -89,6 +83,7 @@ void testStop(void)
     setPidMode(NullMode);
     setPower(0, LEFT);
     setPower(0, RIGHT);
+    speedPidLeft.targetVal = speedPidRight.targetVal = 0;
     cameraSetOff();
 }
 extern const int8_t sinList[];
@@ -120,34 +115,16 @@ void gotoRamp(void)
     testStop();
 }
 MenuTypedef speedParaMenu[] = {
-    {.caption = menuCaptionStr1, .left = speedDec, .mid = NULL, .right = speedInc},
-    {.caption = menuCaptionStr2, .left = speedDec, .mid = NULL, .right = speedInc},
-    {.caption = menuCaptionStr3, .left = speedDec, .mid = NULL, .right = speedInc},
-    {.caption = menuCaptionStr4, .mid = setSpeed, .left = speed_dec, .right = speed_inc},
+    GeneralPidParaAdjMenu,
+    {.caption = menuCaptionStr4, .mid = setSpeed, .left = generalDec, .right = generalInc},
+    {.caption = "apply", .left = speedSet, .mid = speedSet, .right = speedSet},
     {.caption = "sine", .left = gotoSine, .right = gotoSine, .mid = NULL},
     {.caption = "ramp", .left = gotoRamp, .right = gotoRamp, .mid = NULL},
     {.caption = "stop test", .left = testStop, .right = testStop, .mid = testStop},
-    {.caption = "apply", .left = speedSet, .mid = speedSet, .right = speedSet},
     GO_BACK_MENU,
     END_OF_MENU};
 
 extern MenuTypedef angleParaMenu[];
-void angleParaCaptionUpdate(void)
-{
-    generalParaCaptionUpdate(angleParaMenu);
-}
-
-void angleInc(void)
-{
-    // valueAdjust_u16(RIGHT_KEY, menuVal_u16_Buf, 200, 1, speedParaCaptionUpdate);
-    valueAdjust_32(RIGHT_KEY, menuVal_32_Buf, 200, -200, 1, speedParaCaptionUpdate);
-}
-
-void angleDec(void)
-{
-    // valueAdjust_u16(LEFT_KEY, menuVal_u16_Buf, 200, 1, speedParaCaptionUpdate);
-    valueAdjust_32(LEFT_KEY, menuVal_32_Buf, 200, -200, 1, speedParaCaptionUpdate);
-}
 
 void angleSet(void)
 {
@@ -159,30 +136,14 @@ void angleStart(void)
     setPidMode(angleMode);
 }
 
-void balanceSpeedCaptionUpdate(void)
-{
-    generalParaCaptionUpdate(angleParaMenu);
-    sprintf(menuCaptionStr4, "speed:  %d", menuVal_32_Buf[3]);
-}
-
-void b_s_dec(void)
-{
-    valueAdjust_32(LEFT_KEY, menuVal_32_Buf, 200, -200, 1, balanceSpeedCaptionUpdate);
-}
-void b_s_inc(void)
-{
-    valueAdjust_32(RIGHT_KEY, menuVal_32_Buf, 200, -200, 1, balanceSpeedCaptionUpdate);
-}
 void b_s_set(void)
 {
     setBaseSpeed(menuVal_32_Buf[3]);
 }
 void mpu6050DmpTest(void);
 MenuTypedef angleParaMenu[] = {
-    {.caption = menuCaptionStr1, .left = angleDec, .mid = NULL, .right = angleInc},
-    {.caption = menuCaptionStr2, .left = angleDec, .mid = NULL, .right = angleInc},
-    {.caption = menuCaptionStr3, .left = angleDec, .mid = NULL, .right = angleInc},
-    {.caption = menuCaptionStr4, .left = b_s_dec, .mid = b_s_set, .right = b_s_inc},
+   GeneralPidParaAdjMenu,
+    {.caption = menuCaptionStr4, .left = generalDec, .mid = b_s_set, .right = generalInc},
     {.caption = "apply", .left = angleSet, .mid = angleSet, .right = angleSet},
     {.caption = "balance angle", .left = mpu6050DmpTest, .mid = NULL, .right = mpu6050DmpTest},
     {.caption = "start", .left = angleStart, .mid = angleStart, .right = angleStart},
@@ -192,32 +153,16 @@ MenuTypedef angleParaMenu[] = {
 
 void gotoAnglePara(void)
 {
+    gotoNextMenu(angleParaMenu);
     menuVal_32_Buf[0] = anglePid.Kp;
     menuVal_32_Buf[1] = anglePid.Ki;
     menuVal_32_Buf[2] = anglePid.Kd;
-    angleParaCaptionUpdate();
-    balanceSpeedCaptionUpdate();
-    gotoNextMenu(angleParaMenu);
+    generalParaCaptionUpdate();
+    showMenu(menuManager.getCurrentMenu());
 }
 
 extern PID_paraTypdef picTurn;
 extern MenuTypedef picMenu[];
-
-void picParaCaptionUpdate(void)
-{
-    generalParaCaptionUpdate(picMenu);
-}
-void picInc(void)
-{
-    // valueAdjust_u16(RIGHT_KEY, menuVal_u16_Buf, 200, 1, speedParaCaptionUpdate);
-    valueAdjust_32(RIGHT_KEY, menuVal_32_Buf, 200, -200, 1, picParaCaptionUpdate);
-}
-
-void picDec(void)
-{
-    // valueAdjust_u16(LEFT_KEY, menuVal_u16_Buf, 200, 1, speedParaCaptionUpdate);
-    valueAdjust_32(LEFT_KEY, menuVal_32_Buf, 200, -200, 1, picParaCaptionUpdate);
-}
 
 void picSet(void)
 {
@@ -231,9 +176,8 @@ void picStart(void)
 }
 
 MenuTypedef picMenu[] = {
-    {.caption = menuCaptionStr1, .left = picDec, .mid = NULL, .right = picInc},
-    {.caption = menuCaptionStr2, .left = picDec, .mid = NULL, .right = picInc},
-    {.caption = menuCaptionStr3, .left = picDec, .mid = NULL, .right = picInc},
+   GeneralPidParaAdjMenu,
+    {.caption = menuCaptionStr4, .left = NULL, .mid = NULL, .right = NULL},
     {.caption = "apply", .left = picSet, .mid = picSet, .right = picSet},
     {.caption = "start", .left = picStart, .mid = testStop, .right = picStart},
     {.caption = "stop", .left = testStop, .right = testStop, .mid = testStop},
@@ -242,30 +186,17 @@ MenuTypedef picMenu[] = {
 
 void gotoPicPara(void)
 {
+    gotoNextMenu(picMenu);
     menuVal_32_Buf[0] = picTurn.Kp;
     menuVal_32_Buf[1] = picTurn.Ki;
     menuVal_32_Buf[2] = picTurn.Kd;
-    angleParaCaptionUpdate();
-    gotoNextMenu(picMenu);
+    generalParaCaptionUpdate();
+    showMenu(menuManager.getCurrentMenu());
 }
 
 extern PID_paraTypdef speedCtrlPid;
 extern MenuTypedef speedHoldMenu[];
 
-void speedHoldCaptionUpdate(void)
-{
-    generalParaCaptionUpdate(speedHoldMenu);
-    sprintf(menuCaptionStr4, "speed: %d", menuVal_32_Buf[3]);
-}
-void s_h_Inc(void)
-{
-    valueAdjust_32(RIGHT_KEY, menuVal_32_Buf, 200, -200, 1, speedHoldCaptionUpdate);
-}
-
-void s_h_Dec(void)
-{
-    valueAdjust_32(LEFT_KEY, menuVal_32_Buf, 200, -200, 1, speedHoldCaptionUpdate);
-}
 
 void s_h_Set(void)
 {
@@ -283,10 +214,8 @@ void s_h_set_speed(void)
 }
 
 MenuTypedef speedHoldMenu[] = {
-    {.caption = menuCaptionStr1, .left = s_h_Dec, .mid = NULL, .right = s_h_Inc},
-    {.caption = menuCaptionStr2, .left = s_h_Dec, .mid = NULL, .right = s_h_Inc},
-    {.caption = menuCaptionStr3, .left = s_h_Dec, .mid = NULL, .right = s_h_Inc},
-    {.caption = menuCaptionStr4, .left = s_h_Dec, .right = s_h_Inc, .mid = s_h_set_speed},
+    GeneralPidParaAdjMenu,
+    {.caption = menuCaptionStr4, .left = generalDec, .right = generalInc, .mid = s_h_set_speed},
     {.caption = "apply", .left = s_h_Set, .mid = s_h_Set, .right = s_h_Set},
     {.caption = "balance angle", .left = mpu6050DmpTest, .mid = NULL, .right = mpu6050DmpTest},
     {.caption = "start", .left = s_h_Start, .mid = s_h_Start, .right = s_h_Start},
@@ -296,13 +225,53 @@ MenuTypedef speedHoldMenu[] = {
 
 void gotoSpeedHold(void)
 {
+    gotoNextMenu(speedHoldMenu);
     menuVal_32_Buf[0] = speedCtrlPid.Kp;
     menuVal_32_Buf[1] = speedCtrlPid.Ki;
     menuVal_32_Buf[2] = speedCtrlPid.Kd;
     menuVal_32_Buf[3] = speedCtrlPid.targetVal;
-    speedHoldCaptionUpdate();
-    gotoNextMenu(speedHoldMenu);
+    generalParaCaptionUpdate();
+    showMenu(menuManager.getCurrentMenu());
 }
+
+extern MenuTypedef accPidMenu[];
+extern PID_paraTypdef accPidLeft;
+extern PID_paraTypdef accPidRight;
+
+void accSet(void)
+{
+    generalParaSet(&accPidLeft);
+    generalParaSet(&accPidRight);
+    accPidLeft.targetVal = menuVal_32_Buf[3];
+    accPidRight.targetVal = menuVal_32_Buf[3];
+}
+void accTest(void)
+{
+    setPidMode(accPidMode);
+}
+
+MenuTypedef accPidMenu[] = {
+   GeneralPidParaAdjMenu,
+    {.caption = menuCaptionStr4, .left = generalDec, .right = generalInc, .mid = accSet},
+    {.caption = "apply", .left = accSet, .mid = accSet, .right = accSet},
+    // {.caption = "balance angle", .left = mpu6050DmpTest, .mid = NULL, .right = mpu6050DmpTest},
+    {.caption = "start", .left = accTest, .mid = accTest, .right = accTest},
+    {.caption = "stop", .left = testStop, .right = testStop, .mid = testStop},
+    GO_BACK_MENU,
+    END_OF_MENU};
+
+void gotoAccMenu(void)
+{
+    gotoNextMenu(accPidMenu);
+    menuVal_32_Buf[0] = accPidLeft.Kp;
+    menuVal_32_Buf[1] = accPidLeft.Ki;
+    menuVal_32_Buf[2] = accPidLeft.Kd;
+    menuVal_32_Buf[3] = accPidLeft.targetVal;
+    generalParaCaptionUpdate();
+    showMenu(menuManager.getCurrentMenu());
+}
+
+// belows are about data loading and saving
 
 void loadBuf2PidPara(uint32_t *buf, PID_paraTypdef *pid)
 {
@@ -341,6 +310,7 @@ void pidParaLoad(void)
 
 MenuTypedef paraAdjMenu[] = {
     {.caption = "speed", .left = gotoSpeedPara, .mid = gotoSpeedPara, .right = gotoSpeedPara},
+    {.caption = "acceleration", .left = gotoAccMenu, .mid = gotoAccMenu, .right = gotoAccMenu},
     {.caption = "angle", .left = gotoAnglePara, .mid = gotoAnglePara, .right = gotoAnglePara},
     {.caption = "camera", .left = gotoPicPara, .mid = gotoPicPara, .right = gotoPicPara},
     {.caption = "speed hold", .left = gotoSpeedHold, .mid = gotoSpeedHold, .right = gotoSpeedHold},

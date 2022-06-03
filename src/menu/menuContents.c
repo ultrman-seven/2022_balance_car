@@ -102,9 +102,12 @@ void mpu6050DataTest(void)
         screenClear();
         // OLED_printf("t:%d", Read_Temperature());
         // OLED_printf("gy:%d", gyro[1]);
-        OLED_printf("accel,p:%.2f\nx: %d\ny: %d\nz: %d", p, accel[0] - 164 * quickSin(p * 10), accel[1], accel[2] + 164 * quickCos(p * 10));
-        printf("r=%d\r\n", accel[0] - 164 * quickSin(p * 10));
-        delayMs(10);
+        OLED_printf(
+            "accel,p:%.2f\nx: %d\ny: %d\nz: %d", p,
+            accel[0] + 500 - 168 * quickSin(p * 10),
+            accel[1], accel[2] + 164 * quickCos(p * 10));
+        printf("r=%d\r\n", accel[0] + 500 - 168 * quickSin(p * 10));
+        delayMs(5);
     }
     showMenu(menuManager.getCurrentMenu());
 }
