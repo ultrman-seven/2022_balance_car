@@ -16,7 +16,7 @@ void menuInit(void)
     screenClear();
     keyInterruptInit();
     menuManager.append(mainMenu);
-    // showMenu();
+    showMenu(menuManager.getCurrentMenu());
 }
 
 void showMenu(MenuTypedef *menuNode)

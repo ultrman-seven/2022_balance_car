@@ -34,9 +34,9 @@
 #include "quickSin.h"
 
 int32_t balancePoint = -216;
-int32_t baseSpeed = 0;
+int32_t baseSpeed = 50;
 enum ctrlModes pidMode = NullMode; // pwmMode;
-int32_t accOutput = 0;
+float accOutput = 0.0;
 PID_paraTypdef speedPidLeft = {
     .Kp = 25, .Ki = 25, .Kd = 7, .integral = 0, .proportionLast = 0, .proportionLastLast = 0, .targetVal = 0};
 PID_paraTypdef speedPidRight = {
@@ -168,9 +168,9 @@ void pidUpdateFunction(void)
         //     pidIncrementalCtrlUpdate(acc, &accPidRight) / 10;
 
         //角度 -pid-> 加速度 --> 速度
-        // accOutput = pidCtrlAngle(pitch * 10) / 1000;
-        // speedPidLeft.targetVal += accOutput;
-        // speedPidRight.targetVal += accOutput;
+        // accOutput += pidCtrlAngle(pitch * 10) / 10.0;
+        // speedPidLeft.targetVal = accOutput;
+        // speedPidRight.targetVal = accOutput;
 
         speedPidLeft.targetVal += turnSpeed;
         speedPidRight.targetVal -= turnSpeed;
@@ -269,6 +269,40 @@ void pidUpdateFunction(void)
         setPower(pwmRight, RIGHT);
         printf("r=%d,c=%d,s=%d\r\n", accPidLeft.targetVal, acc, speedPidLeft.targetVal);
         break;
+    case angleMode_accOutput:
+            do
+        {
+            Read_DMP(&pitch, &r, &y);
+        } while (pitch < 0.000001 && pitch > -0.000001);
+        // speedPidLeft.targetVal = speedPidRight.targetVal = pidCtrlUpdate(pitch * 10, &anglePid) / 10;
+
+        // balanceModify += pidIncrementalCtrlUpdate(-1 * (accel[0] - 164 * quickSin(pitch * 10)) / 1000, &findAnglePid) / 4;
+        // balanceModify -= pidIncrementalCtrlUpdate((getSpeed(LEFT) + getSpeed(RIGHT)) / 2, &speedCtrlPid)/10;
+        anglePid.targetVal = balancePoint;
+
+        //角度 -pid-> 加速度 --> 速度
+        accOutput = pidCtrlAngle(pitch * 10) / 1000;
+        speedPidLeft.targetVal += accOutput;
+        speedPidRight.targetVal += accOutput;
+
+        speedPidLeft.targetVal += turnSpeed;
+        speedPidRight.targetVal -= turnSpeed;
+        if (speedPidLeft.targetVal > 500)
+            speedPidLeft.targetVal = 500;
+        if (speedPidLeft.targetVal < -500)
+            speedPidLeft.targetVal = -500;
+        if (speedPidRight.targetVal > 500)
+            speedPidRight.targetVal = 500;
+        if (speedPidRight.targetVal < -500)
+            speedPidRight.targetVal = -500;
+        pwmLeft = pwmLeft + pidIncrementalCtrlUpdate(getSpeed(LEFT), &speedPidLeft) / 10;
+        pwmRight = pwmRight + pidIncrementalCtrlUpdate(getSpeed(RIGHT), &speedPidRight) / 10;
+        setPower(pwmLeft, LEFT);
+        setPower(pwmRight, RIGHT);
+        // printf("p=%.1f,a=%.1f\r\n", p, pitch);
+        // float p = anglePid.targetVal / 10.0;
+        // printf("a=%d,r=%d\r\n", acc,speedPidLeft.targetVal);
+    break;
     default:
         break;
     }

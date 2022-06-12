@@ -88,7 +88,8 @@ void __DMA_init(void)
     NVIC_Init(&nvic);
 
     dma.DMA_M2M = DISABLE;
-    dma.DMA_Mode = DMA_Mode_Normal;
+    // dma.DMA_Mode = DMA_Mode_Normal;
+    dma.DMA_Mode = DMA_Mode_Circular;
     dma.DMA_BufferSize = PIC_COL * PIC_LINE;
     dma.DMA_DIR = DMA_DIR_PeripheralSRC;
     dma.DMA_MemoryBaseAddr = (uint32_t) & (picReceive.pic);
@@ -166,7 +167,7 @@ void cameraInit(void)
     __uart1Init();
     __cameraConfig(SET_COL, PIC_COL);
     __cameraConfig(SET_ROW, PIC_LINE);
-    __cameraConfig(FPS, 2);
+    __cameraConfig(FPS, 20);
     __cameraConfig(INIT, 0);
     __DMA_init();
     __TIM2PclkInit();
@@ -180,13 +181,13 @@ void cameraInit(void)
     nvic.NVIC_IRQChannel = EXTI4_15_IRQn;
     NVIC_Init(&nvic);
 
-    SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOD, EXTI_PinSource7);
+    SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOD, EXTI_PinSource4);
     SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOD, EXTI_PinSource5);
 
     gpio.GPIO_Speed = GPIO_Speed_50MHz;
     gpio.GPIO_Mode = GPIO_Mode_IN_FLOATING;
     // gpio.GPIO_Mode = GPIO_Mode_IPU;
-    gpio.GPIO_Pin = GPIO_Pin_7 | GPIO_Pin_5;
+    gpio.GPIO_Pin = GPIO_Pin_4 | GPIO_Pin_5;
     GPIO_Init(GPIOD, &gpio);
 
     //接收数据
@@ -196,7 +197,7 @@ void cameraInit(void)
     exti.EXTI_LineCmd = ENABLE;
     exti.EXTI_Mode = EXTI_Mode_Interrupt;
     exti.EXTI_Trigger = EXTI_Trigger_Falling;
-    exti.EXTI_Line = EXTI_Line7 | EXTI_Line5;
+    exti.EXTI_Line = EXTI_Line4 | EXTI_Line5;
     EXTI_Init(&exti);
 }
 
@@ -215,6 +216,7 @@ void cameraSetOn(void)
     cameraInit();
     // screenClear();
     cameraFlag = 1;
+    picReceive.state = 1;
 }
 void cameraSetOff(void)
 {
@@ -223,23 +225,23 @@ void cameraSetOff(void)
 
 void v_int(void)
 {
-    // screenClear();
-    // OLED_print("v\n");
+    // if (picReceive.state)
+    // {
+    //     __DMA_init();
+    //     picReceive.state = 0;
+    // }
+    // else
+    // {
+    //     // DMA1_Channel5->CNDTR = PIC_COL * PIC_LINE;
+    //     DMA_Cmd(DMA1_Channel5, ENABLE);
+    //     // uart1SendBytes(pic_FLAG_BYTES, 6);
+    //     // uart1SendByte(PIC_LINE);
+    //     // uart1SendByte(PIC_COL);
+    //     if (cameraFlag)
+    //         picReceive.state = 1;
+    // }
     if (picReceive.state)
-    {
-        __DMA_init();
-        picReceive.state = 0;
-    }
-    else
-    {
-        // DMA1_Channel5->CNDTR = PIC_COL * PIC_LINE;
         DMA_Cmd(DMA1_Channel5, ENABLE);
-        // uart1SendBytes(pic_FLAG_BYTES, 6);
-        // uart1SendByte(PIC_LINE);
-        // uart1SendByte(PIC_COL);
-        if (cameraFlag)
-            picReceive.state = 1;
-    }
 }
 
 void imgGray2Bin(uint8_t *img, uint8_t l, uint8_t c);
@@ -252,21 +254,25 @@ void DMA1_Channel4_5_IRQHandler(void)
     if (DMA_GetITStatus(DMA1_IT_TC5) == SET)
     {
         uint32_t l;
-        cameraFlag = 0;
-        DMA_ClearITPendingBit(DMA1_IT_TC5);
         DMA_Cmd(DMA1_Channel5, DISABLE);
-        imgGray2Bin(picReceive.pic, PIC_LINE, PIC_COL);
-        printPic();
-        l = findPointCenter(picReceive.pic, PIC_LINE, PIC_COL);
-        l = (l & 0xff);
-        Picture_display(blankPic, l, 0, 64, 1);
-        setAngularVelocity(pidCtrlUpdate(l - (PIC_COL / 2), &picTurn));
+        cameraFlag = 0;
+        picReceive.state = 0;
+        DMA_ClearITPendingBit(DMA1_IT_TC5);
+        // imgGray2Bin(picReceive.pic, PIC_LINE, PIC_COL);
+        // printPic();
+        // showGrayPic(picReceive.pic, 0, 0, PIC_LINE-1, PIC_COL-1);
+        // l = findPointCenter(picReceive.pic, PIC_LINE, PIC_COL);
+        // l = (l & 0xff);
+        // Picture_display(blankPic, l, 0, 64, 1);
+        // setAngularVelocity(pidCtrlUpdate(l - (PIC_COL / 2), &picTurn));
+
         // uart1SendBytes(pic_FLAG_BYTES, 6);
         // uart1SendByte(PIC_LINE);
         // uart1SendByte(PIC_COL);
         // uart1SendBytes(picReceive.pic, PIC_COL * PIC_LINE);
         // screenClear();
         // OLED_printf("ok");
-        cameraFlag = 1;
+        // cameraFlag = 1;
+        picReceive.state = 1;
     }
 }

@@ -24,7 +24,7 @@ def judgeStart(com:serial.Serial)->bool:
         
     
 if __name__=='__main__':
-    mm32 = openCom('com17',115200)
+    mm32 = openCom('com13',115200)
     mm32.write(bytes([0x97, 0x02, 0xf0,0xa5]))
     while(True):
         if (judgeStart(mm32)):

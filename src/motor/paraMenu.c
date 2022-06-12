@@ -311,7 +311,8 @@ void pidParaLoad(void)
 MenuTypedef paraAdjMenu[] = {
     {.caption = "速度环", .left = gotoSpeedPara, .mid = gotoSpeedPara, .right = gotoSpeedPara},
     {.caption = "加速度环", .left = gotoAccMenu, .mid = gotoAccMenu, .right = gotoAccMenu},
-    {.caption = "角度环", .left = gotoAnglePara, .mid = gotoAnglePara, .right = gotoAnglePara},
+    {.caption = "角度环(速度)", .left = gotoAnglePara, .mid = gotoAnglePara, .right = gotoAnglePara},
+    
     {.caption = "摄像头", .left = gotoPicPara, .mid = gotoPicPara, .right = gotoPicPara},
     {.caption = "平衡调速环", .left = gotoSpeedHold, .mid = gotoSpeedHold, .right = gotoSpeedHold},
     {.caption = "保存", .left = pidParaSave, .right = pidParaSave, .mid = pidParaSave},

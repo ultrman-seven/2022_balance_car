@@ -30,9 +30,12 @@ uint16_t utf8ToUnicode(uint8_t *c)
 #define Zh2Start 0x4e00
 uint8_t zhBuf[3];
 uint8_t zhCnt;
+#define MAX_LINE 8
+#define MAX_WORD 20
 void OLED_putchar(char ch)
 {
 	if (wordCount >= 16)
+	// if (wordCount >= MAX_WORD)
 	{
 		wordCount = 0;
 		line += asciiHigh / 8;

@@ -104,6 +104,7 @@ int main(void)
     // uartInit();
     delayMs(2000);
     // cameraInit();
+    // ips114_clear(0xf080);
     while (1)
     {
         (ledBright % 2) ? (ledBright -= 2) : (ledBright += 2);

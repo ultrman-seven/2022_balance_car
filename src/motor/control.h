@@ -17,6 +17,7 @@ enum ctrlModes
     balanceModifyMode,
     accPidMode,
     accPhysicalMode,
+    angleMode_accOutput,
     NullMode = 20
 };
 extern enum ctrlModes pidMode;

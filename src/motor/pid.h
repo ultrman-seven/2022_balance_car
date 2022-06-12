@@ -16,10 +16,14 @@ typedef struct
     // float Ki;
     // float Kd;
 
-    int32_t targetVal;
-    int32_t integral;
-    int32_t proportionLast;
-    int32_t proportionLastLast;
+    float targetVal;
+    float integral;
+    float proportionLast;
+    float proportionLastLast;
+    // int32_t targetVal;
+    // int32_t integral;
+    // int32_t proportionLast;
+    // int32_t proportionLastLast;
 } PID_paraTypdef;
 
 #define PIT_UPDATE_TIME 10000 // us
