@@ -24,12 +24,16 @@ void generalParaCaptionUpdate(void)
 {
     float value = 0;
     MenuTypedef *menu = menuManager.getCurrentMenu();
-    sprintf(menu[0].caption, "Kp:  %d", menuVal_32_Buf[0]);
+    // sprintf(menu[0].caption, "Kp:  %d", menuVal_32_Buf[0]);
+    sprintf(menuCaptionStr1, "Kp:  %d", menuVal_32_Buf[0]);
     value = menuVal_32_Buf[1] / 10.0;
-    sprintf(menu[1].caption, "Ki:  %.1f", value);
+    // sprintf(menu[1].caption, "Ki:  %.1f", value);
+    sprintf(menuCaptionStr2, "Ki:  %.1f", value);
     value = menuVal_32_Buf[2] / 10.0;
-    sprintf(menu[2].caption, "Kd:  %.1f", value);
-    sprintf(menu[3].caption, "值:  %d", menuVal_32_Buf[3]);
+    // sprintf(menu[2].caption, "Kd:  %.1f", value);
+    sprintf(menuCaptionStr3, "Kd:  %.1f", value);
+    // sprintf(menu[3].caption, "值:  %d", menuVal_32_Buf[3]);
+    sprintf(menuCaptionStr4, "值:  %d", menuVal_32_Buf[3]);
 }
 
 void generalParaSet(PID_paraTypdef *pid)
@@ -37,6 +41,12 @@ void generalParaSet(PID_paraTypdef *pid)
     pid->Kp = menuVal_32_Buf[0];
     pid->Ki = menuVal_32_Buf[1];
     pid->Kd = menuVal_32_Buf[2];
+}
+void generalParaLoad(PID_paraTypdef *pid)
+{
+    menuVal_32_Buf[0] = pid->Kp;
+    menuVal_32_Buf[1] = pid->Ki;
+    menuVal_32_Buf[2] = pid->Kd;
 }
 
 void generalInc(void)
@@ -142,7 +152,7 @@ void b_s_set(void)
 }
 void mpu6050DmpTest(void);
 MenuTypedef angleParaMenu[] = {
-   GeneralPidParaAdjMenu,
+    GeneralPidParaAdjMenu,
     {.caption = menuCaptionStr4, .left = generalDec, .mid = b_s_set, .right = generalInc},
     {.caption = "参数应用", .left = angleSet, .mid = angleSet, .right = angleSet},
     {.caption = "平衡点调整", .left = mpu6050DmpTest, .mid = NULL, .right = mpu6050DmpTest},
@@ -176,7 +186,7 @@ void picStart(void)
 }
 
 MenuTypedef picMenu[] = {
-   GeneralPidParaAdjMenu,
+    GeneralPidParaAdjMenu,
     {.caption = menuCaptionStr4, .left = NULL, .mid = NULL, .right = NULL},
     {.caption = "参数应用", .left = picSet, .mid = picSet, .right = picSet},
     {.caption = "开始测试", .left = picStart, .mid = testStop, .right = picStart},
@@ -196,7 +206,6 @@ void gotoPicPara(void)
 
 extern PID_paraTypdef speedCtrlPid;
 extern MenuTypedef speedHoldMenu[];
-
 
 void s_h_Set(void)
 {
@@ -251,7 +260,7 @@ void accTest(void)
 }
 
 MenuTypedef accPidMenu[] = {
-   GeneralPidParaAdjMenu,
+    GeneralPidParaAdjMenu,
     {.caption = menuCaptionStr4, .left = generalDec, .right = generalInc, .mid = accSet},
     {.caption = "参数应用", .left = accSet, .mid = accSet, .right = accSet},
     // {.caption = "balance angle", .left = mpu6050DmpTest, .mid = NULL, .right = mpu6050DmpTest},
@@ -271,6 +280,75 @@ void gotoAccMenu(void)
     showMenu(menuManager.getCurrentMenu());
 }
 
+extern PID_paraTypdef ph_car_home_anglePid;
+// extern PID_paraTypdef ph_car_home_speedPid;
+extern PID_paraTypdef ph_car_home_speedPid_right;
+extern PID_paraTypdef ph_car_home_speedPid_left;
+extern int32_t baseSpeed;
+
+void ph_car_home_speedSet(void)
+{
+    // generalParaSet(&ph_car_home_speedPid);
+    generalParaSet(&ph_car_home_speedPid_left);
+    generalParaSet(&ph_car_home_speedPid_right);
+}
+MenuTypedef ph_speed[] = {
+    GeneralPidParaAdjMenu,
+    {.caption = "参数应用", .left = ph_car_home_speedSet, .mid = ph_car_home_speedSet, .right = ph_car_home_speedSet},
+    GO_BACK_MENU,
+    END_OF_MENU};
+void ph_car_home_angleSet(void)
+{
+    generalParaSet(&ph_car_home_anglePid);
+}
+MenuTypedef ph_angle[] = {
+    GeneralPidParaAdjMenu,
+    {.caption = "参数应用", .left = ph_car_home_angleSet, .mid = ph_car_home_angleSet, .right = ph_car_home_angleSet},
+    GO_BACK_MENU,
+    END_OF_MENU};
+
+void goto_ph_speed(void)
+{
+    gotoNextMenu(ph_speed);
+    generalParaLoad(&ph_car_home_speedPid_left);
+    generalParaCaptionUpdate();
+    showMenu(menuManager.getCurrentMenu());
+}
+void goto_ph_angle(void)
+{
+    gotoNextMenu(ph_angle);
+    generalParaLoad(&ph_car_home_anglePid);
+    generalParaCaptionUpdate();
+    showMenu(menuManager.getCurrentMenu());
+}
+void ph_car_home_start(void)
+{
+    setPidMode(balanceCarHomeMode);
+    cameraSetOn();
+}
+void ph_set_speed(void)
+{
+    // ph_car_home_speedPid_left.targetVal = menuVal_32_Buf[3];
+    // ph_car_home_speedPid_right.targetVal = 
+    baseSpeed = menuVal_32_Buf[3];
+}
+MenuTypedef ph_car_home_menu[] = {
+    {.caption = "速度环参数", .left = goto_ph_speed, .right = goto_ph_speed, .mid = goto_ph_speed},
+    {.caption = "平衡环参数", .left = goto_ph_angle, .right = goto_ph_angle, .mid = goto_ph_angle},
+    {.caption = "开始", .left = ph_car_home_start, .mid = ph_car_home_start, .right = ph_car_home_start},
+    {.caption = menuCaptionStr4, .left = generalDec, .right = generalInc, .mid = ph_set_speed},
+    {.caption = "结束", .left = testStop, .right = testStop, .mid = testStop},
+    {.caption = "平衡点调整", .left = mpu6050DmpTest, .mid = NULL, .right = mpu6050DmpTest},
+    GO_BACK_MENU,
+    END_OF_MENU};
+void goto_ph_car_home(void)
+{
+    gotoNextMenu(ph_car_home_menu);
+    // menuVal_32_Buf[3] = ph_car_home_speedPid_left.targetVal;
+    menuVal_32_Buf[3] = baseSpeed;
+    generalParaCaptionUpdate();
+    showMenu(menuManager.getCurrentMenu());
+}
 // belows are about data loading and saving
 
 void loadBuf2PidPara(uint32_t *buf, PID_paraTypdef *pid)
@@ -312,7 +390,7 @@ MenuTypedef paraAdjMenu[] = {
     {.caption = "速度环", .left = gotoSpeedPara, .mid = gotoSpeedPara, .right = gotoSpeedPara},
     {.caption = "加速度环", .left = gotoAccMenu, .mid = gotoAccMenu, .right = gotoAccMenu},
     {.caption = "角度环(速度)", .left = gotoAnglePara, .mid = gotoAnglePara, .right = gotoAnglePara},
-    
+    {.caption = "平衡小车之家", .left = goto_ph_car_home, .right = goto_ph_car_home, .mid = goto_ph_car_home},
     {.caption = "摄像头", .left = gotoPicPara, .mid = gotoPicPara, .right = gotoPicPara},
     {.caption = "平衡调速环", .left = gotoSpeedHold, .mid = gotoSpeedHold, .right = gotoSpeedHold},
     {.caption = "保存", .left = pidParaSave, .right = pidParaSave, .mid = pidParaSave},

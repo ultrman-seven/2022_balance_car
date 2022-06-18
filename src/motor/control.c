@@ -34,7 +34,7 @@
 #include "quickSin.h"
 
 int32_t balancePoint = -216;
-int32_t baseSpeed = 50;
+int32_t baseSpeed = 0;
 enum ctrlModes pidMode = NullMode; // pwmMode;
 float accOutput = 0.0;
 PID_paraTypdef speedPidLeft = {
@@ -71,10 +71,143 @@ void setBaseSpeed(int32_t s)
     baseSpeed = s;
 }
 
+PID_paraTypdef ph_car_home_anglePid = {
+    .Kp = 44, .Kd = 6, .Ki = 0, .targetVal = 0};
+PID_paraTypdef ph_car_home_speedPid = {
+    .Kp = 25, .Ki = 4, .Kd = 0, .targetVal = 0};
+
+/**
+ * @description:
+ * @param {float} Angle
+ * @param {float} Gyro
+ * @param {PID_paraTypdef} *p
+ * @return pwm
+ */
+int ph_car_home_balance(float Angle, float Gyro, PID_paraTypdef *p)
+{
+    float Bias; //, kp = 300, kd = 1;
+    int balance;
+    Bias = (float)(p->targetVal) / 10.0 - Angle; //===求出平衡的角度中值 和机械相关
+    // balance = kp * Bias + Gyro * kd; //===计算平衡控制的电机PWM  PD控制   kp是P系数 kd是D系数
+    balance = (p->Kp) * Bias + (Gyro * (p->Kd)) / 50.0;
+    return balance;
+}
+float Target_Velocity;
+float Encoder_Integral;
+/**
+ * @description:
+ * @param {int} speed_left
+ * @param {int} speed_right
+ * @return pwm
+ */
+int ph_car_home_velocity(int speed_left, int speed_right, PID_paraTypdef *p)
+{
+    static float Velocity, Encoder_Least, Encoder; //, Movement = 0;
+    // float kp = 80, ki = 0.4;
+    //=============遥控前进后退部分=======================//
+    // if (Bi_zhang == 1 && Flag_sudu == 1)
+    // 	Target_Velocity = 45; //如果进入避障模式,自动进入低速模式
+    // else
+    // 	Target_Velocity = 90;
+    // if (1 == Flag_Qian)
+    // 	Movement = Target_Velocity / Flag_sudu; //===前进标志位置1
+    // else if (1 == Flag_Hou)
+    // 	Movement = -Target_Velocity / Flag_sudu; //===后退标志位置1
+    // else
+    // 	Movement = 0;
+    // if (Bi_zhang == 1 && Distance < 500 && Flag_Left != 1 && Flag_Right != 1) //避障标志位置1且非遥控转弯的时候，进入避障模式
+    // 	Movement = -Target_Velocity / Flag_sudu;
+    //=============速度PI控制器=======================//
+    Encoder_Least = 0 - (speed_left + speed_right) / 2.0; //===获取最新速度偏差==测量速度（左右编码器之和）-目标速度（此处为零）
+    Encoder *= 0.8;                                       //===一阶低通滤波器
+    Encoder += Encoder_Least * 0.2;                       //===一阶低通滤波器
+    Encoder_Integral += Encoder;                          //===积分出位移 积分时间：10ms
+    Encoder_Integral = Encoder_Integral - (p->targetVal); //===接收遥控器数据，控制前进后退
+    if (Encoder_Integral > 10000)
+        Encoder_Integral = 10000; //===积分限幅
+    if (Encoder_Integral < -10000)
+        Encoder_Integral = -10000;                                      //===积分限幅
+    Velocity = Encoder * (p->Kp) + (Encoder_Integral * (p->Ki)) / 10.0; //===速度控制
+    // if (Turn_Off(Angle_Balance, Voltage) == 1 || Flag_Stop == 1)
+    // 	Encoder_Integral = 0; //===电机关闭后清除积分
+    return Velocity / 10.0;
+}
+PID_paraTypdef ph_car_home_speedPid_left = {
+    .Kp = 25, .Ki = 4, .Kd = 0, .targetVal = 0, .integral = 0.0};
+PID_paraTypdef ph_car_home_speedPid_right = {
+    .Kp = 25, .Ki = 4, .Kd = 0, .targetVal = 0, .integral = 0.0};
+
+int ph_car_home_OneWheelVelocity(int speed_left, PID_paraTypdef *p)
+{
+    static float Velocity, Encoder_Least, Encoder; //, Movement = 0;
+    Encoder_Least = 0 - speed_left;                //===获取最新速度偏差==测量速度（左右编码器之和）-目标速度（此处为零）
+    Encoder *= 0.8;                                //===一阶低通滤波器
+    Encoder += Encoder_Least * 0.2;                //===一阶低通滤波器
+    p->integral += Encoder;                        //===积分出位移 积分时间：10ms
+    p->integral = p->integral - (p->targetVal);    //===接收遥控器数据，控制前进后退
+    if (p->integral > 10000)
+        p->integral = 10000; //===积分限幅
+    if (p->integral < -10000)
+        p->integral = -10000;                                      //===积分限幅
+    Velocity = Encoder * (p->Kp) + (p->integral * (p->Ki)) / 10.0; //===速度控制
+    return Velocity / 10.0;
+}
+uint32_t myabs(int32_t val)
+{
+    if (val >= 0)
+        return val;
+    else
+        return -val;
+}
+
+uint8_t Flag_Left = 0, Flag_Right = 0;
+int ph_car_home_turn(int encoder_left, int encoder_right, float gyro) //转向控制
+{
+    static float Turn_Target, Turn, Encoder_temp, Turn_Convert = 0.49, Turn_Count;
+    float Turn_Amplitude = 20, Kp = 10, Kd = 0;
+    //=============遥控左右旋转部分=======================//
+    if (1 == Flag_Left || 1 == Flag_Right) //这一部分主要是根据旋转前的速度调整速度的起始速度，增加小车的适应性
+    {
+        if (++Turn_Count == 1)
+            Encoder_temp = myabs(encoder_left + encoder_right);
+        Turn_Convert = 50 / Encoder_temp;
+        if (Turn_Convert < 0.6)
+            Turn_Convert = 0.6;
+        if (Turn_Convert > 3)
+            Turn_Convert = 3;
+    }
+    else
+    {
+        Turn_Convert = 0.9;
+        Turn_Count = 0;
+        Encoder_temp = 0;
+        Turn_Target = 0;
+        return 0;
+    }
+    if (1 == Flag_Left)
+        Turn_Target -= Turn_Convert;
+    else if (1 == Flag_Right)
+        Turn_Target += Turn_Convert;
+    else
+        Turn_Target = 0;
+
+    if (Turn_Target > Turn_Amplitude)
+        Turn_Target = Turn_Amplitude; //===转向速度限幅
+    if (Turn_Target < -Turn_Amplitude)
+        Turn_Target = -Turn_Amplitude;
+    if (baseSpeed)
+        Kd = 0.5;
+    else
+        Kd = 0;                           //转向的时候取消陀螺仪的纠正 有点模糊PID的思想
+                                          //=============转向PD控制器=======================//
+    Turn = -Turn_Target * Kp - gyro * Kd; //===结合Z轴陀螺仪进行PD控制
+    return Turn / 50.0;
+}
+
 int32_t pidCtrlAngle(int32_t currentVal)
 {
     int32_t proportion, diff;
-    proportion = anglePid.targetVal - currentVal;
+    proportion = anglePid.targetVal / 10.0 - currentVal;
 
     anglePid.integral = anglePid.integral * 0.4 + proportion;
     // object->integral += proportion;
@@ -130,7 +263,7 @@ void pidUpdateFunction(void)
         pwmRight = speedPidRight.targetVal;
         setPower(pwmLeft, LEFT);
         setPower(pwmRight, RIGHT);
-        printf("r=%d,c=%d\r\n", speedPidLeft.targetVal, getSpeed(LEFT));
+        printf("r=%d,c=%d\r\n", (int32_t)speedPidLeft.targetVal, getSpeed(LEFT));
         break;
     case speedMode:
         speedPidLeft.targetVal = baseSpeed + turnSpeed;
@@ -139,7 +272,7 @@ void pidUpdateFunction(void)
         pwmRight = pwmRight + pidIncrementalCtrlUpdate(getSpeed(RIGHT), &speedPidRight) / 10;
         setPower(pwmLeft, LEFT);
         setPower(pwmRight, RIGHT);
-        printf("r=%d,c=%d\r\n", speedPidLeft.targetVal, getSpeed(LEFT));
+        printf("r=%d,c=%d\r\n", (int32_t)speedPidLeft.targetVal, getSpeed(LEFT));
         break;
     case angleMode:
         do
@@ -156,7 +289,6 @@ void pidUpdateFunction(void)
         speedPidLeft.targetVal =
             speedPidRight.targetVal =
                 baseSpeed + pidCtrlAngle(pitch * 10) / 10;
-
 
         //角度 -pid-> 加速度 -pid-> 速度
         acc = acc * 5 + ((accel[0] + 500 - 168 * quickSin(pitch * 10)) / 100 - 5) * 5;
@@ -188,7 +320,7 @@ void pidUpdateFunction(void)
         setPower(pwmRight, RIGHT);
         // printf("p=%.1f,a=%.1f\r\n", p, pitch);
         // float p = anglePid.targetVal / 10.0;
-        printf("a=%d,r=%d\r\n", acc,speedPidLeft.targetVal);
+        printf("a=%d,r=%d\r\n", acc, (int32_t)speedPidLeft.targetVal);
         break;
     case rockerMode:
         do
@@ -236,7 +368,7 @@ void pidUpdateFunction(void)
         pwmRight = pwmRight + pidIncrementalCtrlUpdate(getSpeed(RIGHT), &speedPidRight) / 10;
         setPower(pwmLeft, LEFT);
         setPower(pwmRight, RIGHT);
-        printf("r=%d,s=%d,c=%d\r\n", balanceModify, (getSpeed(LEFT) + getSpeed(RIGHT)) / 2, speedCtrlPid.targetVal);
+        printf("r=%d,s=%d,c=%d\r\n", balanceModify, (getSpeed(LEFT) + getSpeed(RIGHT)) / 2, (int32_t)speedCtrlPid.targetVal);
         break;
 
     case accPhysicalMode:
@@ -270,7 +402,7 @@ void pidUpdateFunction(void)
         printf("r=%d,c=%d,s=%d\r\n", accPidLeft.targetVal, acc, speedPidLeft.targetVal);
         break;
     case angleMode_accOutput:
-            do
+        do
         {
             Read_DMP(&pitch, &r, &y);
         } while (pitch < 0.000001 && pitch > -0.000001);
@@ -302,7 +434,33 @@ void pidUpdateFunction(void)
         // printf("p=%.1f,a=%.1f\r\n", p, pitch);
         // float p = anglePid.targetVal / 10.0;
         // printf("a=%d,r=%d\r\n", acc,speedPidLeft.targetVal);
-    break;
+        break;
+    case balanceCarHomeMode:
+        do
+        {
+            Read_DMP(&pitch, &r, &y);
+        } while (pitch < 0.000001 && pitch > -0.000001);
+        int Balance_Pwm, Velocity_Pwm, Moto1, Moto2, Turn_Pwm;
+        ph_car_home_anglePid.targetVal = balancePoint;
+        ph_car_home_speedPid_left.targetVal = baseSpeed;  // + ph_turn_speed;
+        ph_car_home_speedPid_right.targetVal = baseSpeed; // - ph_turn_speed;
+        Balance_Pwm = ph_car_home_balance(
+            pitch, (gyro[1] + 40), &ph_car_home_anglePid); //===平衡PID控制
+        // Velocity_Pwm = ph_car_home_velocity(
+        //     getSpeed(LEFT), getSpeed(RIGHT),
+        //     &ph_car_home_speedPid);
+
+        Flag_Left = (turnSpeed > 20) ? 1 : 0;
+        Flag_Right = (turnSpeed < -20) ? 1 : 0;
+        //===速度环PID控制	 记住，速度反馈是正反馈，就是小车快的时候要慢下来就需要再跑快一点
+        Turn_Pwm = ph_car_home_turn(getSpeed(LEFT), getSpeed(RIGHT), gyro[2]); //===转向环PID控制
+        Velocity_Pwm = ph_car_home_OneWheelVelocity(getSpeed(LEFT), &ph_car_home_speedPid_left);
+        Moto1 = Balance_Pwm - Velocity_Pwm + Turn_Pwm; //===计算左轮电机最终PWM
+        Velocity_Pwm = ph_car_home_OneWheelVelocity(getSpeed(RIGHT), &ph_car_home_speedPid_right);
+        Moto2 = Balance_Pwm - Velocity_Pwm - Turn_Pwm;
+        setPower(Moto1, LEFT);
+        setPower(Moto2, RIGHT);
+        break;
     default:
         break;
     }
@@ -313,6 +471,12 @@ void pidUpdateFunction(void)
 void setPidMode(enum ctrlModes m)
 {
     pidMode = m;
+    if (m == NullMode)
+    {
+        Encoder_Integral = 0;
+        ph_car_home_speedPid_left.integral = 0.0;
+        ph_car_home_speedPid_right.integral = 0.0;
+    }
 }
 
 void setLinerSpeed(int8_t speed)

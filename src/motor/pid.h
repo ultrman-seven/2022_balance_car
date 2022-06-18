@@ -16,11 +16,11 @@ typedef struct
     // float Ki;
     // float Kd;
 
-    float targetVal;
+    // float targetVal;
     float integral;
     float proportionLast;
     float proportionLastLast;
-    // int32_t targetVal;
+    int32_t targetVal;
     // int32_t integral;
     // int32_t proportionLast;
     // int32_t proportionLastLast;

@@ -12,6 +12,7 @@
                 "UNICODE",
                 "_UNICODE",
                 "code=",
+                "__STATIC_INLINE=",
                 "EMPL_MM32SPIN27_WY_LIB",
                 "MPU6050"
             ],

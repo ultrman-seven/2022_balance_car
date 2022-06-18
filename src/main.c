@@ -94,18 +94,21 @@ void globalInit(void)
     // batteryInit();
 }
 extern const int8_t sinList[];
+#define DangerSpeed 1300
 int main(void)
 {
     void uartInit(void);
     void cameraInit(void);
     int32_t ledBright = 0;
+    uint8_t sysRunningState = 1;
+    //sysStart:
     globalInit();
 
     // uartInit();
     delayMs(2000);
     // cameraInit();
     // ips114_clear(0xf080);
-    while (1)
+    while (sysRunningState)
     {
         (ledBright % 2) ? (ledBright -= 2) : (ledBright += 2);
         if (ledBright > 10000 || ledBright == 1)
@@ -114,6 +117,15 @@ int main(void)
         // if (ledBright++ == 3600)
         //     ledBright = 0;
         // TIM2->CCR2 = sinList[ledBright / 10] * 100;
+        if (getSpeed(LEFT) >= DangerSpeed)
+            NVIC_SystemReset(); // sysRunningState = 0;
+        if (getSpeed(LEFT) <= -DangerSpeed)
+            NVIC_SystemReset(); // sysRunningState = 0;
+        if (getSpeed(RIGHT) >= DangerSpeed)
+            NVIC_SystemReset(); // sysRunningState = 0;
+        if (getSpeed(RIGHT) <= -DangerSpeed)
+            NVIC_SystemReset(); // sysRunningState = 0;
         delay(1000);
     }
+    return 0;
 }

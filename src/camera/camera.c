@@ -258,13 +258,13 @@ void DMA1_Channel4_5_IRQHandler(void)
         cameraFlag = 0;
         picReceive.state = 0;
         DMA_ClearITPendingBit(DMA1_IT_TC5);
-        // imgGray2Bin(picReceive.pic, PIC_LINE, PIC_COL);
-        // printPic();
+        imgGray2Bin(picReceive.pic, PIC_LINE, PIC_COL);
+        printPic();
         // showGrayPic(picReceive.pic, 0, 0, PIC_LINE-1, PIC_COL-1);
-        // l = findPointCenter(picReceive.pic, PIC_LINE, PIC_COL);
-        // l = (l & 0xff);
-        // Picture_display(blankPic, l, 0, 64, 1);
-        // setAngularVelocity(pidCtrlUpdate(l - (PIC_COL / 2), &picTurn));
+        l = findPointCenter(picReceive.pic, PIC_LINE, PIC_COL);
+        l = (l & 0xff);
+        Picture_display(blankPic, l, 0, 64, 1);
+        setAngularVelocity(pidCtrlUpdate(l - (PIC_COL / 2), &picTurn));
 
         // uart1SendBytes(pic_FLAG_BYTES, 6);
         // uart1SendByte(PIC_LINE);

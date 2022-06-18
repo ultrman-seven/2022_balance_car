@@ -56,7 +56,7 @@ void getSysState(void)
 {
     screenClear();
     OLED_printf("sys clock: %s\nmpu dmp:%d\n", (sysClkState == SUCCESS) ? "ok" : "error", mpuDmpState);
-    OLED_printf("mpu: 0x%x", I2C_ReadOneByte((0x69 << 1), 0x75));
+    OLED_printf("mpu: 0x%x", I2C_ReadOneByte((0x68 << 1), 0x75));
 }
 
 // test menu callback functions
@@ -102,10 +102,11 @@ void mpu6050DataTest(void)
         screenClear();
         // OLED_printf("t:%d", Read_Temperature());
         // OLED_printf("gy:%d", gyro[1]);
-        OLED_printf(
-            "accel,p:%.2f\nx: %d\ny: %d\nz: %d", p,
-            accel[0] + 500 - 168 * quickSin(p * 10),
-            accel[1], accel[2] + 164 * quickCos(p * 10));
+        // OLED_printf(
+        //     "accel,p:%.2f\nx: %d\ny: %d\nz: %d", p,
+        //     accel[0] + 500 - 168 * quickSin(p * 10),
+        //     accel[1], accel[2] + 164 * quickCos(p * 10));
+        OLED_printf("gyros:\nx:%d\ny:%d\nz:%d", gyro[0], gyro[1], gyro[2]);
         printf("r=%d\r\n", accel[0] + 500 - 168 * quickSin(p * 10));
         delayMs(5);
     }

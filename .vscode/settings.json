@@ -29,7 +29,9 @@
         "xiosbase": "c",
         "font.h": "c",
         "cmath": "c",
-        "flash.h": "c"
+        "flash.h": "c",
+        "quicksin.h": "c",
+        "uart.h": "c"
     },
     "cSpell.enableFiletypes": [
         "8051",
