@@ -135,11 +135,14 @@ int motorSpeed[2] = {0};
 int lastCNT[2] = {0};
 // uint32_t ms = 0;
 // int lastLCircle[2] = {0};
+uint8_t timerFlag = 0;
 void TIM17_IRQHandler(void)
 {
     int32_t currintCnt;
     int speed;
     // uint32_t time;
+    TIM_ClearITPendingBit(TIM17, TIM_FLAG_Update);
+    timerFlag = 1;
     currintCnt = circleCount[LEFT] * 1024 * 4 + TIM_Left->CNT;
     // getTimeStamp(&time);
     // if (ms++ % 10 == 0)
@@ -186,8 +189,8 @@ void TIM17_IRQHandler(void)
     // lastCNT[LEFT] = currentCNT;
     // motorSpeed[LEFT] = TIM_Left->CNT;
     // timeLast = time;
+
     pidUpdateFunction();
-    TIM_ClearITPendingBit(TIM17, TIM_FLAG_Update);
 }
 
 int getCircleCount(MotorChoose side)

@@ -4,6 +4,7 @@
 #include "stdio.h"
 #include "flash.h"
 #include "motor/control.h"
+#include "oledio.h"
 
 void cameraSetOn(void);
 void cameraSetOff(void);
@@ -306,7 +307,23 @@ MenuTypedef ph_angle[] = {
     {.caption = "参数应用", .left = ph_car_home_angleSet, .mid = ph_car_home_angleSet, .right = ph_car_home_angleSet},
     GO_BACK_MENU,
     END_OF_MENU};
-
+extern PID_paraTypdef turnPid;
+void cam_turn_set(void)
+{
+    generalParaSet(&turnPid);
+}
+MenuTypedef ph_turn[] = {
+    GeneralPidParaAdjMenu,
+    {.caption = "参数应用", .left = cam_turn_set, .mid = cam_turn_set, .right = cam_turn_set},
+    GO_BACK_MENU,
+    END_OF_MENU};
+void goto_ph_turn(void)
+{
+    gotoNextMenu(ph_turn);
+    generalParaLoad(&turnPid);
+    generalParaCaptionUpdate();
+    showMenu(menuManager.getCurrentMenu());    
+}
 void goto_ph_speed(void)
 {
     gotoNextMenu(ph_speed);
@@ -323,22 +340,46 @@ void goto_ph_angle(void)
 }
 void ph_car_home_start(void)
 {
+    // cameraSetOn();
     setPidMode(balanceCarHomeMode);
-    cameraSetOn();
 }
 void ph_set_speed(void)
 {
     // ph_car_home_speedPid_left.targetVal = menuVal_32_Buf[3];
-    // ph_car_home_speedPid_right.targetVal = 
+    // ph_car_home_speedPid_right.targetVal =
     baseSpeed = menuVal_32_Buf[3];
 }
+
+extern uint8_t Flag_Left, Flag_Right;
+
+void showTurn(void)
+{
+    if (Flag_Left)
+    {
+        screenClear();
+        OLED_printf("左转");
+        return;
+    }
+    if (Flag_Right)
+    {
+        screenClear();
+        OLED_printf("右转");
+        return;
+    }
+    screenClear();
+    OLED_printf("不转弯");
+    return;
+}
+
 MenuTypedef ph_car_home_menu[] = {
     {.caption = "速度环参数", .left = goto_ph_speed, .right = goto_ph_speed, .mid = goto_ph_speed},
     {.caption = "平衡环参数", .left = goto_ph_angle, .right = goto_ph_angle, .mid = goto_ph_angle},
-    {.caption = "开始", .left = ph_car_home_start, .mid = ph_car_home_start, .right = ph_car_home_start},
+    {.caption = "转向环参数", .left =goto_ph_turn, .right = goto_ph_turn, .mid = goto_ph_turn},
     {.caption = menuCaptionStr4, .left = generalDec, .right = generalInc, .mid = ph_set_speed},
+    {.caption = "开始", .left = ph_car_home_start, .mid = ph_car_home_start, .right = ph_car_home_start},
     {.caption = "结束", .left = testStop, .right = testStop, .mid = testStop},
     {.caption = "平衡点调整", .left = mpu6050DmpTest, .mid = NULL, .right = mpu6050DmpTest},
+    {.caption = "转弯", .left = showTurn, .right = showTurn},
     GO_BACK_MENU,
     END_OF_MENU};
 void goto_ph_car_home(void)

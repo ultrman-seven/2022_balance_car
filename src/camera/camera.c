@@ -158,15 +158,18 @@ void __cameraConfig(cameraCMD name, uint16_t val)
     __cameraSenaBytes(cmds, 4);
     delayMs(5);
 }
-
+extern PID_paraTypdef turnPid;
+extern int imgPosition;
 void cameraInit(void)
 {
     GPIO_InitTypeDef gpio;
     NVIC_InitTypeDef nvic;
     EXTI_InitTypeDef exti;
+    imgPosition = turnPid.targetVal = PIC_COL / 2;
     __uart1Init();
     __cameraConfig(SET_COL, PIC_COL);
     __cameraConfig(SET_ROW, PIC_LINE);
+    __cameraConfig(EXP_TIME, 300);
     __cameraConfig(FPS, 20);
     __cameraConfig(INIT, 0);
     __DMA_init();
@@ -245,26 +248,62 @@ void v_int(void)
 }
 
 void imgGray2Bin(uint8_t *img, uint8_t l, uint8_t c);
-void printPic(void);
+void printPic(uint8_t *pic, uint8_t h, uint8_t w);
+uint16_t findMax(uint8_t *img, uint16_t height, uint8_t width);
+uint8_t OTSU(uint8_t *image, uint8_t IMAGE_H, uint8_t IMAGE_W);
+uint16_t BFS(uint8_t *image, uint16_t IMAGE_H, uint16_t IMAGE_W);
 uint32_t findPointCenter(uint8_t *img, uint8_t l, uint8_t c);
 const uint8_t blankPic[8] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 extern PID_paraTypdef picTurn;
+uint8_t picFlag = 0;
+
+uint8_t DMA_ok_flag = 0;
 void DMA1_Channel4_5_IRQHandler(void)
 {
     if (DMA_GetITStatus(DMA1_IT_TC5) == SET)
     {
-        uint32_t l;
         DMA_Cmd(DMA1_Channel5, DISABLE);
-        cameraFlag = 0;
+        DMA_ok_flag = 1;
+        // cameraFlag = 0;
         picReceive.state = 0;
         DMA_ClearITPendingBit(DMA1_IT_TC5);
-        imgGray2Bin(picReceive.pic, PIC_LINE, PIC_COL);
-        printPic();
-        // showGrayPic(picReceive.pic, 0, 0, PIC_LINE-1, PIC_COL-1);
-        l = findPointCenter(picReceive.pic, PIC_LINE, PIC_COL);
-        l = (l & 0xff);
-        Picture_display(blankPic, l, 0, 64, 1);
-        setAngularVelocity(pidCtrlUpdate(l - (PIC_COL / 2), &picTurn));
+    }
+}
+
+void picProcess(void)
+{
+    if (DMA_ok_flag)
+    {
+        if (picFlag == 4)
+        {
+            uint32_t l;
+            uint16_t maxIdx;
+            uint32_t time1, time2;
+            // OTSU(picReceive.pic, PIC_LINE, PIC_COL);
+            getTimeStamp(&time1);
+            maxIdx = findMax(picReceive.pic, PIC_LINE, PIC_COL);
+            imgGray2Bin(picReceive.pic, PIC_LINE, PIC_COL);
+            printPic(picReceive.pic, PIC_LINE, PIC_COL);
+            //  l = findPointCenter(picReceive.pic, PIC_LINE, PIC_COL);
+            //  l = (l & 0xff);
+            l = maxIdx % PIC_COL;
+#ifdef _IPS_114__
+            l = 0;
+            showGrayPic(picReceive.pic, 0, 0, PIC_LINE - 1, PIC_COL - 1);
+#else
+            // BFS(picReceive.pic, PIC_LINE, PIC_COL);
+            delayMs(60);
+            getTimeStamp(&time2);
+
+            Picture_display(blankPic, l, 0, 64, 1);
+            // screenClear();
+            // OLED_putNumber(time2 - time1);
+#endif
+            // setAngularVelocity(pidCtrlUpdate(l - (PIC_COL / 2), &picTurn));
+            imgPosition = l;
+        }
+        else
+            picFlag++;
 
         // uart1SendBytes(pic_FLAG_BYTES, 6);
         // uart1SendByte(PIC_LINE);
@@ -273,6 +312,8 @@ void DMA1_Channel4_5_IRQHandler(void)
         // screenClear();
         // OLED_printf("ok");
         // cameraFlag = 1;
-        picReceive.state = 1;
+        if (cameraFlag)
+            picReceive.state = 1;
+        DMA_ok_flag = 0;
     }
 }

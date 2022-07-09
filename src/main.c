@@ -89,43 +89,36 @@ void globalInit(void)
     encoderInit();
     motorInit();
     MPU6050_initialize();
-    // MPU6050_INT_Ini();
     mpuDmpState = DMP_Init();
-    // batteryInit();
 }
 extern const int8_t sinList[];
-#define DangerSpeed 1300
+#define DangerSpeed 1200
+void picProcess(void);
+// void pidUpdateFunction(void);
 int main(void)
 {
-    void uartInit(void);
-    void cameraInit(void);
     int32_t ledBright = 0;
-    uint8_t sysRunningState = 1;
-    //sysStart:
     globalInit();
 
-    // uartInit();
-    delayMs(2000);
-    // cameraInit();
-    // ips114_clear(0xf080);
-    while (sysRunningState)
+    // delayMs(2000);
+    while (1)
     {
+        picProcess();
+        // pidUpdateFunction();
         (ledBright % 2) ? (ledBright -= 2) : (ledBright += 2);
         if (ledBright > 10000 || ledBright == 1)
             ledBright--;
         TIM2->CCR2 = ledBright;
-        // if (ledBright++ == 3600)
-        //     ledBright = 0;
-        // TIM2->CCR2 = sinList[ledBright / 10] * 100;
+
         if (getSpeed(LEFT) >= DangerSpeed)
-            NVIC_SystemReset(); // sysRunningState = 0;
+            NVIC_SystemReset();
         if (getSpeed(LEFT) <= -DangerSpeed)
-            NVIC_SystemReset(); // sysRunningState = 0;
+            NVIC_SystemReset(); 
         if (getSpeed(RIGHT) >= DangerSpeed)
-            NVIC_SystemReset(); // sysRunningState = 0;
+            NVIC_SystemReset();
         if (getSpeed(RIGHT) <= -DangerSpeed)
-            NVIC_SystemReset(); // sysRunningState = 0;
-        delay(1000);
+            NVIC_SystemReset();
+        // delay(1000);
     }
     return 0;
 }

@@ -288,6 +288,28 @@ void showPic(uint8_t *ptr_pic, uint8_t colStart, uint8_t pageStart, uint8_t line
             sendData(*ptr_pic++);
     }
 }
+void showGrayPic(uint8_t *ptr_pic, uint8_t colStart, uint8_t pageStart, uint8_t line, uint8_t col)
+{
+    uint8_t page, column;
+    uint8_t dat;
+    int8_t i;
+    for (page = pageStart; page < pageStart + (line / 8); page++) // page loop
+    {
+        setCol(colStart);
+        setPage(page);
+        for (column = 0; column < col; column++) // column loop
+        // sendData(*ptr_pic++);
+        {
+            dat = 0;
+            for (i = page * 8 + 7; i >= page * 8; i--)
+            {
+                dat <<= 1;
+                dat += ptr_pic[col * i + column] ? 1 : 0;
+            }
+            sendData(dat);
+        }
+    }
+}
 
 void PictureContrastDisplay(const uint8_t *ptr_pic, uint8_t colStart, uint8_t pageStart, uint8_t line, uint8_t col)
 {

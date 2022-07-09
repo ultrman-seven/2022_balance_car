@@ -4,7 +4,7 @@
 
 int32_t pidCtrlUpdate(int32_t currentVal, PID_paraTypdef *object)
 {
-    int32_t proportion, diff;
+    int32_t proportion, diff; 
     proportion = object->targetVal - currentVal;
 
     object->integral = object->integral * 0.4 + proportion;

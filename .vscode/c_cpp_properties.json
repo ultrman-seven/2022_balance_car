@@ -5,7 +5,8 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/MM32SPIN2xx_p_LIB/Include",
-                "D:\\Program Files\\arm keil\\ARM\\**"
+                "D:\\Program Files\\arm keil\\ARM\\**",
+                "${workspaceFolder}/src/oled"
             ],
             "defines": [
                 "_DEBUG",
