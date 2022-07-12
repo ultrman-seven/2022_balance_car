@@ -52,12 +52,12 @@ void generalParaLoad(PID_paraTypdef *pid)
 
 void generalInc(void)
 {
-    valueAdjust_32(RIGHT_KEY, menuVal_32_Buf, 300, -300, 1, generalParaCaptionUpdate);
+    valueAdjust_32(RIGHT_KEY, menuVal_32_Buf, 8000, -800, 1, generalParaCaptionUpdate);
 }
 
 void generalDec(void)
 {
-    valueAdjust_32(LEFT_KEY, menuVal_32_Buf, 300, -300, 1, generalParaCaptionUpdate);
+    valueAdjust_32(LEFT_KEY, menuVal_32_Buf, 800, -800, 1, generalParaCaptionUpdate);
 }
 
 #define GeneralPidParaAdjMenu                                                               \
@@ -343,6 +343,11 @@ void ph_car_home_start(void)
     // cameraSetOn();
     setPidMode(balanceCarHomeMode);
 }
+void ph_car_home_cam_start(void)
+{
+    cameraSetOn();
+    setPidMode(balanceCarHomeMode);
+}
 void ph_set_speed(void)
 {
     // ph_car_home_speedPid_left.targetVal = menuVal_32_Buf[3];
@@ -377,6 +382,7 @@ MenuTypedef ph_car_home_menu[] = {
     {.caption = "转向环参数", .left =goto_ph_turn, .right = goto_ph_turn, .mid = goto_ph_turn},
     {.caption = menuCaptionStr4, .left = generalDec, .right = generalInc, .mid = ph_set_speed},
     {.caption = "开始", .left = ph_car_home_start, .mid = ph_car_home_start, .right = ph_car_home_start},
+    {.caption = "摄像头开始", .left = ph_car_home_cam_start, .mid = ph_car_home_cam_start, .right = ph_car_home_cam_start},
     {.caption = "结束", .left = testStop, .right = testStop, .mid = testStop},
     {.caption = "平衡点调整", .left = mpu6050DmpTest, .mid = NULL, .right = mpu6050DmpTest},
     {.caption = "转弯", .left = showTurn, .right = showTurn},

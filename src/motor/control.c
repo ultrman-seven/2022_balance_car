@@ -70,9 +70,14 @@ void setBaseSpeed(int32_t s)
 {
     baseSpeed = s;
 }
-
+// PID_paraTypdef ph_car_home_anglePid = {
+//     .Kp = 132, .Kd = 83, .Ki = 0, .targetVal = 0};
 PID_paraTypdef ph_car_home_anglePid = {
-    .Kp = 44, .Kd = 6, .Ki = 0, .targetVal = 0};
+    .Kp = 391, .Kd = 148, .Ki = 0, .targetVal = 0};
+
+// PID_paraTypdef ph_car_home_anglePid = {
+//     .Kp = 44, .Kd = 6, .Ki = 0, .targetVal = 0};
+
 // PID_paraTypdef ph_car_home_anglePid = {
 //     .Kp = 48, .Kd = 14, .Ki = 0, .targetVal = 0};
 PID_paraTypdef ph_car_home_speedPid = {
@@ -85,13 +90,20 @@ PID_paraTypdef ph_car_home_speedPid = {
  * @param {PID_paraTypdef} *p
  * @return pwm
  */
+float gyro_y = 0.0;
 int ph_car_home_balance(float Angle, float Gyro, PID_paraTypdef *p)
 {
     float Bias; //, kp = 300, kd = 1;
     int balance;
+    // if (gyro_y)
+    //     gyro_y = Gyro;
+    // else
+    //     gyro_y = gyro_y * 0.6 + Gyro * 0.4;
+    gyro_y = Gyro;
+    // printf("x=%.1f\r\n", gyro_y);
     Bias = (float)(p->targetVal) / 10.0 - Angle; //===求出平衡的角度中值 和机械相关
     // balance = kp * Bias + Gyro * kd; //===计算平衡控制的电机PWM  PD控制   kp是P系数 kd是D系数
-    balance = (p->Kp) * Bias + (Gyro * (p->Kd)) / 50.0;
+    balance = (p->Kp) * Bias + (gyro_y * (p->Kd)) / 50.0;
     return balance;
 }
 float Target_Velocity;
@@ -125,17 +137,23 @@ int ph_car_home_velocity(int speed_left, int speed_right, PID_paraTypdef *p)
     Encoder += Encoder_Least * 0.2;                       //===一阶低通滤波器
     Encoder_Integral += Encoder;                          //===积分出位移 积分时间：10ms
     Encoder_Integral = Encoder_Integral + (p->targetVal); //===接收遥控器数据，控制前进后退
-    if (Encoder_Integral > 5000)
-        Encoder_Integral = 5000; //===积分限幅
-    if (Encoder_Integral < -5000)
-        Encoder_Integral = -5000;                                      //===积分限幅
+    if (Encoder_Integral > 10000)
+        Encoder_Integral = 10000; //===积分限幅
+    if (Encoder_Integral < -10000)
+        Encoder_Integral = -10000;                                       //===积分限幅
     Velocity = Encoder * (p->Kp) + (Encoder_Integral * (p->Ki)) / 10.0; //===速度控制
     // if (Turn_Off(Angle_Balance, Voltage) == 1 || Flag_Stop == 1)
     // 	Encoder_Integral = 0; //===电机关闭后清除积分
-    return Velocity / 10.0;
+    // return Velocity / 10.0;
+    return Velocity;
 }
+
 PID_paraTypdef ph_car_home_speedPid_left = {
-    .Kp = 25, .Ki = 4, .Kd = 0, .targetVal = 0, .integral = 0.0, .proportionLast = 0.0};
+    .Kp = 60, .Ki = 3, .Kd = 0, .targetVal = 0, .integral = 0.0, .proportionLast = 0.0};
+// PID_paraTypdef ph_car_home_speedPid_left = {
+//     .Kp = 40, .Ki = 2, .Kd = 0, .targetVal = 0, .integral = 0.0, .proportionLast = 0.0};
+// PID_paraTypdef ph_car_home_speedPid_left = {
+//     .Kp = 25, .Ki = 4, .Kd = 0, .targetVal = 0, .integral = 0.0, .proportionLast = 0.0};
 // PID_paraTypdef ph_car_home_speedPid_left = {
 //     .Kp = 32, .Ki = 2, .Kd = 0, .targetVal = 0, .integral = 0.0, .proportionLast = 0.0};
 PID_paraTypdef ph_car_home_speedPid_right = {
@@ -226,8 +244,8 @@ float getBellFunc(int val)
     return (exp(F_NUM * val) - 1) / (exp(F_NUM * val) + 1) + 1;
 }
 
-PID_paraTypdef turnPid = {.Kp = 8, .Kd = 2, .Ki = 0, .targetVal = 64};
-// PID_paraTypdef turnPid = {.Kp = 0, .Kd = 0, .Ki = 0, .targetVal = 64};
+// PID_paraTypdef turnPid = {.Kp = 8, .Kd = 2, .Ki = 0, .targetVal = 64};
+PID_paraTypdef turnPid = {.Kp = 0, .Kd = 0, .Ki = 0, .targetVal = 64};
 int imgPosition = 64;
 int cam_turn(int val, int16_t gyro, PID_paraTypdef *p)
 {
@@ -520,6 +538,7 @@ void setPidMode(enum ctrlModes m)
         Encoder_Integral = 0;
         ph_car_home_speedPid_left.integral = 0.0;
         ph_car_home_speedPid_right.integral = 0.0;
+        gyro_y = 0;
     }
 }
 

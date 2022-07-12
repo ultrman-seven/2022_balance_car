@@ -90,6 +90,7 @@ void globalInit(void)
     motorInit();
     MPU6050_initialize();
     mpuDmpState = DMP_Init();
+    batteryInit();
 }
 extern const int8_t sinList[];
 #define DangerSpeed 1200
@@ -114,10 +115,12 @@ int main(void)
             NVIC_SystemReset();
         if (getSpeed(LEFT) <= -DangerSpeed)
             NVIC_SystemReset(); 
-        if (getSpeed(RIGHT) >= DangerSpeed)
-            NVIC_SystemReset();
-        if (getSpeed(RIGHT) <= -DangerSpeed)
-            NVIC_SystemReset();
+        // if (getSpeed(RIGHT) >= DangerSpeed)
+        //     NVIC_SystemReset();
+        // if (getSpeed(RIGHT) <= -DangerSpeed)
+        //     NVIC_SystemReset();
+        // screenClear();
+        // OLED_printf("voltage:%f", getVoltage());
         // delay(1000);
     }
     return 0;

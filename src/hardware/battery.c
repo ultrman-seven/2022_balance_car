@@ -29,8 +29,8 @@ float getVoltage(void)
     ADC_SoftwareStartConvCmd(ADC2, ENABLE);
     while (ADC_GetFlagStatus(ADC2, ADC_FLAG_EOC) == RESET)
         ;
-    result = ((double)ADC_GetConversionValue(ADC2) * 14.85) / (double)4095;
-    // result = ADC_GetConversionValue(ADC2);
+    // result = ((double)ADC_GetConversionValue(ADC2) * 14.85) / (double)4095;
+    result = ADC_GetConversionValue(ADC2);
     ADC_SoftwareStartConvCmd(ADC2, DISABLE);
     ADC_ClearFlag(ADC2, ADC_FLAG_EOC);
     return result;

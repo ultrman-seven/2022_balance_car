@@ -35,7 +35,7 @@ void motorInit(void)
     tim.TIM_ClockDivision = TIM_CKD_DIV1;
     tim.TIM_CounterMode = TIM_CounterMode_Up;
     tim.TIM_Period = PWM_PERIOD;
-    tim.TIM_Prescaler = 2;
+    tim.TIM_Prescaler = 0;
     tim.TIM_RepetitionCounter = 0;
     TIM_TimeBaseInit(TIM3, &tim);
 

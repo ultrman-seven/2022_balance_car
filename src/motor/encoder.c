@@ -16,7 +16,7 @@ void time17Init(uint16_t period, uint16_t prescaler)
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM17, ENABLE);
     time.TIM_ClockDivision = TIM_CKD_DIV1;
     time.TIM_CounterMode = TIM_CounterMode_Up;
-    time.TIM_RepetitionCounter = 0;
+    time.TIM_RepetitionCounter = 0; 
     time.TIM_Period = period;
     time.TIM_Prescaler = prescaler;
     TIM_TimeBaseInit(TIM17, &time);
