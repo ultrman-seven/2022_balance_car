@@ -8,8 +8,10 @@ EventRecorderStub.scvd
 
 # temp
 tmp/
-src/*/*.c.md
-src/*/*.h.md
+spin27/src/*/*.c.md
+spin27/src/*/*.cmd
+spin27/src/*/*.h.md
+spin27/src/*/*.hmd
 
 # c++
 src/*.cpp
