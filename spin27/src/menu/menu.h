@@ -26,7 +26,7 @@ typedef struct
         .caption = NULL, .left = NULL, .right = NULL, .mid = NULL \
     }
 
-#define MID_KEY_EXTI_LINE EXTI_Line10
+#define MID_KEY_EXTI_LINE EXTI_Line12
 
 extern MenuRecorderObject menuManager;
 extern uint8_t currentChoose;

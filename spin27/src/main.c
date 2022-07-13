@@ -5,7 +5,6 @@
 #include "motor.h"
 #include "encoder.h"
 #include "mpu6050.h"
-#include "battery.h"
 #include "inv_mpu.h"
 #include "iicsoft.h"
 #include <stdio.h>
@@ -40,15 +39,15 @@ void boardLED_Init(void)
     TIM_TimeBaseInitTypeDef tim;
     TIM_OCInitTypeDef oc;
 
-    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
 
-    GPIO_PinAFConfig(GPIOA, GPIO_PinSource12, GPIO_AF_4);
+    GPIO_PinAFConfig(GPIOB, GPIO_PinSource1, GPIO_AF_4);
 
-    gpio.GPIO_Pin = GPIO_Pin_12;
+    gpio.GPIO_Pin = GPIO_Pin_1;
     gpio.GPIO_Mode = GPIO_Mode_AF_PP;
     gpio.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(GPIOA, &gpio);
+    GPIO_Init(GPIOB, &gpio);
 
     tim.TIM_CounterMode = TIM_CounterMode_Up;
     tim.TIM_ClockDivision = TIM_CKD_DIV1;
@@ -65,8 +64,8 @@ void boardLED_Init(void)
     oc.TIM_OutputState = ENABLE;
     oc.TIM_OutputNState = DISABLE;
     oc.TIM_Pulse = 5000;
-    TIM_OC2Init(TIM2, &oc);
-    TIM_OC2PreloadConfig(TIM2, TIM_OCPreload_Enable);
+    TIM_OC3Init(TIM2, &oc);
+    TIM_OC3PreloadConfig(TIM2, TIM_OCPreload_Enable);
 
     TIM_ARRPreloadConfig(TIM2, ENABLE);
     TIM_CtrlPWMOutputs(TIM2, ENABLE);
@@ -83,19 +82,15 @@ void globalInit(void)
     sysClkState = HSE_SysClock();
     delayInit();
     boardLED_Init();
-    bluetooth_CH9141Init();
+    // bluetooth_CH9141Init();
     menuInit();
-    beepInit();
     encoderInit();
     motorInit();
     MPU6050_initialize();
     mpuDmpState = DMP_Init();
-    batteryInit();
 }
-extern const int8_t sinList[];
 #define DangerSpeed 1200
 void picProcess(void);
-// void pidUpdateFunction(void);
 int main(void)
 {
     int32_t ledBright = 0;
@@ -105,11 +100,10 @@ int main(void)
     while (1)
     {
         picProcess();
-        // pidUpdateFunction();
         (ledBright % 2) ? (ledBright -= 2) : (ledBright += 2);
         if (ledBright > 10000 || ledBright == 1)
             ledBright--;
-        TIM2->CCR2 = ledBright;
+        TIM2->CCR3 = ledBright;
 
         if (getSpeed(LEFT) >= DangerSpeed)
             NVIC_SystemReset();
@@ -119,9 +113,6 @@ int main(void)
         //     NVIC_SystemReset();
         // if (getSpeed(RIGHT) <= -DangerSpeed)
         //     NVIC_SystemReset();
-        // screenClear();
-        // OLED_printf("voltage:%f", getVoltage());
-        // delay(1000);
     }
     return 0;
 }

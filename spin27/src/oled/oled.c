@@ -10,21 +10,22 @@
 // #define DC DC_PORT, DC_PIN
 // #define RCC_DC RCC_AHBPeriph_GPIOA
 
-#define RES_PORT GPIOA
-#define RES_PIN GPIO_Pin_9
+#define RES_PORT GPIOB
+#define RES_PIN GPIO_Pin_0
 #define RES RES_PORT, RES_PIN
-#define RCC_RES RCC_AHBPeriph_GPIOA
+#define RCC_RES RCC_AHBPeriph_GPIOB
 
 #ifndef __NSS_HARD__
 #define CS_PORT GPIOB
-#define CS_PIN GPIO_Pin_12
+#define CS_PIN GPIO_Pin_2
 #define CS CS_PORT, CS_PIN
 #endif
 #define RCC_CS RCC_AHBPeriph_GPIOB
 
-#define Flash_CS_PORT GPIOC
-#define Flash_CS_PIN GPIO_Pin_3
+#define Flash_CS_PORT GPIOD
+#define Flash_CS_PIN GPIO_Pin_2
 #define Flash_CS Flash_CS_PORT, Flash_CS_PIN
+#define RCC_Flash_CS RCC_AHBPeriph_GPIOD
 
 void dc_res_Init(void)
 {
@@ -33,6 +34,7 @@ void dc_res_Init(void)
     RCC_AHBPeriphClockCmd(RCC_DC, ENABLE);
     RCC_AHBPeriphClockCmd(RCC_CS, ENABLE);
     RCC_AHBPeriphClockCmd(RCC_RES, ENABLE);
+    RCC_AHBPeriphClockCmd(RCC_Flash_CS, ENABLE);
 
     gpio.GPIO_Mode = GPIO_Mode_Out_PP;
     gpio.GPIO_Speed = GPIO_Speed_50MHz;
@@ -69,7 +71,7 @@ void oledInit(void)
     // mosi
     GPIO_PinAFConfig(GPIOB, GPIO_PinSource13, GPIO_AF_4);
     // miso
-    GPIO_PinAFConfig(GPIOC, GPIO_PinSource2, GPIO_AF_1);
+    GPIO_PinAFConfig(GPIOB, GPIO_PinSource12, GPIO_AF_4);
 #ifdef __NSS_HARD__
     // nss
     GPIO_PinAFConfig(GPIOB, GPIO_PinSource12, GPIO_AF_0);
@@ -80,9 +82,9 @@ void oledInit(void)
     init_gpio.GPIO_Speed = GPIO_Speed_50MHz;
     init_gpio.GPIO_Mode = GPIO_Mode_AF_PP;
     GPIO_Init(GPIOB, &init_gpio);
-    init_gpio.GPIO_Pin = GPIO_Pin_2;
+    init_gpio.GPIO_Pin = GPIO_Pin_12;
     init_gpio.GPIO_Mode = GPIO_Mode_IPU;
-    GPIO_Init(GPIOC, &init_gpio);
+    GPIO_Init(GPIOB, &init_gpio);
 
     init_spi.SPI_Mode = SPI_Mode_Master;
     init_spi.SPI_DataSize = SPI_DataSize_8b;
@@ -224,19 +226,19 @@ void sendData(uint8_t cmd)
 void oledReset(void)
 #ifndef _IPS_114__
 {
-    const uint8_t rstCmd[] = {0xAE, 0x02, 0x10, 0x40,
-                              0xB0, 0x81, 0xFF, 0xA1, 0xA4, 0xA6, 0xC8, 0xA8,
-                              0x3F, 0xD5, 0x80, 0xD3, 0x00, 0xAD, 0x8B, 0xDA,
-                              0x12, 0xDB, 0x40, 0xD9, 0xF1, 0xAF};
-    // const uint8_t rstCmd[] = {0xae, 0x00, 0x10, 0x40, 0x81,
-    //                           0x7f, 0xa1, 0xc8, 0xa6, 0xa8, 0x3f, 0xd3,
-    //                           0x00, 0xd5, 0x80, 0xd9, 0xf1, 0xda, 0x12, 0xdb,
-    //                           0x40, 0x20, 0x02, 0x8d, 0x14, 0xa4, 0xa6, 0xaf};
+    // const uint8_t rstCmd[] = {0xAE, 0x02, 0x10, 0x40,
+    //                           0xB0, 0x81, 0xFF, 0xA1, 0xA4, 0xA6, 0xC8, 0xA8,
+    //                           0x3F, 0xD5, 0x80, 0xD3, 0x00, 0xAD, 0x8B, 0xDA,
+    //                           0x12, 0xDB, 0x40, 0xD9, 0xF1, 0xAF};
+    const uint8_t rstCmd[] = {0xae, 0x00, 0x10, 0x40, 0x81,
+                              0x7f, 0xa1, 0xc8, 0xa6, 0xa8, 0x3f, 0xd3,
+                              0x00, 0xd5, 0x80, 0xd9, 0xf1, 0xda, 0x12, 0xdb,
+                              0x40, 0x20, 0x02, 0x8d, 0x14, 0xa4, 0xa6, 0xaf};
     uint8_t cnt;
     GPIO_ResetBits(RES);
     delayMs(100);
     GPIO_SetBits(RES);
-    for (cnt = 0; cnt < 26; cnt++)
+    for (cnt = 0; cnt < 28; cnt++)
         sendCMD(rstCmd[cnt]);
 }
 
