@@ -40,9 +40,16 @@ void goBackToLastMenu(void)
     showMenu(menuManager.getLastMenu());
 }
 
+void cameraSetOn(void);
+void cameraSetOff(void);
 // main menu callback functions
+extern int32_t baseSpeed;
 void runStart(void)
 {
+    balancePoint = 422;
+    baseSpeed = -200;
+    cameraSetOn();
+    setPidMode(balanceCarHomeMode);
 }
 
 void gotoTests(void)
@@ -207,8 +214,7 @@ MenuTypedef mainMenu[] = {
     {.caption = "run", .mid = runStart, .right = runStart, .left = runStart},
     {.caption = "系统状态", .left = getSysState, .right = getSysState, .mid = getSysState},
     END_OF_MENU};
-void cameraSetOn(void);
-void cameraSetOff(void);
+
 MenuTypedef testMenu[] = {
     {.caption = "蜂鸣器", .left = beepTest, .mid = beepTest, .right = beepTest},
     {.caption = "mpu6050测试", .left = gotoMPU6050Test, .right = gotoMPU6050Test, .mid = gotoMPU6050Test},

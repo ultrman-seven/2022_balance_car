@@ -20,7 +20,7 @@ ErrorStatus HSE_SysClock(void)
     if (HSE_StartUpState == SUCCESS)
     {
         RCC_HCLKConfig(RCC_SYSCLK_Div1);
-        RCC_PCLK1Config(RCC_HCLK_Div1);
+        RCC_PCLK1Config(RCC_HCLK_Div2);
         RCC_PCLK2Config(RCC_HCLK_Div1);
         //外部晶振8MHz，12倍频成96MHz
         RCC_PLLConfig(RCC_PLLSource_HSE_Div1, RCC_PLLMul_12);
