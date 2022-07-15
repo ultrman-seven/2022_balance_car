@@ -15,7 +15,10 @@
                 "code=",
                 "__STATIC_INLINE=",
                 "EMPL_MM32SPIN27_WY_LIB",
-                "MPU6050"
+                "MPU6050",
+                "__nop()=",
+                "__ASM(A)=",
+                "__VS_CODE"
             ],
             "windowsSdkVersion": "10.0.18362.0",
             "compilerPath": "D:\\Program Files\\vs2019\\VC\\Tools\\MSVC\\14.28.29333\\bin\\Hostx64\\x64\\cl.exe",

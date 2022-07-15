@@ -628,6 +628,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\wy_exti.c</FilePath>
             </File>
+            <File>
+              <FileName>getImgVal.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\getImgVal.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

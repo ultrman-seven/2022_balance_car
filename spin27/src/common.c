@@ -42,8 +42,8 @@ void SysTick_Handler(void)
 //重定义fputc函数
 int fputc(int ch, FILE *f)
 {
-    UART_SendData(UART1, ch);
-    while (!UART_GetFlagStatus(UART1, UART_FLAG_TXEPT))
+    UART_SendData(UART2, ch);
+    while (!UART_GetFlagStatus(UART2, UART_FLAG_TXEPT))
         ;
     return ch;
 }

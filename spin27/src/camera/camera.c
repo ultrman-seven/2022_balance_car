@@ -131,16 +131,16 @@ void __TIM2PclkInit(void)
     TIM_DMACmd(TIM2, TIM_DMA_CC1, ENABLE);
 }
 
-void UART2_IRQHandler(void)
-{
-    if (UART_GetITStatus(UART2, UART_IT_RXIEN) == SET)
-    {
-        UART_ClearITPendingBit(UART2, UART_IT_RXIEN);
-        // UART_SendData(UART1, UART_ReceiveData(UART2));
-        // while (!UART_GetFlagStatus(UART1, UART_FLAG_TXEPT))
-        //     ;
-    }
-}
+// void UART2_IRQHandler(void)
+// {
+//     if (UART_GetITStatus(UART2, UART_IT_RXIEN) == SET)
+//     {
+//         UART_ClearITPendingBit(UART2, UART_IT_RXIEN);
+//         // UART_SendData(UART1, UART_ReceiveData(UART2));
+//         // while (!UART_GetFlagStatus(UART1, UART_FLAG_TXEPT))
+//         //     ;
+//     }
+// }
 
 void __cameraSenaBytes(uint8_t *dat, uint8_t len)
 {

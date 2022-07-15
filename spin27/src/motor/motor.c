@@ -1,10 +1,15 @@
 #include "common.h"
 #include "encoder.h"
 #include "motor.h"
-#define HC244OE_PIN GPIO_Pin_8
-#define HC244OE_PORT GPIOA
+#define HC244OE_PIN GPIO_Pin_3
+#define HC244OE_PORT GPIOD
 #define HC244OE HC244OE_PORT, HC244OE_PIN
-#define RCC_HC244 RCC_AHBPeriph_GPIOA
+#define RCC_HC244 RCC_AHBPeriph_GPIOD
+
+#define v12_PIN GPIO_Pin_5
+#define v12_PORT GPIOB
+#define v12 v12_PORT, v12_PIN
+#define RCC_v12 RCC_AHBPeriph_GPIOB
 
 void motorInit(void)
 {
@@ -15,6 +20,7 @@ void motorInit(void)
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
     RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOC, ENABLE);
     RCC_AHBPeriphClockCmd(RCC_HC244, ENABLE);
+    RCC_AHBPeriphClockCmd(RCC_v12, ENABLE);
 
     GPIO_PinAFConfig(GPIOC, GPIO_PinSource6, GPIO_AF_1);
     GPIO_PinAFConfig(GPIOC, GPIO_PinSource7, GPIO_AF_1);
@@ -31,6 +37,10 @@ void motorInit(void)
     GPIO_Init(HC244OE_PORT, &io);
     // GPIO_SetBits(HC244OE);
     GPIO_ResetBits(HC244OE);
+
+    io.GPIO_Pin = v12_PIN;
+    GPIO_Init(v12_PORT, &io);
+    GPIO_SetBits(v12);
 
     tim.TIM_ClockDivision = TIM_CKD_DIV1;
     tim.TIM_CounterMode = TIM_CounterMode_Up;

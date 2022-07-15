@@ -61,7 +61,9 @@
         "xlocmon": "c",
         "xloctime": "c",
         "xtree": "c",
-        "xutility": "c"
+        "xutility": "c",
+        "hal_device.h": "c",
+        "camera.h": "c"
     },
     "cSpell.enableFiletypes": [
         "8051",

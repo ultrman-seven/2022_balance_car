@@ -209,11 +209,13 @@ MenuTypedef mainMenu[] = {
     END_OF_MENU};
 void cameraSetOn(void);
 void cameraSetOff(void);
+void test3277(void);
 MenuTypedef testMenu[] = {
     {.caption = "蜂鸣器", .left = beepTest, .mid = beepTest, .right = beepTest},
     {.caption = "mpu6050测试", .left = gotoMPU6050Test, .right = gotoMPU6050Test, .mid = gotoMPU6050Test},
     {.caption = "电机", .left = gotoMotorRelatedTest, .mid = gotoMotorRelatedTest, .right = gotoMotorRelatedTest},
     {.caption = "摄像头", .left = cameraSetOn, .right = cameraSetOn, .mid = cameraSetOff},
+    {.caption = "3277", .left = test3277, .right = test3277, .mid = test3277},
     GO_BACK_MENU,
     END_OF_MENU};
 

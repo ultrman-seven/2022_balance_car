@@ -73,7 +73,7 @@ void setBaseSpeed(int32_t s)
 // PID_paraTypdef ph_car_home_anglePid = {
 //     .Kp = 132, .Kd = 83, .Ki = 0, .targetVal = 0};
 PID_paraTypdef ph_car_home_anglePid = {
-    .Kp = 391, .Kd = 148, .Ki = 0, .targetVal = 0};
+    .Kp = 190, .Kd = 31, .Ki = 0, .targetVal = 0};
 
 // PID_paraTypdef ph_car_home_anglePid = {
 //     .Kp = 44, .Kd = 6, .Ki = 0, .targetVal = 0};
@@ -132,15 +132,16 @@ int ph_car_home_velocity(int speed_left, int speed_right, PID_paraTypdef *p)
     // if (Bi_zhang == 1 && Distance < 500 && Flag_Left != 1 && Flag_Right != 1) //避障标志位置1且非遥控转弯的时候，进入避障模式
     // 	Movement = -Target_Velocity / Flag_sudu;
     //=============速度PI控制器=======================//
-    Encoder_Least = 0 - (speed_left + speed_right) / 2.0; //===获取最新速度偏差==测量速度（左右编码器之和）-目标速度（此处为零）
+    Encoder_Least = (p->targetVal) - (speed_left + speed_right) / 2.0; //===获取最新速度偏差==测量速度（左右编码器之和）-目标速度（此处为零）
     Encoder *= 0.8;                                       //===一阶低通滤波器
     Encoder += Encoder_Least * 0.2;                       //===一阶低通滤波器
     Encoder_Integral += Encoder;                          //===积分出位移 积分时间：10ms
-    Encoder_Integral = Encoder_Integral + (p->targetVal); //===接收遥控器数据，控制前进后退
+    // Encoder_Integral = Encoder_Integral; //===接收遥控器数据，控制前进后退
+    Encoder_Integral *= 0.64;
     if (Encoder_Integral > 10000)
         Encoder_Integral = 10000; //===积分限幅
     if (Encoder_Integral < -10000)
-        Encoder_Integral = -10000;                                       //===积分限幅
+        Encoder_Integral = -10000;                                      //===积分限幅
     Velocity = Encoder * (p->Kp) + (Encoder_Integral * (p->Ki)) / 10.0; //===速度控制
     // if (Turn_Off(Angle_Balance, Voltage) == 1 || Flag_Stop == 1)
     // 	Encoder_Integral = 0; //===电机关闭后清除积分
@@ -149,7 +150,7 @@ int ph_car_home_velocity(int speed_left, int speed_right, PID_paraTypdef *p)
 }
 
 PID_paraTypdef ph_car_home_speedPid_left = {
-    .Kp = 60, .Ki = 3, .Kd = 0, .targetVal = 0, .integral = 0.0, .proportionLast = 0.0};
+    .Kp = 15, .Ki = 1, .Kd = 0, .targetVal = 0, .integral = 0.0, .proportionLast = 0.0};
 // PID_paraTypdef ph_car_home_speedPid_left = {
 //     .Kp = 40, .Ki = 2, .Kd = 0, .targetVal = 0, .integral = 0.0, .proportionLast = 0.0};
 // PID_paraTypdef ph_car_home_speedPid_left = {
@@ -244,8 +245,8 @@ float getBellFunc(int val)
     return (exp(F_NUM * val) - 1) / (exp(F_NUM * val) + 1) + 1;
 }
 
-// PID_paraTypdef turnPid = {.Kp = 8, .Kd = 2, .Ki = 0, .targetVal = 64};
-PID_paraTypdef turnPid = {.Kp = 0, .Kd = 0, .Ki = 0, .targetVal = 64};
+PID_paraTypdef turnPid = {.Kp = 10, .Kd = 2, .Ki = 0, .targetVal = 64};
+// PID_paraTypdef turnPid = {.Kp = 0, .Kd = 0, .Ki = 0, .targetVal = 0};
 int imgPosition = 64;
 int cam_turn(int val, int16_t gyro, PID_paraTypdef *p)
 {
@@ -295,6 +296,7 @@ int16_t getAcc(void)
 int16_t acc = 0;
 int Balance_Pwm, Velocity_Pwm, Moto1, Moto2, Turn_Pwm;
 extern uint8_t timerFlag;
+int16_t getImgData(void);
 void pidUpdateFunction(void)
 {
     float pitch, y, r;
@@ -322,7 +324,7 @@ void pidUpdateFunction(void)
         pwmRight = speedPidRight.targetVal;
         setPower(pwmLeft, LEFT);
         setPower(pwmRight, RIGHT);
-        printf("r=%d,c=%d\r\n", (int32_t)speedPidLeft.targetVal, getSpeed(LEFT));
+        // printf("r=%d,c=%d\r\n", (int32_t)speedPidLeft.targetVal, getSpeed(LEFT));
         break;
     case speedMode:
         speedPidLeft.targetVal = baseSpeed + turnSpeed;
@@ -331,7 +333,7 @@ void pidUpdateFunction(void)
         pwmRight = pwmRight + pidIncrementalCtrlUpdate(getSpeed(RIGHT), &speedPidRight) / 10;
         setPower(pwmLeft, LEFT);
         setPower(pwmRight, RIGHT);
-        printf("r=%d,c=%d\r\n", (int32_t)speedPidLeft.targetVal, getSpeed(LEFT));
+        // printf("r=%d,c=%d\r\n", (int32_t)speedPidLeft.targetVal, getSpeed(LEFT));
         break;
     case angleMode:
         do
@@ -495,10 +497,11 @@ void pidUpdateFunction(void)
         // printf("a=%d,r=%d\r\n", acc,speedPidLeft.targetVal);
         break;
     case balanceCarHomeMode:
-        do
-        {
-            Read_DMP(&pitch, &r, &y);
-        } while (pitch < 0.000001 && pitch > -0.000001);
+        Read_DMP(&pitch, &r, &y);
+        // do
+        // {
+        //     Read_DMP(&pitch, &r, &y);
+        // } while (pitch < 0.000001 && pitch > -0.000001);
         ph_car_home_anglePid.targetVal = balancePoint;
         ph_car_home_speedPid_left.targetVal = baseSpeed;  // + ph_turn_speed;
         ph_car_home_speedPid_right.targetVal = baseSpeed; // - ph_turn_speed;
@@ -513,6 +516,8 @@ void pidUpdateFunction(void)
         //===速度环PID控制	 记住，速度反馈是正反馈，就是小车快的时候要慢下来就需要再跑快一点
         // Turn_Pwm = ph_car_home_turn(getSpeed(LEFT), getSpeed(RIGHT), gyro[2]); //===转向环PID控制
 
+        turnPid.targetVal = 0;
+        imgPosition = getImgData();
         Turn_Pwm = cam_turn(imgPosition, gyro[2], &turnPid);
 
         // Velocity_Pwm = ph_car_home_OneWheelVelocity(getSpeed(LEFT), &ph_car_home_speedPid_left);

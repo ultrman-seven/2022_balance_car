@@ -8,6 +8,7 @@
 #include "inv_mpu.h"
 #include "iicsoft.h"
 #include <stdio.h>
+#include "uart.h"
 
 ErrorStatus HSE_SysClock(void)
 {
@@ -19,7 +20,7 @@ ErrorStatus HSE_SysClock(void)
     if (HSE_StartUpState == SUCCESS)
     {
         RCC_HCLKConfig(RCC_SYSCLK_Div1);
-        RCC_PCLK1Config(RCC_HCLK_Div1);
+        RCC_PCLK1Config(RCC_HCLK_Div2);
         RCC_PCLK2Config(RCC_HCLK_Div1);
         //外部晶振8MHz，12倍频成96MHz
         RCC_PLLConfig(RCC_PLLSource_HSE_Div1, RCC_PLLMul_12);
@@ -77,17 +78,19 @@ uint8_t mpuDmpState;
 void globalInit(void)
 {
     void menuInit(void);
-    void bluetooth_CH9141Init(void);
+    void communicateInit(void);
 
     sysClkState = HSE_SysClock();
     delayInit();
     boardLED_Init();
-    // bluetooth_CH9141Init();
+    uartInit();
     menuInit();
     encoderInit();
     motorInit();
     MPU6050_initialize();
     mpuDmpState = DMP_Init();
+    delayMs(1000);
+    communicateInit();
 }
 #define DangerSpeed 1200
 void picProcess(void);
@@ -108,11 +111,10 @@ int main(void)
         if (getSpeed(LEFT) >= DangerSpeed)
             NVIC_SystemReset();
         if (getSpeed(LEFT) <= -DangerSpeed)
-            NVIC_SystemReset(); 
+            NVIC_SystemReset();
         // if (getSpeed(RIGHT) >= DangerSpeed)
         //     NVIC_SystemReset();
         // if (getSpeed(RIGHT) <= -DangerSpeed)
         //     NVIC_SystemReset();
     }
-    return 0;
 }
