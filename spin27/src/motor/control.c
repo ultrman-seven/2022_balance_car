@@ -34,7 +34,7 @@
 #include "quickSin.h"
 #include "mpu6050/filter.h"
 
-int32_t balancePoint = -216;
+int32_t balancePoint = 145;
 int32_t baseSpeed = 0;
 enum ctrlModes pidMode = NullMode; // pwmMode;
 float accOutput = 0.0;
@@ -74,7 +74,7 @@ void setBaseSpeed(int32_t s)
 // PID_paraTypdef ph_car_home_anglePid = {
 //     .Kp = 132, .Kd = 83, .Ki = 0, .targetVal = 0};
 PID_paraTypdef ph_car_home_anglePid = {
-    .Kp = 190, .Kd = 31, .Ki = 0, .targetVal = 0, .proportionLast = 0};
+    .Kp = 88, .Kd = 52, .Ki = 0, .targetVal = 0, .proportionLast = 0};
 
 // PID_paraTypdef ph_car_home_anglePid = {
 //     .Kp = 44, .Kd = 6, .Ki = 0, .targetVal = 0};
@@ -156,7 +156,7 @@ int ph_car_home_velocity(int speed_left, int speed_right, PID_paraTypdef *p)
 }
 
 PID_paraTypdef ph_car_home_speedPid_left = {
-    .Kp = 15, .Ki = 1, .Kd = 0, .targetVal = 0, .integral = 0.0, .proportionLast = 0.0};
+    .Kp = 80, .Ki = 4, .Kd = 0, .targetVal = 0, .integral = 0.0, .proportionLast = 0.0};
 // PID_paraTypdef ph_car_home_speedPid_left = {
 //     .Kp = 40, .Ki = 2, .Kd = 0, .targetVal = 0, .integral = 0.0, .proportionLast = 0.0};
 // PID_paraTypdef ph_car_home_speedPid_left = {
@@ -251,8 +251,8 @@ float getBellFunc(int val)
     return (exp(F_NUM * val) - 1) / (exp(F_NUM * val) + 1) + 1;
 }
 
-PID_paraTypdef turnPid = {.Kp = 10, .Kd = 2, .Ki = 0, .targetVal = 64};
-// PID_paraTypdef turnPid = {.Kp = 0, .Kd = 0, .Ki = 0, .targetVal = 0};
+// PID_paraTypdef turnPid = {.Kp = 10, .Kd = 2, .Ki = 0, .targetVal = 64};
+PID_paraTypdef turnPid = {.Kp = 0, .Kd = 0, .Ki = 0, .targetVal = 0};
 int imgPosition = 64;
 int cam_turn(int val, int16_t gyro, PID_paraTypdef *p)
 {

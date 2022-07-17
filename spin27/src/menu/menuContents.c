@@ -206,7 +206,7 @@ void gotoParaMenu(void)
 }
 
 MenuTypedef mainMenu[] = {
-    {.caption = "调参", .left = gotoParaMenu, .right = gotoParaMenu, .right = gotoParaMenu},
+    {.caption = "调参", .mid = gotoParaMenu, .right = gotoParaMenu, .right = gotoParaMenu},
     {.caption = "功能测试", .mid = gotoTests, .right = gotoTests, .left = gotoTests},
     {.caption = "run", .mid = runStart, .right = runStart, .left = runStart},
     {.caption = "系统状态", .left = getSysState, .right = getSysState, .mid = getSysState},
