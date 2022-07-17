@@ -63,7 +63,9 @@
         "xtree": "c",
         "xutility": "c",
         "hal_device.h": "c",
-        "camera.h": "c"
+        "camera.h": "c",
+        "math.h": "c",
+        "filter.h": "c"
     },
     "cSpell.enableFiletypes": [
         "8051",

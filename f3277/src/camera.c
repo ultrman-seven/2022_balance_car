@@ -295,7 +295,7 @@ uint16_t findMax(uint8_t *img, uint16_t height, uint8_t width);
 uint8_t OTSU(uint8_t *image, uint8_t IMAGE_H, uint8_t IMAGE_W);
 uint16_t BFS(uint8_t *image, uint16_t IMAGE_H, uint16_t IMAGE_W);
 uint32_t findPointCenter(uint8_t *img, uint8_t l, uint8_t c);
-
+void LED_flip(void);
 #include "stdio.h"
 int16_t camResult = 0;
 void cameraPicOption(void)
@@ -303,11 +303,12 @@ void cameraPicOption(void)
     if (DMA_ok_flag)
     {
         // printf("\r\npic is ok!\r\n");
+        LED_flip();
         uint16_t maxIdx;
-        // OTSU(picReceive.pic, PIC_LINE, PIC_COL);
-        maxIdx = findMax(picReceive.pic, PIC_LINE, PIC_COL);
+        OTSU(picReceive.pic, PIC_LINE, PIC_COL);
+        // maxIdx = findMax(picReceive.pic, PIC_LINE, PIC_COL);
         imgGray2Bin(picReceive.pic, PIC_LINE, PIC_COL);
-        camResult = PIC_COL / 2 - BFS(picReceive.pic, PIC_LINE, PIC_COL);
+        camResult = (findPointCenter(picReceive.pic, PIC_LINE, PIC_COL) & 0x00ff) - PIC_COL / 2;
         if (cameraFlag)
             picReceive.state = 1;
         DMA_ok_flag = 0;

@@ -75,20 +75,24 @@ void gotoMPU6050Test(void)
 extern uint32_t MPU_time;
 extern uint8_t MPU_who;
 extern PID_paraTypdef anglePid;
+#include "mpu6050/filter.h"
 void mpu6050DmpTest(void)
 {
-    float y, p, r;
+    float y = 0, p, r = 0;
     while (EXTI_GetITStatus(MID_KEY_EXTI_LINE) == RESET)
     {
+        mpuIntCMD(DISABLE);
         Read_DMP(&p, &r, &y);
+        // Get_Angle(3);
         // y = MPU_yaw;
         // p = MPU_pitch;
         // r = MPU_roll;
         screenClear();
-        OLED_printf("who:%d\np:%f\nr:%f\ny:%f", MPU_who, p, r, y);
+        OLED_printf("who:%d\np:%f\ngy:%f\ngz:%f", MPU_who, p, Gyro_Balance, Gyro_Turn);
         // printf("地址:%d\n俯仰角:%f\troll:%f\tyaw:%f\n", MPU_who, p, r, y);
         delayMs(50);
     }
+    mpuIntCMD(ENABLE);
     balancePoint = anglePid.targetVal = 10 * p;
     showMenu(menuManager.getCurrentMenu());
 }

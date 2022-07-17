@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include "motor/control.h"
 #include "quickSin.h"
+#include "mpu6050/filter.h"
 
 int32_t balancePoint = -216;
 int32_t baseSpeed = 0;
@@ -73,7 +74,7 @@ void setBaseSpeed(int32_t s)
 // PID_paraTypdef ph_car_home_anglePid = {
 //     .Kp = 132, .Kd = 83, .Ki = 0, .targetVal = 0};
 PID_paraTypdef ph_car_home_anglePid = {
-    .Kp = 190, .Kd = 31, .Ki = 0, .targetVal = 0};
+    .Kp = 190, .Kd = 31, .Ki = 0, .targetVal = 0, .proportionLast = 0};
 
 // PID_paraTypdef ph_car_home_anglePid = {
 //     .Kp = 44, .Kd = 6, .Ki = 0, .targetVal = 0};
@@ -95,13 +96,18 @@ int ph_car_home_balance(float Angle, float Gyro, PID_paraTypdef *p)
 {
     float Bias; //, kp = 300, kd = 1;
     int balance;
-    // if (gyro_y)
+    // if (gyro_y == 0)
     //     gyro_y = Gyro;
     // else
     //     gyro_y = gyro_y * 0.6 + Gyro * 0.4;
+
     gyro_y = Gyro;
-    // printf("x=%.1f\r\n", gyro_y);
+
     Bias = (float)(p->targetVal) / 10.0 - Angle; //===求出平衡的角度中值 和机械相关
+
+    // gyro_y = Bias - p->proportionLast;
+    // p->proportionLast = Bias;
+
     // balance = kp * Bias + Gyro * kd; //===计算平衡控制的电机PWM  PD控制   kp是P系数 kd是D系数
     balance = (p->Kp) * Bias + (gyro_y * (p->Kd)) / 50.0;
     return balance;
@@ -133,9 +139,9 @@ int ph_car_home_velocity(int speed_left, int speed_right, PID_paraTypdef *p)
     // 	Movement = -Target_Velocity / Flag_sudu;
     //=============速度PI控制器=======================//
     Encoder_Least = (p->targetVal) - (speed_left + speed_right) / 2.0; //===获取最新速度偏差==测量速度（左右编码器之和）-目标速度（此处为零）
-    Encoder *= 0.8;                                       //===一阶低通滤波器
-    Encoder += Encoder_Least * 0.2;                       //===一阶低通滤波器
-    Encoder_Integral += Encoder;                          //===积分出位移 积分时间：10ms
+    Encoder *= 0.8;                                                    //===一阶低通滤波器
+    Encoder += Encoder_Least * 0.2;                                    //===一阶低通滤波器
+    Encoder_Integral += Encoder;                                       //===积分出位移 积分时间：10ms
     // Encoder_Integral = Encoder_Integral; //===接收遥控器数据，控制前进后退
     Encoder_Integral *= 0.64;
     if (Encoder_Integral > 10000)
@@ -145,8 +151,8 @@ int ph_car_home_velocity(int speed_left, int speed_right, PID_paraTypdef *p)
     Velocity = Encoder * (p->Kp) + (Encoder_Integral * (p->Ki)) / 10.0; //===速度控制
     // if (Turn_Off(Angle_Balance, Voltage) == 1 || Flag_Stop == 1)
     // 	Encoder_Integral = 0; //===电机关闭后清除积分
-    // return Velocity / 10.0;
-    return Velocity;
+    return Velocity / 10.0;
+    // return Velocity;
 }
 
 PID_paraTypdef ph_car_home_speedPid_left = {
@@ -297,15 +303,16 @@ int16_t acc = 0;
 int Balance_Pwm, Velocity_Pwm, Moto1, Moto2, Turn_Pwm;
 extern uint8_t timerFlag;
 int16_t getImgData(void);
+float pitch = 0;
 void pidUpdateFunction(void)
 {
-    float pitch, y, r;
-    // if (!timerFlag)
-    //     return;
-    // timerFlag = 0;
+    float y, r;
+    uint32_t i;
+    // getTimeStamp(&i);
+    // if (i > 5000)
+    //     Read_DMP(&pitch, &r, &y);
 
     // uint8_t waitErr = 8;
-    // Read_DMP(&pitch, &r, &y);
     // while (pitch < 0.000001 && pitch > -0.000001 && waitErr)
     // {
     //     Read_DMP(&pitch, &r, &y);
@@ -319,7 +326,6 @@ void pidUpdateFunction(void)
     switch (pidMode)
     {
     case pwmMode:
-
         pwmLeft = speedPidLeft.targetVal;
         pwmRight = speedPidRight.targetVal;
         setPower(pwmLeft, LEFT);
@@ -350,20 +356,6 @@ void pidUpdateFunction(void)
         speedPidLeft.targetVal =
             speedPidRight.targetVal =
                 baseSpeed + pidCtrlAngle(pitch * 10) / 10;
-
-        //角度 -pid-> 加速度 -pid-> 速度
-        acc = acc * 5 + ((accel[0] + 500 - 168 * quickSin(pitch * 10)) / 100 - 5) * 5;
-        acc /= 10;
-        // accPidLeft.targetVal = accPidRight.targetVal = pidCtrlAngle(pitch * 10) / 100;
-        // speedPidLeft.targetVal +=
-        //     pidIncrementalCtrlUpdate(acc, &accPidLeft) / 10;
-        // speedPidRight.targetVal +=
-        //     pidIncrementalCtrlUpdate(acc, &accPidRight) / 10;
-
-        //角度 -pid-> 加速度 --> 速度
-        // accOutput += pidCtrlAngle(pitch * 10) / 10.0;
-        // speedPidLeft.targetVal = accOutput;
-        // speedPidRight.targetVal = accOutput;
 
         speedPidLeft.targetVal += turnSpeed;
         speedPidRight.targetVal -= turnSpeed;
@@ -407,97 +399,21 @@ void pidUpdateFunction(void)
         setPower(pwmRight, RIGHT);
         break;
     case balanceModifyMode:
-        do
-        {
-            Read_DMP(&pitch, &r, &y);
-        } while (pitch < 0.000001 && pitch > -0.000001);
-        // speedPidLeft.targetVal = speedPidRight.targetVal = pidCtrlUpdate(pitch * 10, &anglePid) / 10;
-
-        // balanceModify += pidIncrementalCtrlUpdate(-1 * (accel[0] - 164 * quickSin(pitch * 10)) / 1000, &findAnglePid) / 4;
-        balanceModify -=
-            pidIncrementalCtrlUpdate((getSpeed(LEFT) + getSpeed(RIGHT)) / 2, &speedCtrlPid) /
-            50;
-        if (balanceModify > MAX_Modify)
-            balanceModify = MAX_Modify;
-        if (balanceModify < -MAX_Modify)
-            balanceModify = -MAX_Modify;
-        anglePid.targetVal = balancePoint + balanceModify;
-        speedPidLeft.targetVal = speedPidRight.targetVal = pidCtrlAngle(pitch * 10) / 10;
-        speedPidLeft.targetVal += turnSpeed;
-        speedPidRight.targetVal -= turnSpeed;
-        pwmLeft = pwmLeft + pidIncrementalCtrlUpdate(getSpeed(LEFT), &speedPidLeft) / 10;
-        pwmRight = pwmRight + pidIncrementalCtrlUpdate(getSpeed(RIGHT), &speedPidRight) / 10;
-        setPower(pwmLeft, LEFT);
-        setPower(pwmRight, RIGHT);
-        printf("r=%d,s=%d,c=%d\r\n", balanceModify, (getSpeed(LEFT) + getSpeed(RIGHT)) / 2, (int32_t)speedCtrlPid.targetVal);
+        // 代码见历史
         break;
-
     case accPhysicalMode:
-
+        // 代码见历史
         break;
     case accPidMode:
-        // 3
-        // 0.7
-        // 0.3
-
-        Read_DMP(&pitch, &r, &y);
-        acc = acc * 5 + ((accel[0] + 500 - 168 * quickSin(pitch * 10)) / 100 - 5) * 5;
-        acc /= 10;
-        // acc = accel[0] + 500 - 168 * quickSin(pitch * 10);
-        speedPidLeft.targetVal +=
-            pidIncrementalCtrlUpdate(acc, &accPidLeft) / 10;
-        speedPidRight.targetVal +=
-            pidIncrementalCtrlUpdate(acc, &accPidRight) / 10;
-        if (speedPidLeft.targetVal > 500)
-            speedPidLeft.targetVal = 500;
-        if (speedPidLeft.targetVal < -500)
-            speedPidLeft.targetVal = -500;
-        if (speedPidRight.targetVal > 500)
-            speedPidRight.targetVal = 500;
-        if (speedPidRight.targetVal < -500)
-            speedPidRight.targetVal = -500;
-        pwmLeft = pwmLeft + pidIncrementalCtrlUpdate(getSpeed(LEFT), &speedPidLeft) / 10;
-        pwmRight = pwmRight + pidIncrementalCtrlUpdate(getSpeed(RIGHT), &speedPidRight) / 10;
-        setPower(pwmLeft, LEFT);
-        setPower(pwmRight, RIGHT);
-        printf("r=%d,c=%d,s=%d\r\n", accPidLeft.targetVal, acc, speedPidLeft.targetVal);
+        // 代码见历史
         break;
     case angleMode_accOutput:
-        do
-        {
-            Read_DMP(&pitch, &r, &y);
-        } while (pitch < 0.000001 && pitch > -0.000001);
-        // speedPidLeft.targetVal = speedPidRight.targetVal = pidCtrlUpdate(pitch * 10, &anglePid) / 10;
-
-        // balanceModify += pidIncrementalCtrlUpdate(-1 * (accel[0] - 164 * quickSin(pitch * 10)) / 1000, &findAnglePid) / 4;
-        // balanceModify -= pidIncrementalCtrlUpdate((getSpeed(LEFT) + getSpeed(RIGHT)) / 2, &speedCtrlPid)/10;
-        anglePid.targetVal = balancePoint;
-
-        //角度 -pid-> 加 速度 --> 速度
-        accOutput = pidCtrlAngle(pitch * 10) / 1000;
-        speedPidLeft.targetVal += accOutput;
-        speedPidRight.targetVal += accOutput;
-
-        speedPidLeft.targetVal += turnSpeed;
-        speedPidRight.targetVal -= turnSpeed;
-        if (speedPidLeft.targetVal > 500)
-            speedPidLeft.targetVal = 500;
-        if (speedPidLeft.targetVal < -500)
-            speedPidLeft.targetVal = -500;
-        if (speedPidRight.targetVal > 500)
-            speedPidRight.targetVal = 500;
-        if (speedPidRight.targetVal < -500)
-            speedPidRight.targetVal = -500;
-        pwmLeft = pwmLeft + pidIncrementalCtrlUpdate(getSpeed(LEFT), &speedPidLeft) / 10;
-        pwmRight = pwmRight + pidIncrementalCtrlUpdate(getSpeed(RIGHT), &speedPidRight) / 10;
-        setPower(pwmLeft, LEFT);
-        setPower(pwmRight, RIGHT);
-        // printf("p=%.1f,a=%.1f\r\n", p, pitch);
-        // float p = anglePid.targetVal / 10.0;
-        // printf("a=%d,r=%d\r\n", acc,speedPidLeft.targetVal);
+        // 代码见历史
         break;
     case balanceCarHomeMode:
-        Read_DMP(&pitch, &r, &y);
+        // Read_DMP(&pitch, &r, &y);
+        // Get_Angle(3);
+        pitch = MPU_pitch;
         // do
         // {
         //     Read_DMP(&pitch, &r, &y);
@@ -506,24 +422,21 @@ void pidUpdateFunction(void)
         ph_car_home_speedPid_left.targetVal = baseSpeed;  // + ph_turn_speed;
         ph_car_home_speedPid_right.targetVal = baseSpeed; // - ph_turn_speed;
         Balance_Pwm = ph_car_home_balance(
-            pitch, (gyro[1] + 40), &ph_car_home_anglePid); //===平衡PID控制
+            pitch, (gyro[1]), &ph_car_home_anglePid); //===平衡PID控制
+        // Balance_Pwm = ph_car_home_balance(
+        //     pitch, Gyro_Balance, &ph_car_home_anglePid); //===平衡PID控制
         // Velocity_Pwm = ph_car_home_velocity(
         //     getSpeed(LEFT), getSpeed(RIGHT),
         //     &ph_car_home_speedPid);
-
-        Flag_Left = (turnSpeed > 20) ? 1 : 0;
-        Flag_Right = (turnSpeed < -20) ? 1 : 0;
         //===速度环PID控制	 记住，速度反馈是正反馈，就是小车快的时候要慢下来就需要再跑快一点
         // Turn_Pwm = ph_car_home_turn(getSpeed(LEFT), getSpeed(RIGHT), gyro[2]); //===转向环PID控制
 
         turnPid.targetVal = 0;
         imgPosition = getImgData();
         Turn_Pwm = cam_turn(imgPosition, gyro[2], &turnPid);
-
-        // Velocity_Pwm = ph_car_home_OneWheelVelocity(getSpeed(LEFT), &ph_car_home_speedPid_left);
+        // Turn_Pwm = cam_turn(imgPosition, Gyro_Turn, &turnPid);
         Velocity_Pwm = ph_car_home_velocity(getSpeed(LEFT), getSpeed(RIGHT), &ph_car_home_speedPid_left);
         Moto1 = Balance_Pwm - Velocity_Pwm + Turn_Pwm; //===计算左轮电机最终PWM
-        // Velocity_Pwm = ph_car_home_OneWheelVelocity(getSpeed(RIGHT), &ph_car_home_speedPid_right);
         Moto2 = Balance_Pwm - Velocity_Pwm - Turn_Pwm;
         setPower(Moto1, LEFT);
         setPower(Moto2, RIGHT);

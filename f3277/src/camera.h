@@ -1,8 +1,8 @@
 #ifndef AEFBEEE5_E12F_4B1E_ABBA_864363E71034
 #define AEFBEEE5_E12F_4B1E_ABBA_864363E71034
 #include "common.h"
-#define PIC_LINE 64
-#define PIC_COL 100
+#define PIC_LINE 120
+#define PIC_COL 188
 
 extern int16_t camResult;
 void cameraInit(void);

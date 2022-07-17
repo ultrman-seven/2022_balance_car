@@ -380,4 +380,5 @@ uint8_t DMP_Init(void);
 void Read_DMP(float *Pitch,float *Roll,float *Yaw);
 int Read_Temperature(void);
 void MPU6050_INT_Ini(void);
+void mpuIntCMD(FunctionalState e);
 #endif

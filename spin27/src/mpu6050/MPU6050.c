@@ -3,25 +3,25 @@
 #include "common.h"
 #include "iicsoft.h"
 
-#define PRINT_ACCEL     (0x01)
-#define PRINT_GYRO      (0x02)
-#define PRINT_QUAT      (0x04)
-#define ACCEL_ON        (0x01)
-#define GYRO_ON         (0x02)
-#define MOTION          (0)
-#define NO_MOTION       (1)
-#define DEFAULT_MPU_HZ  (200)
-#define FLASH_SIZE      (512)
-#define FLASH_MEM_START ((void*)0x1800)
-#define q30  1073741824.0f
+#define PRINT_ACCEL (0x01)
+#define PRINT_GYRO (0x02)
+#define PRINT_QUAT (0x04)
+#define ACCEL_ON (0x01)
+#define GYRO_ON (0x02)
+#define MOTION (0)
+#define NO_MOTION (1)
+#define DEFAULT_MPU_HZ (200)
+#define FLASH_SIZE (512)
+#define FLASH_MEM_START ((void *)0x1800)
+#define q30 1073741824.0f
 short gyro[3], accel[3], sensors;
-//float Pitch,Roll; 
-float q0=1.0f,q1=0.0f,q2=0.0f,q3=0.0f;
+// float Pitch,Roll;
+float q0 = 1.0f, q1 = 0.0f, q2 = 0.0f, q3 = 0.0f;
 static signed char gyro_orientation[9] = {-1, 0, 0,
-                                           0,-1, 0,
-                                           0, 0, 1};
+                                          0, -1, 0,
+                                          0, 0, 1};
 
-static  unsigned short inv_row_2_scale(const signed char *row)
+static unsigned short inv_row_2_scale(const signed char *row)
 {
     unsigned short b;
 
@@ -38,19 +38,17 @@ static  unsigned short inv_row_2_scale(const signed char *row)
     else if (row[2] < 0)
         b = 6;
     else
-        b = 7;      // error
+        b = 7; // error
     return b;
 }
 
-
-static  unsigned short inv_orientation_matrix_to_scalar(
+static unsigned short inv_orientation_matrix_to_scalar(
     const signed char *mtx)
 {
     unsigned short scalar;
     scalar = inv_row_2_scale(mtx);
     scalar |= inv_row_2_scale(mtx + 3) << 3;
     scalar |= inv_row_2_scale(mtx + 6) << 6;
-
 
     return scalar;
 }
@@ -78,83 +76,88 @@ uint8_t run_self_test(void)
         accel[1] *= accel_sens;
         accel[2] *= accel_sens;
         dmp_set_accel_bias(accel);
-        //OLED_printf("setting bias succesfully ......\n");
+        // OLED_printf("setting bias succesfully ......\n");
         return 0;
     }
     return 1;
 }
 
-
 uint8_t buffer[14];
 
-int16_t  MPU6050_FIFO[6][11];
-int16_t Gx_offset=0,Gy_offset=0,Gz_offset=0;
-
+int16_t MPU6050_FIFO[6][11];
+int16_t Gx_offset = 0, Gy_offset = 0, Gz_offset = 0;
 
 /**************************实现函数********************************************
-*函数原型:		void  MPU6050_newValues(int16_t ax,int16_t ay,int16_t az,int16_t gx,int16_t gy,int16_t gz)
-*功　　能:	    将新的ADC数据更新到 FIFO数组，进行滤波处理
-*******************************************************************************/
+ *函数原型:		void  MPU6050_newValues(int16_t ax,int16_t ay,int16_t az,int16_t gx,int16_t gy,int16_t gz)
+ *功　　能:	    将新的ADC数据更新到 FIFO数组，进行滤波处理
+ *******************************************************************************/
 
-void  MPU6050_newValues(int16_t ax,int16_t ay,int16_t az,int16_t gx,int16_t gy,int16_t gz)
+void MPU6050_newValues(int16_t ax, int16_t ay, int16_t az, int16_t gx, int16_t gy, int16_t gz)
 {
-unsigned char i ;
-int32_t sum=0;
-for(i=1;i<10;i++){	//FIFO 操作
-MPU6050_FIFO[0][i-1]=MPU6050_FIFO[0][i];
-MPU6050_FIFO[1][i-1]=MPU6050_FIFO[1][i];
-MPU6050_FIFO[2][i-1]=MPU6050_FIFO[2][i];
-MPU6050_FIFO[3][i-1]=MPU6050_FIFO[3][i];
-MPU6050_FIFO[4][i-1]=MPU6050_FIFO[4][i];
-MPU6050_FIFO[5][i-1]=MPU6050_FIFO[5][i];
-}
-MPU6050_FIFO[0][9]=ax;//将新的数据放置到 数据的最后面
-MPU6050_FIFO[1][9]=ay;
-MPU6050_FIFO[2][9]=az;
-MPU6050_FIFO[3][9]=gx;
-MPU6050_FIFO[4][9]=gy;
-MPU6050_FIFO[5][9]=gz;
+    unsigned char i;
+    int32_t sum = 0;
+    for (i = 1; i < 10; i++)
+    { // FIFO 操作
+        MPU6050_FIFO[0][i - 1] = MPU6050_FIFO[0][i];
+        MPU6050_FIFO[1][i - 1] = MPU6050_FIFO[1][i];
+        MPU6050_FIFO[2][i - 1] = MPU6050_FIFO[2][i];
+        MPU6050_FIFO[3][i - 1] = MPU6050_FIFO[3][i];
+        MPU6050_FIFO[4][i - 1] = MPU6050_FIFO[4][i];
+        MPU6050_FIFO[5][i - 1] = MPU6050_FIFO[5][i];
+    }
+    MPU6050_FIFO[0][9] = ax; //将新的数据放置到 数据的最后面
+    MPU6050_FIFO[1][9] = ay;
+    MPU6050_FIFO[2][9] = az;
+    MPU6050_FIFO[3][9] = gx;
+    MPU6050_FIFO[4][9] = gy;
+    MPU6050_FIFO[5][9] = gz;
 
-sum=0;
-for(i=0;i<10;i++){	//求当前数组的合，再取平均值
-   sum+=MPU6050_FIFO[0][i];
-}
-MPU6050_FIFO[0][10]=sum/10;
+    sum = 0;
+    for (i = 0; i < 10; i++)
+    { //求当前数组的合，再取平均值
+        sum += MPU6050_FIFO[0][i];
+    }
+    MPU6050_FIFO[0][10] = sum / 10;
 
-sum=0;
-for(i=0;i<10;i++){
-   sum+=MPU6050_FIFO[1][i];
-}
-MPU6050_FIFO[1][10]=sum/10;
+    sum = 0;
+    for (i = 0; i < 10; i++)
+    {
+        sum += MPU6050_FIFO[1][i];
+    }
+    MPU6050_FIFO[1][10] = sum / 10;
 
-sum=0;
-for(i=0;i<10;i++){
-   sum+=MPU6050_FIFO[2][i];
-}
-MPU6050_FIFO[2][10]=sum/10;
+    sum = 0;
+    for (i = 0; i < 10; i++)
+    {
+        sum += MPU6050_FIFO[2][i];
+    }
+    MPU6050_FIFO[2][10] = sum / 10;
 
-sum=0;
-for(i=0;i<10;i++){
-   sum+=MPU6050_FIFO[3][i];
-}
-MPU6050_FIFO[3][10]=sum/10;
+    sum = 0;
+    for (i = 0; i < 10; i++)
+    {
+        sum += MPU6050_FIFO[3][i];
+    }
+    MPU6050_FIFO[3][10] = sum / 10;
 
-sum=0;
-for(i=0;i<10;i++){
-   sum+=MPU6050_FIFO[4][i];
-}
-MPU6050_FIFO[4][10]=sum/10;
+    sum = 0;
+    for (i = 0; i < 10; i++)
+    {
+        sum += MPU6050_FIFO[4][i];
+    }
+    MPU6050_FIFO[4][10] = sum / 10;
 
-sum=0;
-for(i=0;i<10;i++){
-   sum+=MPU6050_FIFO[5][i];
-}
-MPU6050_FIFO[5][10]=sum/10;
+    sum = 0;
+    for (i = 0; i < 10; i++)
+    {
+        sum += MPU6050_FIFO[5][i];
+    }
+    MPU6050_FIFO[5][10] = sum / 10;
 }
 
 /**************************实现函数********************************************
-*函数原型:		void MPU6050_setClockSource(uint8_t source)
-*功　　能:	    设置  MPU6050 的时钟源
+ *函数原型:		void MPU6050_setClockSource(uint8_t source)
+ *功　　能:	    设置  MPU6050 的时钟源
  * CLK_SEL | Clock Source
  * --------+--------------------------------------
  * 0       | Internal oscillator
@@ -165,10 +168,10 @@ MPU6050_FIFO[5][10]=sum/10;
  * 5       | PLL with external 19.2MHz reference
  * 6       | Reserved
  * 7       | Stops the clock and keeps the timing generator in reset
-*******************************************************************************/
-void MPU6050_setClockSource(uint8_t source){
+ *******************************************************************************/
+void MPU6050_setClockSource(uint8_t source)
+{
     IICwriteBits(devAddr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_CLKSEL_BIT, MPU6050_PWR1_CLKSEL_LENGTH, source);
-
 }
 
 /** Set full-scale gyroscope range.
@@ -179,64 +182,71 @@ void MPU6050_setClockSource(uint8_t source){
  * @see MPU6050_GCONFIG_FS_SEL_BIT
  * @see MPU6050_GCONFIG_FS_SEL_LENGTH
  */
-void MPU6050_setFullScaleGyroRange(uint8_t range) {
+void MPU6050_setFullScaleGyroRange(uint8_t range)
+{
     IICwriteBits(devAddr, MPU6050_RA_GYRO_CONFIG, MPU6050_GCONFIG_FS_SEL_BIT, MPU6050_GCONFIG_FS_SEL_LENGTH, range);
 }
 
 /**************************实现函数********************************************
-*函数原型:		void MPU6050_setFullScaleAccelRange(uint8_t range)
-*功　　能:	    设置  MPU6050 加速度计的最大量程
-*******************************************************************************/
-void MPU6050_setFullScaleAccelRange(uint8_t range) {
+ *函数原型:		void MPU6050_setFullScaleAccelRange(uint8_t range)
+ *功　　能:	    设置  MPU6050 加速度计的最大量程
+ *******************************************************************************/
+void MPU6050_setFullScaleAccelRange(uint8_t range)
+{
     IICwriteBits(devAddr, MPU6050_RA_ACCEL_CONFIG, MPU6050_ACONFIG_AFS_SEL_BIT, MPU6050_ACONFIG_AFS_SEL_LENGTH, range);
 }
 
 /**************************实现函数********************************************
 *函数原型:		void MPU6050_setSleepEnabled(uint8_t enabled)
 *功　　能:	    设置  MPU6050 是否进入睡眠模式
-				enabled =1   睡觉
-			    enabled =0   工作
+                enabled =1   睡觉
+                enabled =0   工作
 *******************************************************************************/
-void MPU6050_setSleepEnabled(uint8_t enabled) {
+void MPU6050_setSleepEnabled(uint8_t enabled)
+{
     IICwriteBit(devAddr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT, enabled);
 }
 
 /**************************实现函数********************************************
-*函数原型:		uint8_t MPU6050_getDeviceID(void)
-*功　　能:	    读取  MPU6050 WHO_AM_I 标识	 将返回 0x68
-*******************************************************************************/
-uint8_t MPU6050_getDeviceID(void) {
+ *函数原型:		uint8_t MPU6050_getDeviceID(void)
+ *功　　能:	    读取  MPU6050 WHO_AM_I 标识	 将返回 0x68
+ *******************************************************************************/
+uint8_t MPU6050_getDeviceID(void)
+{
 
     IICreadBytes(devAddr, MPU6050_RA_WHO_AM_I, 1, buffer);
     return buffer[0];
 }
 
 /**************************实现函数********************************************
-*函数原型:		uint8_t MPU6050_testConnection(void)
-*功　　能:	    检测MPU6050 是否已经连接
-*******************************************************************************/
-uint8_t MPU6050_testConnection(void) {
-   if(MPU6050_getDeviceID() == 0x68)  //0b01101000;
-   return 1;
-   	else return 0;
+ *函数原型:		uint8_t MPU6050_testConnection(void)
+ *功　　能:	    检测MPU6050 是否已经连接
+ *******************************************************************************/
+uint8_t MPU6050_testConnection(void)
+{
+    if (MPU6050_getDeviceID() == 0x68) // 0b01101000;
+        return 1;
+    else
+        return 0;
 }
 
 /**************************实现函数********************************************
-*函数原型:		void MPU6050_setI2CMasterModeEnabled(uint8_t enabled)
-*功　　能:	    设置 MPU6050 是否为AUX I2C线的主机
-*******************************************************************************/
-void MPU6050_setI2CMasterModeEnabled(uint8_t enabled) {
+ *函数原型:		void MPU6050_setI2CMasterModeEnabled(uint8_t enabled)
+ *功　　能:	    设置 MPU6050 是否为AUX I2C线的主机
+ *******************************************************************************/
+void MPU6050_setI2CMasterModeEnabled(uint8_t enabled)
+{
     IICwriteBit(devAddr, MPU6050_RA_USER_CTRL, MPU6050_USERCTRL_I2C_MST_EN_BIT, enabled);
 }
 
 /**************************实现函数********************************************
-*函数原型:		void MPU6050_setI2CBypassEnabled(uint8_t enabled)
-*功　　能:	    设置 MPU6050 是否为AUX I2C线的主机
-*******************************************************************************/
-void MPU6050_setI2CBypassEnabled(uint8_t enabled) {
+ *函数原型:		void MPU6050_setI2CBypassEnabled(uint8_t enabled)
+ *功　　能:	    设置 MPU6050 是否为AUX I2C线的主机
+ *******************************************************************************/
+void MPU6050_setI2CBypassEnabled(uint8_t enabled)
+{
     IICwriteBit(devAddr, MPU6050_RA_INT_PIN_CFG, MPU6050_INTCFG_I2C_BYPASS_EN_BIT, enabled);
 }
-
 
 /**************************************************************************
 函数功能：读取MPU6050内置DMP的姿态信息
@@ -244,23 +254,23 @@ void MPU6050_setI2CBypassEnabled(uint8_t enabled) {
 返回  值：无
 作    者：平衡小车之家
 **************************************************************************/
-void Read_DMP(float *Pitch,float *Roll,float *Yaw)
-{	
-	  unsigned long sensor_timestamp;
-		unsigned char more;
-		long quat[4];
+void Read_DMP(float *Pitch, float *Roll, float *Yaw)
+{
+    unsigned long sensor_timestamp;
+    unsigned char more;
+    long quat[4];
 
-				dmp_read_fifo(gyro, accel, quat, &sensor_timestamp, &sensors, &more);		
-				if (sensors & INV_WXYZ_QUAT )
-				{    
-					 q0=quat[0] / q30;
-					 q1=quat[1] / q30;
-					 q2=quat[2] / q30;
-					 q3=quat[3] / q30;
-					 *Pitch = asin(-2 * q1 * q3 + 2 * q0* q2)* 57.3; 	
-					 *Roll = atan2(2 * q2 * q3 + 2 * q0 * q1, -2 * q1 * q1 - 2 * q2* q2 + 1)* 57.3; // roll
-				   *Yaw   = atan2(2*(q1*q2 + q0*q3),q0*q0+q1*q1-q2*q2-q3*q3) * 57.3;	//yaw
-				}
+    dmp_read_fifo(gyro, accel, quat, &sensor_timestamp, &sensors, &more);
+    if (sensors & INV_WXYZ_QUAT)
+    {
+        q0 = quat[0] / q30;
+        q1 = quat[1] / q30;
+        q2 = quat[2] / q30;
+        q3 = quat[3] / q30;
+        *Pitch = asin(-2 * q1 * q3 + 2 * q0 * q2) * 57.3;
+        *Roll = atan2(2 * q2 * q3 + 2 * q0 * q1, -2 * q1 * q1 - 2 * q2 * q2 + 1) * 57.3;     // roll
+        *Yaw = atan2(2 * (q1 * q2 + q0 * q3), q0 * q0 + q1 * q1 - q2 * q2 - q3 * q3) * 57.3; // yaw
+    }
 }
 
 /**************************************************************************
@@ -270,14 +280,14 @@ void Read_DMP(float *Pitch,float *Roll,float *Yaw)
 作    者：平衡小车之家
 **************************************************************************/
 int Read_Temperature(void)
-{	   
-	  float Temp;
-	  Temp=(I2C_ReadOneByte(devAddr,MPU6050_RA_TEMP_OUT_H)<<8)+I2C_ReadOneByte(devAddr,MPU6050_RA_TEMP_OUT_L);
-		if(Temp>32768) Temp-=65536;
-		Temp=(36.53+Temp/340)*10;
-	  return (int)Temp;
+{
+    float Temp;
+    Temp = (I2C_ReadOneByte(devAddr, MPU6050_RA_TEMP_OUT_H) << 8) + I2C_ReadOneByte(devAddr, MPU6050_RA_TEMP_OUT_L);
+    if (Temp > 32768)
+        Temp -= 65536;
+    Temp = (36.53 + Temp / 340) * 10;
+    return (int)Temp;
 }
-
 
 /**************************实现函数********************************************
  *函数原型:		void MPU6050_initialize(void)
@@ -304,7 +314,7 @@ uint8_t DMP_Init(void)
 {
     u8 temp;
     uint8_t err = 0;
-    i2cRead(0x68,0x75,1,&temp);
+    i2cRead(0x68, 0x75, 1, &temp);
     if (temp != 0x68)
         err = 1;
     if (!mpu_init())
@@ -340,46 +350,79 @@ uint8_t DMP_Init(void)
 入口参数：无
 返回  值：无
 **************************************************************************/
+
+uint8_t MPU_who;
+float MPU_pitch = 0, MPU_roll = 0, MPU_yaw = 0;
+uint32_t MPU_time;
+
+#include "pid.h"
+void tim17Callback(void);
+void mpuUpdate(void)
+{
+    Read_DMP(&MPU_pitch, &MPU_roll, &MPU_yaw);
+    tim17Callback();
+    pidUpdateFunction();
+}
+
+#define MPU_INT_PORT GPIOD
+#define MPU_INT_RCC RCC_AHBPeriph_GPIOD
+#define MPU_INT_PIN_SOURCE GPIO_PinSource5
+#define MPU_INT_EXTI_PORT EXTI_PortSourceGPIOD
+#define MPU_INT_EXTI_NVIC EXTI4_15_IRQn
+
+#define MPU_INT_EXTI_PIN_SOURCE MPU_INT_PIN_SOURCE
+#define MPU_INT_PIN (0X01 << MPU_INT_PIN_SOURCE)
+#define MPU_INT_EXTI_LINE MPU_INT_PIN
+void setExtiCallbackFunction(uint8_t line, void (*f)(void));
 void MPU6050_INT_Ini(void)
 {
     GPIO_InitTypeDef gpio;
     NVIC_InitTypeDef nvic;
     EXTI_InitTypeDef exti;
 
-    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);
+    RCC_AHBPeriphClockCmd(MPU_INT_RCC, ENABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
 
-    nvic.NVIC_IRQChannel = EXTI2_3_IRQn;
+    nvic.NVIC_IRQChannel = MPU_INT_EXTI_NVIC;
     nvic.NVIC_IRQChannelCmd = ENABLE;
     nvic.NVIC_IRQChannelPriority = 1;
     NVIC_Init(&nvic);
 
-    SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOB, EXTI_PinSource2);
+    SYSCFG_EXTILineConfig(MPU_INT_EXTI_PORT, MPU_INT_EXTI_PIN_SOURCE);
 
     gpio.GPIO_Mode = GPIO_Mode_IPU;
-    gpio.GPIO_Pin = GPIO_Pin_2;
+    gpio.GPIO_Pin = MPU_INT_PIN;
     gpio.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(GPIOB, &gpio);
+    GPIO_Init(MPU_INT_PORT, &gpio);
 
-    exti.EXTI_Line = EXTI_Line2;
+    exti.EXTI_Line = MPU_INT_EXTI_LINE;
     exti.EXTI_LineCmd = ENABLE;
+    exti.EXTI_Mode = EXTI_Mode_Interrupt;
+    exti.EXTI_Trigger = EXTI_Trigger_Falling;
+    EXTI_Init(&exti);
+
+    setExtiCallbackFunction(MPU_INT_EXTI_PIN_SOURCE, mpuUpdate);
+}
+
+void mpuIntCMD(FunctionalState e)
+{
+    EXTI_InitTypeDef exti;
+    exti.EXTI_Line = MPU_INT_EXTI_LINE;
+    exti.EXTI_LineCmd = e;
     exti.EXTI_Mode = EXTI_Mode_Interrupt;
     exti.EXTI_Trigger = EXTI_Trigger_Falling;
     EXTI_Init(&exti);
 }
 
-uint8_t MPU_who;
-float MPU_pitch = 0, MPU_roll = 0, MPU_yaw = 0;
-uint32_t MPU_time;
-void EXTI2_3_IRQHandler(void)
-{
+// void EXTI2_3_IRQHandler(void)
+// {
 
-    if (EXTI_GetITStatus(EXTI_Line2) != RESET)
-    {
-        // delay(0x1000);
-        mpu_read_reg(0x75, &MPU_who);
-        Read_DMP(&MPU_pitch, &MPU_roll, &MPU_yaw);
-        getTimeStamp(&MPU_time);
-        EXTI_ClearITPendingBit(EXTI_Line2);
-    }
-}
+//     if (EXTI_GetITStatus(EXTI_Line2) != RESET)
+//     {
+//         // delay(0x1000);
+//         mpu_read_reg(0x75, &MPU_who);
+//         Read_DMP(&MPU_pitch, &MPU_roll, &MPU_yaw);
+//         getTimeStamp(&MPU_time);
+//         EXTI_ClearITPendingBit(EXTI_Line2);
+//     }
+// }

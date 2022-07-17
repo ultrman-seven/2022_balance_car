@@ -1,7 +1,7 @@
 #include "common.h"
 #include <stdlib.h>
 #include <math.h>
-uint8_t imgBin[1024] = {0};
+// uint8_t imgBin[1024] = {0};
 
 // #define THRESHOLD 60
 uint16_t THRESHOLD = 120;
@@ -87,8 +87,8 @@ void imgGray2Bin(uint8_t *img, uint8_t l, uint8_t c)
     uint8_t currentPage = 0;
     uint16_t currentCol = 1024;
     uint16_t t = THRESHOLD; // otsuThreshold(img, c, l);
-    if (l > 64 || c > 128)
-        return;
+    // if (l > 64 || c > 128)
+    //     return;
     // while (currentCol--)
     //     imgBin[currentCol] = 0x00;
     while (l--)
@@ -96,8 +96,8 @@ void imgGray2Bin(uint8_t *img, uint8_t l, uint8_t c)
         currentCol = 0;
         while (currentCol < c)
         {
-            imgBin[128 * currentPage + currentCol++] |=
-                ((uint8_t)((*img > t) ? 1 : 0)) << (currentBit);
+            // imgBin[128 * currentPage + currentCol++] |=
+            //     ((uint8_t)((*img > t) ? 1 : 0)) << (currentBit);
             currentCol++;
 #ifndef _IPS_114__
             *img = (*img > t) ? 255 : 0;
@@ -218,7 +218,7 @@ uint32_t findPointCenter(uint8_t *img, uint8_t l, uint8_t c)
 #define PIXEL_LABEL_INFLECTION 10
 #define PIXEL_LABEL_WHITE 0 // 白点
 
-#define QUE_LENTH 500
+#define QUE_LENTH 1000
 
 uint8_t que_row[QUE_LENTH]; // 队列数组 行
 uint8_t que_col[QUE_LENTH]; // 队列数组 列

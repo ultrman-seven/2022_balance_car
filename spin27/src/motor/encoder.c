@@ -94,7 +94,7 @@ void encoderInit(void)
     TIM_SetCounter(TIM8, 0);
     TIM_Cmd(TIM1, ENABLE);
     TIM_Cmd(TIM8, ENABLE);
-    time17Init(100 * SPEED_COMPUT_PERIOD, 960 - 1);
+    // time17Init(100 * SPEED_COMPUT_PERIOD, 960 - 1);
     getTimeStamp(&timeLast);
 }
 
@@ -136,12 +136,12 @@ int lastCNT[2] = {0};
 // uint32_t ms = 0;
 // int lastLCircle[2] = {0};
 uint8_t timerFlag = 0;
-void TIM17_IRQHandler(void)
+
+void tim17Callback(void)
 {
     int32_t currintCnt;
     int speed;
     // uint32_t time;
-    TIM_ClearITPendingBit(TIM17, TIM_FLAG_Update);
     timerFlag = 1;
     currintCnt = circleCount[LEFT] * 1024 * 4 + TIM_Left->CNT;
     // getTimeStamp(&time);
@@ -183,6 +183,12 @@ void TIM17_IRQHandler(void)
     }
     else
         lastCNT[RIGHT] = currintCnt;
+}
+
+void TIM17_IRQHandler(void)
+{
+    TIM_ClearITPendingBit(TIM17, TIM_FLAG_Update);
+    tim17Callback();
     // currentCNT = (lastLCircle[LEFT] - circleCount[LEFT]) * 1024 * 4 + TIM_Left->CNT;
     // lastLCircle[LEFT] = circleCount[LEFT];
     // motorSpeed[LEFT] = (currentCNT - lastCNT[LEFT]) * GearAndDiameter;
@@ -190,7 +196,7 @@ void TIM17_IRQHandler(void)
     // motorSpeed[LEFT] = TIM_Left->CNT;
     // timeLast = time;
 
-    pidUpdateFunction();
+    // pidUpdateFunction();
 }
 
 int getCircleCount(MotorChoose side)

@@ -96,6 +96,8 @@ void testStop(void)
     setPower(0, RIGHT);
     speedPidLeft.targetVal = speedPidRight.targetVal = 0;
     cameraSetOff();
+    // delayMs(1000);
+    // setPidMode(balanceCarHomeMode);
 }
 extern const int8_t sinList[];
 void gotoSine(void)
@@ -322,7 +324,7 @@ void goto_ph_turn(void)
     gotoNextMenu(ph_turn);
     generalParaLoad(&turnPid);
     generalParaCaptionUpdate();
-    showMenu(menuManager.getCurrentMenu());    
+    showMenu(menuManager.getCurrentMenu());
 }
 void goto_ph_speed(void)
 {
@@ -375,17 +377,20 @@ void showTurn(void)
     OLED_printf("不转弯");
     return;
 }
-
+void pidParaSave(void);
+void pidParaLoad(void);
 MenuTypedef ph_car_home_menu[] = {
     {.caption = "速度环参数", .left = goto_ph_speed, .right = goto_ph_speed, .mid = goto_ph_speed},
     {.caption = "平衡环参数", .left = goto_ph_angle, .right = goto_ph_angle, .mid = goto_ph_angle},
-    {.caption = "转向环参数", .left =goto_ph_turn, .right = goto_ph_turn, .mid = goto_ph_turn},
+    {.caption = "转向环参数", .left = goto_ph_turn, .right = goto_ph_turn, .mid = goto_ph_turn},
     {.caption = menuCaptionStr4, .left = generalDec, .right = generalInc, .mid = ph_set_speed},
     {.caption = "开始", .left = ph_car_home_start, .mid = ph_car_home_start, .right = ph_car_home_start},
-    {.caption = "摄像头开始", .left = ph_car_home_cam_start, .mid = ph_car_home_cam_start, .right = ph_car_home_cam_start},
+    // {.caption = "摄像头开始", .left = ph_car_home_cam_start, .mid = ph_car_home_cam_start, .right = ph_car_home_cam_start},
     {.caption = "结束", .left = testStop, .right = testStop, .mid = testStop},
     {.caption = "平衡点调整", .left = mpu6050DmpTest, .mid = NULL, .right = mpu6050DmpTest},
-    {.caption = "转弯", .left = showTurn, .right = showTurn},
+        {.caption = "保存", .left = pidParaSave, .right = pidParaSave, .mid = pidParaSave},
+    {.caption = "载入", .left = pidParaLoad, .right = pidParaLoad, .mid = pidParaLoad},
+    // {.caption = "转弯", .left = showTurn, .right = showTurn},
     GO_BACK_MENU,
     END_OF_MENU};
 void goto_ph_car_home(void)
@@ -412,7 +417,7 @@ void loadPidPara2Buf(uint32_t *buf, PID_paraTypdef *pid)
     *buf++ = (uint32_t)(pid->Kd);
 }
 
-#define PID_NUM 4
+#define PID_NUM 7
 void pidParaSave(void)
 {
     uint32_t dat[PID_NUM * 3] = {0};
@@ -420,6 +425,10 @@ void pidParaSave(void)
     loadPidPara2Buf(dat + 3, &anglePid);
     loadPidPara2Buf(dat + 6, &picTurn);
     loadPidPara2Buf(dat + 9, &speedCtrlPid);
+
+    loadPidPara2Buf(dat + 12, &ph_car_home_anglePid);
+    loadPidPara2Buf(dat + 15, &ph_car_home_speedPid_left);
+    loadPidPara2Buf(dat + 18, &turnPid);
     Flash_saveData(dat, PID_NUM * 3);
 }
 void pidParaLoad(void)
@@ -431,15 +440,18 @@ void pidParaLoad(void)
     loadBuf2PidPara(buf + 3, &anglePid);
     loadBuf2PidPara(buf + 6, &picTurn);
     loadBuf2PidPara(buf + 9, &speedCtrlPid);
+    loadBuf2PidPara(buf + 12, &ph_car_home_anglePid);
+    loadBuf2PidPara(buf + 15, &ph_car_home_speedPid_left);
+    loadBuf2PidPara(buf + 18, &turnPid);
 }
 
 MenuTypedef paraAdjMenu[] = {
     {.caption = "速度环", .left = gotoSpeedPara, .mid = gotoSpeedPara, .right = gotoSpeedPara},
-    {.caption = "加速度环", .left = gotoAccMenu, .mid = gotoAccMenu, .right = gotoAccMenu},
-    {.caption = "角度环(速度)", .left = gotoAnglePara, .mid = gotoAnglePara, .right = gotoAnglePara},
+    // {.caption = "加速度环", .left = gotoAccMenu, .mid = gotoAccMenu, .right = gotoAccMenu},
+    {.caption = "角度环", .left = gotoAnglePara, .mid = gotoAnglePara, .right = gotoAnglePara},
     {.caption = "平衡小车之家", .left = goto_ph_car_home, .right = goto_ph_car_home, .mid = goto_ph_car_home},
-    {.caption = "摄像头", .left = gotoPicPara, .mid = gotoPicPara, .right = gotoPicPara},
-    {.caption = "平衡调速环", .left = gotoSpeedHold, .mid = gotoSpeedHold, .right = gotoSpeedHold},
+    // {.caption = "摄像头", .left = gotoPicPara, .mid = gotoPicPara, .right = gotoPicPara},
+    // {.caption = "平衡调速环", .left = gotoSpeedHold, .mid = gotoSpeedHold, .right = gotoSpeedHold},
     {.caption = "保存", .left = pidParaSave, .right = pidParaSave, .mid = pidParaSave},
     {.caption = "载入", .left = pidParaLoad, .right = pidParaLoad, .mid = pidParaLoad},
     GO_BACK_MENU,

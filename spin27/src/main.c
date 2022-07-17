@@ -89,6 +89,7 @@ void globalInit(void)
     motorInit();
     MPU6050_initialize();
     mpuDmpState = DMP_Init();
+    MPU6050_INT_Ini();
     delayMs(1000);
     communicateInit();
 }

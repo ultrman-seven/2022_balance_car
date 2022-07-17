@@ -25,6 +25,28 @@ ErrorStatus HSE_SysClock(void)
     return HSE_StartUpState;
 }
 
+#define LED_RCC RCC_AHBENR_GPIOB
+#define LED_PORT GPIOB
+#define LED_PIN GPIO_Pin_1
+void boardLED_init(void)
+{
+    GPIO_InitTypeDef g;
+
+    RCC_AHBPeriphClockCmd(LED_RCC, ENABLE);
+
+    g.GPIO_Mode = GPIO_Mode_Out_PP;
+    g.GPIO_Speed = GPIO_Speed_50MHz;
+    g.GPIO_Pin = LED_PIN;
+    GPIO_Init(LED_PORT, &g);
+}
+void LED_flip(void)
+{
+    if (GPIO_ReadOutputDataBit(LED_PORT, LED_PIN))
+        GPIO_ResetBits(LED_PORT, LED_PIN);
+    else
+        GPIO_SetBits(LED_PORT, LED_PIN);
+}
+
 void communicateInit(void);
 int main(void)
 {
@@ -36,9 +58,11 @@ int main(void)
 
     delayMs(5000);
     communicateInit();
+    boardLED_init();
 
     while (1)
     {
         cameraPicOption();
+        // delayMs(20);
     }
 }
