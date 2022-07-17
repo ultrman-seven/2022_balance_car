@@ -363,6 +363,8 @@ void mpuUpdate(void)
     tim17Callback();
     pidUpdateFunction();
 }
+void WY_EXTI_Init(const char *k, void (*callback)(void));
+void MPU6050_INT_Ini(void) { WY_EXTI_Init("d5", mpuUpdate); }
 
 #define MPU_INT_PORT GPIOD
 #define MPU_INT_RCC RCC_AHBPeriph_GPIOD
@@ -373,36 +375,6 @@ void mpuUpdate(void)
 #define MPU_INT_EXTI_PIN_SOURCE MPU_INT_PIN_SOURCE
 #define MPU_INT_PIN (0X01 << MPU_INT_PIN_SOURCE)
 #define MPU_INT_EXTI_LINE MPU_INT_PIN
-void setExtiCallbackFunction(uint8_t line, void (*f)(void));
-void MPU6050_INT_Ini(void)
-{
-    GPIO_InitTypeDef gpio;
-    NVIC_InitTypeDef nvic;
-    EXTI_InitTypeDef exti;
-
-    RCC_AHBPeriphClockCmd(MPU_INT_RCC, ENABLE);
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
-
-    nvic.NVIC_IRQChannel = MPU_INT_EXTI_NVIC;
-    nvic.NVIC_IRQChannelCmd = ENABLE;
-    nvic.NVIC_IRQChannelPriority = 1;
-    NVIC_Init(&nvic);
-
-    SYSCFG_EXTILineConfig(MPU_INT_EXTI_PORT, MPU_INT_EXTI_PIN_SOURCE);
-
-    gpio.GPIO_Mode = GPIO_Mode_IPU;
-    gpio.GPIO_Pin = MPU_INT_PIN;
-    gpio.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(MPU_INT_PORT, &gpio);
-
-    exti.EXTI_Line = MPU_INT_EXTI_LINE;
-    exti.EXTI_LineCmd = ENABLE;
-    exti.EXTI_Mode = EXTI_Mode_Interrupt;
-    exti.EXTI_Trigger = EXTI_Trigger_Falling;
-    EXTI_Init(&exti);
-
-    setExtiCallbackFunction(MPU_INT_EXTI_PIN_SOURCE, mpuUpdate);
-}
 
 void mpuIntCMD(FunctionalState e)
 {
@@ -413,16 +385,3 @@ void mpuIntCMD(FunctionalState e)
     exti.EXTI_Trigger = EXTI_Trigger_Falling;
     EXTI_Init(&exti);
 }
-
-// void EXTI2_3_IRQHandler(void)
-// {
-
-//     if (EXTI_GetITStatus(EXTI_Line2) != RESET)
-//     {
-//         // delay(0x1000);
-//         mpu_read_reg(0x75, &MPU_who);
-//         Read_DMP(&MPU_pitch, &MPU_roll, &MPU_yaw);
-//         getTimeStamp(&MPU_time);
-//         EXTI_ClearITPendingBit(EXTI_Line2);
-//     }
-// }
