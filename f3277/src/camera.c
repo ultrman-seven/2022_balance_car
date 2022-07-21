@@ -298,38 +298,41 @@ uint32_t findPointCenter(uint8_t *img, uint16_t l, uint16_t c);
 uint8_t *gaussianFilter(uint8_t *img, uint16_t l, uint16_t c);
 void LED_flip(void);
 void fuck_zaoDian(uint8_t *img, uint16_t l, uint16_t c);
+uint16_t findLamp(void);
+void twoPass(uint8_t *img, uint16_t l, uint16_t c);
 #include "stdio.h"
+#include "string.h"
 int16_t camResult = 0;
-#define PIC_CUT_LINE 32
-#define PIC_CUT (PIC_COL * PIC_CUT_LINE)
+extern uint8_t pic_cp[PIC_COL * PIC_LINE];
 void cameraPicOption(void)
 {
     if (DMA_ok_flag)
     {
         uint16_t tmp;
-        for (tmp = 0; tmp < PIC_CUT; tmp++)
-            picReceive.pic[tmp] = 0;
+        uint16_t maxIdx, t;
         LED_flip();
-        // uint16_t maxIdx;
-        // gaussianFilter(picReceive.pic, PIC_LINE, PIC_COL);
-        gaussianFilter(picReceive.pic + PIC_CUT, PIC_LINE - PIC_CUT_LINE, PIC_COL);
+        memset(picReceive.pic, 0x00, PIC_CUT);
         // fuck_zaoDian(picReceive.pic, PIC_LINE, PIC_COL);
-        // findMax(picReceive.pic, PIC_LINE, PIC_COL);
-        OTSU(picReceive.pic, PIC_LINE, PIC_COL);
+        // for (tmp = PIC_CUT; tmp < PIC_COL * PIC_LINE; tmp++)
+        //     pic_cp[tmp] = picReceive.pic[tmp];
+        // gaussianFilter(picReceive.pic + PIC_CUT, PIC_LINE - PIC_CUT_LINE, PIC_COL);
+        maxIdx = findMax(picReceive.pic, PIC_LINE, PIC_COL);
+        t = OTSU(picReceive.pic + PIC_CUT, PIC_LINE - PIC_CUT_LINE, PIC_COL);
+        if (picReceive.pic[maxIdx] <= 20 || t <= 8)
+            goto no_lamp;
         imgGray2Bin(picReceive.pic, PIC_LINE, PIC_COL);
+        twoPass(picReceive.pic, PIC_LINE, PIC_COL);
         // camResult = (findPointCenter(picReceive.pic, PIC_LINE, PIC_COL) & 0x00ff) - PIC_COL / 2;
         // camResult = BFS(picReceive.pic, PIC_LINE, PIC_COL) - PIC_COL / 2;
-        uint32_t x = 0, cnt = 0;
-        for (tmp = PIC_CUT; tmp < PIC_COL * PIC_LINE; tmp++)
-            if (picReceive.pic[tmp] == 255)
-            {
-                cnt++;
-                x += (tmp % PIC_COL);
-            }
-        if (cnt)
-            camResult = x / cnt - PIC_COL / 2;
+
+        camResult = findLamp();
+        if (camResult)
+            camResult -= PIC_COL / 2;
         else
-            camResult = 0 - PIC_COL / 2;
+        {
+        no_lamp:
+            camResult = PIC_COL / 2;
+        }
         if (cameraFlag)
             picReceive.state = 1;
         DMA_ok_flag = 0;

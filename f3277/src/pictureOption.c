@@ -6,11 +6,6 @@
 
 void printPic(uint8_t *pic, uint8_t h, uint8_t w)
 {
-    // #ifndef _IPS_114__
-    //     showGrayPic(pic, 0, 0, h, w);
-    // #else
-    //     showPic(imgBin, 0, 10, 64, 128);
-    // #endif // MACRO
 }
 // #define THRESHOLD 60
 uint16_t THRESHOLD = 120;
@@ -99,6 +94,7 @@ void imgGray2Bin(uint8_t *img, uint16_t l, uint16_t c)
         *img = (*img > t) ? 255 : 0;
         img++;
     }
+    // printf("l%d:,c:%d,cnt:%d\r\n", l, c, cnt);
 }
 
 // uint8_t colTmp[64] = {0};
@@ -162,14 +158,16 @@ uint32_t findPointCenter(uint8_t *img, uint16_t l, uint16_t c)
     return ((y << 8) & 0xff00) + x;
 }
 
-uint8_t pic_cp[PIC_COL * PIC_LINE];
+uint8_t pic_cp[PIC_COL * PIC_LINE] = {0};
 #define array_2d_2_1d(NAME, ROW, COL, A_C) NAME[((ROW) * (A_C)) + (COL)]
 
 uint8_t *conv(uint16_t *core, uint8_t core_size, uint8_t *src, uint16_t l, uint16_t c)
 {
 #define core2d(row, col) array_2d_2_1d(core, row, col, core_size)
 #define src2d(row, col) array_2d_2_1d(src, row, col, c)
-#define res2d(row, col) array_2d_2_1d(pic_cp, row, col, c)
+#define res2d(row, col) array_2d_2_1d(pic_cp_tmp, row, col, c)
+
+    uint8_t *pic_cp_tmp = pic_cp + PIC_CUT;
     uint16_t l_tp, c_tp;
     uint8_t rl, rc, core_radius = core_size / 2;
     uint32_t tmp;
@@ -199,7 +197,7 @@ uint8_t *conv(uint16_t *core, uint8_t core_size, uint8_t *src, uint16_t l, uint1
         }
     }
     for (l_tp = 0; l_tp < c * l; l_tp++)
-        src[l_tp] = pic_cp[l_tp];
+        src[l_tp] = pic_cp_tmp[l_tp];
 
     return pic_cp;
 }
@@ -389,8 +387,310 @@ uint16_t findMax(uint8_t *img, uint16_t height, uint16_t width)
     return maxIdx;
 }
 
-void fuck_zaoDian(uint8_t *img, uint16_t l, uint16_t c)
+#define MAX_LABEL 512
+uint8_t unionFind[MAX_LABEL] = {0};
+point labelFirstPoint[MAX_LABEL];
+// uint8_t picLabel[PL * PC] = {0};
+uint8_t picLabel[PIC_LINE * PIC_COL];
+uint8_t maxLabelValue;
+// uint8_t labNum;
+void twoPass(uint8_t *img, uint16_t l, uint16_t c)
+{
 #define img2d(row, col) array_2d_2_1d(img, row, col, c)
+#define lab2d(row, col) array_2d_2_1d(picLabel, row, col, c)
+    uint16_t l_tp, c_tp;
+    uint8_t label = 1;
+    uint8_t leftExistPixel, upExistPixel;
+    // labNum = 0;
+    l_tp = l * c;
+    while (l_tp--)
+        picLabel[l_tp] = 0;
+    l_tp = MAX_LABEL;
+    while (l_tp--)
+        unionFind[l_tp] = 0;
+    // first pass
+    for (l_tp = 0; l_tp < l; l_tp++)
+    {
+        for (c_tp = 0; c_tp < c; c_tp++)
+        {
+            if (img2d(l_tp, c_tp))
+            {
+                leftExistPixel = (c_tp - 1 >= 0) && img2d(l_tp, c_tp - 1);
+                upExistPixel = (l_tp - 1 >= 0) && img2d(l_tp - 1, c_tp);
+                if (leftExistPixel)
+                {
+                    if (upExistPixel)
+                    {
+                        if (lab2d(l_tp, c_tp - 1) > lab2d(l_tp - 1, c_tp))
+                            unionFind[lab2d(l_tp, c_tp - 1)] = lab2d(l_tp, c_tp) = (lab2d(l_tp - 1, c_tp));
+                        else if (lab2d(l_tp, c_tp - 1) < lab2d(l_tp - 1, c_tp))
+                            unionFind[lab2d(l_tp - 1, c_tp)] = lab2d(l_tp, c_tp) = (lab2d(l_tp, c_tp - 1));
+                        else
+                            lab2d(l_tp, c_tp) = (lab2d(l_tp, c_tp - 1));
+                    }
+                    else
+                        lab2d(l_tp, c_tp) = lab2d(l_tp, c_tp - 1);
+                }
+                else if (upExistPixel)
+                    lab2d(l_tp, c_tp) = lab2d(l_tp - 1, c_tp);
+                else
+                {
+                    labelFirstPoint[label].x = c_tp;
+                    labelFirstPoint[label].y = l_tp;
+                    lab2d(l_tp, c_tp) = label++;
+                }
+            }
+            else
+                lab2d(l_tp, c_tp) = 0;
+        }
+    }
+
+    // second pass
+    maxLabelValue = 0;
+    while (--label)
+    {
+        if (!unionFind[label])
+        {
+            if (label > maxLabelValue)
+                maxLabelValue = label;
+            unionFind[label] = label;
+            continue;
+        }
+        l_tp = label;
+        while (unionFind[l_tp])
+            l_tp = unionFind[l_tp];
+        unionFind[label] = l_tp;
+    }
+
+    l_tp = c * l;
+    while (l_tp--)
+        picLabel[l_tp] = unionFind[picLabel[l_tp]];
+}
+
+point getCenter(uint8_t label)
+{
+    uint16_t l_tp = 0, c_tp;
+    point result = {0, 0};
+    uint32_t x = 0, y = 0;
+    uint16_t cnt = 0;
+
+    // while (picLabel[l_tp] != label)
+    //     if (l_tp++ >= PIC_COL * PIC_LINE)
+    //         return result;
+
+    // c_tp = l_tp % PIC_COL;
+    // l_tp /= PIC_COL;
+    for (l_tp = labelFirstPoint[label].y; l_tp < PIC_LINE; l_tp++)
+    {
+        c_tp = 0;
+        while (array_2d_2_1d(picLabel, l_tp, c_tp, PIC_COL) != label)
+            c_tp++;
+        for (; c_tp < PIC_COL; c_tp++)
+        {
+            if (array_2d_2_1d(picLabel, l_tp, c_tp, PIC_COL) == label)
+            {
+                x += c_tp;
+                y += l_tp;
+                cnt++;
+            }
+            else
+                break;
+        }
+    }
+    if (cnt == 0)
+        return result;
+    result.x = x / cnt;
+    result.y = y / cnt;
+    return result;
+}
+
+typedef struct
+{
+    point position;
+    uint8_t maxGray, minGray, arvGray;
+    uint16_t area;
+} AreaFeature;
+#include "string.h"
+AreaFeature getFeature(uint8_t label)
+{
+    AreaFeature result;
+
+    uint16_t l_tp = 0, c_tp;
+    uint32_t x = 0, y = 0, bright = 0;
+    uint16_t cnt = 0;
+    uint8_t min = 0xff, max = 0x00;
+    memset(&result, 0, sizeof(AreaFeature));
+    for (l_tp = labelFirstPoint[label].y; l_tp < PIC_LINE; l_tp++)
+    {
+        c_tp = 0;
+        while (array_2d_2_1d(picLabel, l_tp, c_tp, PIC_COL) != label)
+            c_tp++;
+        for (; c_tp < PIC_COL; c_tp++)
+        {
+            if (array_2d_2_1d(picLabel, l_tp, c_tp, PIC_COL) == label)
+            {
+                if (array_2d_2_1d(pic_cp, l_tp, c_tp, PIC_COL) > max)
+                    max = array_2d_2_1d(pic_cp, l_tp, c_tp, PIC_COL);
+                if (array_2d_2_1d(pic_cp, l_tp, c_tp, PIC_COL) < min)
+                    min = array_2d_2_1d(pic_cp, l_tp, c_tp, PIC_COL);
+                bright += array_2d_2_1d(pic_cp, l_tp, c_tp, PIC_COL);
+                x += c_tp;
+                y += l_tp;
+                cnt++;
+            }
+            else
+                break;
+        }
+    }
+    if (cnt == 0)
+        return result;
+    result.area = cnt;
+    result.position.x = x / cnt;
+    result.position.y = y / cnt;
+    result.maxGray = max;
+    result.minGray = min;
+    result.arvGray = bright / cnt;
+    return result;
+}
+
+uint8_t valExist(uint8_t *arr, uint8_t len, uint8_t val)
+{
+    while (len--)
+        if (arr[len] == val)
+            return 1;
+    return 0;
+}
+
+// void printAllFeatures(void)
+// {
+//     uint8_t tmp, cnt = 1;
+//     uint8_t *l = (uint8_t *)calloc(maxLabelValue, sizeof(uint8_t));
+//     memset(l, 0x00, maxLabelValue);
+//     l[0] = unionFind[1];
+//     for (tmp = 2; tmp <= maxLabelValue; tmp++)
+//     {
+//         if (!valExist(l, cnt, unionFind[tmp]))
+//             l[cnt++] = unionFind[tmp];
+//     }
+//     printf("=====*****area numbers%d:*****=====\r\n", cnt);
+//     while (cnt--)
+//     {
+//         tmp = l[cnt];
+//         AreaFeature f = getFeature(tmp);
+//         printf("area%d:\r\n", tmp);
+//         printf("position:    x: %3d, y: %3d\r\n", f.position.x, f.position.y);
+//         printf("brightness:    max: %3d, min: %3d, arv: %3d\r\n", f.maxGray, f.minGray, f.arvGray);
+//         printf("total area: %3d\r\n\r\n", f.area);
+//     }
+//     free(l);
+// }
+
+float getAspectRatio(uint8_t label, point center)
+{
+    uint16_t x1, x2, y1, y2;
+    float result;
+
+    x1 = 0;
+    while (array_2d_2_1d(picLabel, center.y, x1, PIC_COL) != label)
+        x1++;
+
+    x2 = PIC_COL - 1;
+    while (array_2d_2_1d(picLabel, center.y, x2, PIC_COL) != label)
+        x2--;
+
+    y1 = 0;
+    while (array_2d_2_1d(picLabel, y1, center.x, PIC_COL) != label)
+        y1++;
+
+    y2 = PIC_LINE - 1;
+    while (array_2d_2_1d(picLabel, y2, center.x, PIC_COL) != label)
+        y2--;
+
+    if ((y2 - y1 + 1) == 0)
+        return 0;
+    result = (float)(x2 - x1 + 1) / (float)(y2 - y1 + 1);
+    return result;
+}
+
+uint8_t bright_area_ok(uint8_t b, uint16_t a)
+{
+    uint64_t x6, x5, x4, x3;
+    uint32_t x2;
+    float result;
+
+    x2 = a * a;
+    x3 = x2 * a;
+    x4 = x2 * x2;
+    x5 = x3 * x2;
+    x6 = x3 * x3;
+
+    result = -3981509.0 / x6 + 6123470.0 / x5 - 2473755.0 / x4 + 333106.0 / x3 + 1891.0 / x2 - 3386.0 / a + 200.1;
+    result -= b;
+    if (result <= 50)
+        return 1;
+    return 0;
+}
+uint16_t findLamp(void)
+{
+    uint8_t tmp, cnt = 1;
+    uint8_t *l = (uint8_t *)calloc(maxLabelValue, sizeof(uint8_t));
+
+    memset(l, 0x00, maxLabelValue);
+    l[0] = unionFind[1];
+    for (tmp = 2; tmp <= maxLabelValue; tmp++)
+    {
+        if (!valExist(l, cnt, unionFind[tmp]))
+            l[cnt++] = unionFind[tmp];
+    }
+
+    while (cnt--)
+    {
+        tmp = l[cnt];
+        AreaFeature f = getFeature(tmp);
+        if (bright_area_ok(f.arvGray, f.area))
+        {
+            free(l);
+            return f.position.x;
+        }
+    }
+    free(l);
+    return 0;
+}
+
+// uint16_t findLamp(void)
+// {
+//     uint8_t tmp, cnt = 1;
+//     uint8_t *l = (uint8_t *)calloc(maxLabelValue, sizeof(uint8_t));
+//     float r;
+
+//     memset(l, 0x00, maxLabelValue);
+//     l[0] = unionFind[1];
+//     for (tmp = 2; tmp <= maxLabelValue; tmp++)
+//     {
+//         if (!valExist(l, cnt, unionFind[tmp]))
+//             l[cnt++] = unionFind[tmp];
+//     }
+//     while (cnt--)
+//     {
+//         tmp = l[cnt];
+//         point p = getCenter(tmp);
+//         if (p.x == 0)
+//             continue;
+//         r = getAspectRatio(tmp, p);
+//         // printf("l:%d\r\n", tmp);
+//         if (r > 2 || r < 0.5)
+//             continue;
+//         else
+//         {
+//             free(l);
+//             return p.x;
+//         }
+//     }
+//     free(l);
+//     return 0;
+// }
+
+void fuck_zaoDian(uint8_t *img, uint16_t l, uint16_t c)
 {
     uint8_t *out = pic_cp;
     for (uint8_t i = 1; i < l - 1; ++i)

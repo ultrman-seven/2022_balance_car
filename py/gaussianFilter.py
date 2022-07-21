@@ -4,8 +4,7 @@ def getGaussianFilterKernel(size=3, sigma=1):
     a = cv2.getGaussianKernel(size, sigma)
     return a*a.T
 
-
-if __name__ == "__main__":
+def putGaussianCore2D():
     data = getGaussianFilterKernel(3, 1.4)*10000
     with open('./tmp/g.cpp','w') as g:
         g.write('#include "common.h"\nuint16_t gaussian[][3] = {\n\t')
@@ -22,4 +21,8 @@ if __name__ == "__main__":
             
         g.write('};')
 
-            
+def putGaussianCore1D():
+    print(cv2.getGaussianKernel(3,1.4))
+
+if __name__ == "__main__":
+    putGaussianCore1D()
