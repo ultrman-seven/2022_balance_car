@@ -33,11 +33,13 @@
 #include "motor/control.h"
 #include "quickSin.h"
 #include "mpu6050/filter.h"
+#include "oledio.h"
 
 int32_t balancePoint = 145;
 int32_t baseSpeed = 0;
 enum ctrlModes pidMode = NullMode; // pwmMode;
 float accOutput = 0.0;
+int16_t tmp;
 PID_paraTypdef speedPidLeft = {
     .Kp = 25, .Ki = 25, .Kd = 7, .integral = 0, .proportionLast = 0, .proportionLastLast = 0, .targetVal = 0};
 PID_paraTypdef speedPidRight = {
@@ -74,7 +76,7 @@ void setBaseSpeed(int32_t s)
 // PID_paraTypdef ph_car_home_anglePid = {
 //     .Kp = 132, .Kd = 83, .Ki = 0, .targetVal = 0};
 PID_paraTypdef ph_car_home_anglePid = {
-    .Kp = 88, .Kd = 52, .Ki = 0, .targetVal = 0, .proportionLast = 0};
+    .Kp = 88, .Kd = 39, .Ki = 0, .targetVal = 0, .proportionLast = 0};
 
 // PID_paraTypdef ph_car_home_anglePid = {
 //     .Kp = 44, .Kd = 6, .Ki = 0, .targetVal = 0};
@@ -143,7 +145,8 @@ int ph_car_home_velocity(int speed_left, int speed_right, PID_paraTypdef *p)
     Encoder += Encoder_Least * 0.2;                                    //===一阶低通滤波器
     Encoder_Integral += Encoder;                                       //===积分出位移 积分时间：10ms
     // Encoder_Integral = Encoder_Integral; //===接收遥控器数据，控制前进后退
-    Encoder_Integral *= 0.64;
+    // Encoder_Integral *= 0.64;
+    Encoder_Integral *= 0.7;
     if (Encoder_Integral > 10000)
         Encoder_Integral = 10000; //===积分限幅
     if (Encoder_Integral < -10000)
@@ -304,6 +307,7 @@ int Balance_Pwm, Velocity_Pwm, Moto1, Moto2, Turn_Pwm;
 extern uint8_t timerFlag;
 int16_t getImgData(void);
 float pitch = 0;
+const uint8_t whiteLine[8] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 void pidUpdateFunction(void)
 {
     float y, r;
@@ -440,6 +444,14 @@ void pidUpdateFunction(void)
         Moto2 = Balance_Pwm - Velocity_Pwm - Turn_Pwm;
         setPower(Moto1, LEFT);
         setPower(Moto2, RIGHT);
+
+        // screenClear();
+        // tmp = imgPosition + 64;
+        // if (tmp < 0)
+        //     tmp = 0;
+        // if (tmp >= 128)
+        //     tmp = 127;
+        // Picture_display(whiteLine, tmp, 0, 64, 1);
         break;
     default:
         break;

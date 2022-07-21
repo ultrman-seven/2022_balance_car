@@ -103,7 +103,7 @@ int main(void)
     // delayMs(2000);
     while (1)
     {
-        picProcess();
+        // picProcess();
         (ledBright % 2) ? (ledBright -= 2) : (ledBright += 2);
         if (ledBright > 10000 || ledBright == 1)
             ledBright--;

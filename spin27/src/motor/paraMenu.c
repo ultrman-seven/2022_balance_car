@@ -347,8 +347,10 @@ void ph_car_home_start(void)
 }
 void ph_car_home_cam_start(void)
 {
-    cameraSetOn();
     setPidMode(balanceCarHomeMode);
+    turnPid.Kp = 4;
+    turnPid.Kd = 2;
+    baseSpeed = -100;
 }
 void ph_set_speed(void)
 {
@@ -384,8 +386,8 @@ MenuTypedef ph_car_home_menu[] = {
     {.caption = "平衡环参数", .left = goto_ph_angle, .right = goto_ph_angle, .mid = goto_ph_angle},
     {.caption = "转向环参数", .left = goto_ph_turn, .right = goto_ph_turn, .mid = goto_ph_turn},
     {.caption = menuCaptionStr4, .left = generalDec, .right = generalInc, .mid = ph_set_speed},
-    {.caption = "开始", .left = ph_car_home_start, .mid = ph_car_home_start, .right = ph_car_home_start},
-    // {.caption = "摄像头开始", .left = ph_car_home_cam_start, .mid = ph_car_home_cam_start, .right = ph_car_home_cam_start},
+    {.caption = "平衡开始", .left = ph_car_home_start, .mid = ph_car_home_start, .right = ph_car_home_start},
+    {.caption = "摄像头开始", .left = ph_car_home_cam_start, .mid = ph_car_home_cam_start, .right = ph_car_home_cam_start},
     {.caption = "结束", .left = testStop, .right = testStop, .mid = testStop},
     {.caption = "平衡点调整", .left = mpu6050DmpTest, .mid = NULL, .right = mpu6050DmpTest},
         {.caption = "保存", .left = pidParaSave, .right = pidParaSave, .mid = pidParaSave},

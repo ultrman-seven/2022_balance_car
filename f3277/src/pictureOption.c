@@ -1,11 +1,20 @@
-#include "common.h"
 #include <stdlib.h>
 #include <math.h>
+#include "stdio.h"
+#include "camera.h"
 // uint8_t imgBin[1024] = {0};
 
+void printPic(uint8_t *pic, uint8_t h, uint8_t w)
+{
+    // #ifndef _IPS_114__
+    //     showGrayPic(pic, 0, 0, h, w);
+    // #else
+    //     showPic(imgBin, 0, 10, 64, 128);
+    // #endif // MACRO
+}
 // #define THRESHOLD 60
 uint16_t THRESHOLD = 120;
-uint8_t OTSU(uint8_t *image, uint8_t IMAGE_H, uint8_t IMAGE_W)
+uint8_t OTSU(uint8_t *image, uint16_t IMAGE_H, uint16_t IMAGE_W)
 {
 #define GRAY_SCALE 256
     uint8_t threshold = 0; // 最终计算出来的阈值，返回值
@@ -81,40 +90,20 @@ uint8_t OTSU(uint8_t *image, uint8_t IMAGE_H, uint8_t IMAGE_W)
     return threshold;
 }
 
-void imgGray2Bin(uint8_t *img, uint8_t l, uint8_t c)
+void imgGray2Bin(uint8_t *img, uint16_t l, uint16_t c)
 {
-    uint8_t currentBit = 0;
-    uint8_t currentPage = 0;
-    uint16_t currentCol = 1024;
+    uint32_t cnt = l * c;
     uint16_t t = THRESHOLD; // otsuThreshold(img, c, l);
-    // if (l > 64 || c > 128)
-    //     return;
-    // while (currentCol--)
-    //     imgBin[currentCol] = 0x00;
-    while (l--)
+    while (cnt--)
     {
-        currentCol = 0;
-        while (currentCol < c)
-        {
-            // imgBin[128 * currentPage + currentCol++] |=
-            //     ((uint8_t)((*img > t) ? 1 : 0)) << (currentBit);
-            currentCol++;
-#ifndef _IPS_114__
-            *img = (*img > t) ? 255 : 0;
-#endif
-            img++;
-        }
-        if (++currentBit == 8)
-        {
-            currentBit = 0;
-            currentPage++;
-        }
+        *img = (*img > t) ? 255 : 0;
+        img++;
     }
 }
 
 // uint8_t colTmp[64] = {0};
 #define MIN_VAL 2
-uint32_t findPointCenter(uint8_t *img, uint8_t l, uint8_t c)
+uint32_t findPointCenter(uint8_t *img, uint16_t l, uint16_t c)
 {
     uint16_t x = 0, y = 0;
     uint8_t line, col, startFlag = 0, cnt = 0;
@@ -173,37 +162,54 @@ uint32_t findPointCenter(uint8_t *img, uint8_t l, uint8_t c)
     return ((y << 8) & 0xff00) + x;
 }
 
-// void conv(uint8_t *mat, uint8_t mat_size, uint8_t *src, uint8_t l, uint8_t c)
-// {
-//     uint8_t *result = (uint8_t *)calloc(l * c, sizeof(uint8_t));
-//     uint8_t row, col, r, i, j;
-//     uint16_t num;
-//     int16_t l_test, c_test;
-//     r = mat_size / 2;
-//     for (row = 0; row < l; row++)
-//         for (col = 0; col < c; col++)
-//         {
-//             num = 0;
-//             for (i = 0; i < mat_size; i++)
-//             {
-//                 l_test = row - r + i;
-//                 if (l_test < 0 || l_test >= l)
-//                     continue;
-//                 for (j = 0; j < mat_size; j++)
-//                 {
-//                     c_test = col - r + j;
-//                     if (c_test < 0 || c_test >= c)
-//                         ;
-//                     else
-//                         num += src[l_test * l + c_test] * mat[i * mat_size + j];
-//                 }
-//             }
-//             result[row * l + col] = (uint8_t)(num / 10);
-//         }
-//     for (i = 0; i < c * l; i++)
-//         src[i] = result[i];
-//     free(result);
-// }
+uint8_t pic_cp[PIC_COL * PIC_LINE];
+#define array_2d_2_1d(NAME, ROW, COL, A_C) NAME[((ROW) * (A_C)) + (COL)]
+
+uint8_t *conv(uint16_t *core, uint8_t core_size, uint8_t *src, uint16_t l, uint16_t c)
+{
+#define core2d(row, col) array_2d_2_1d(core, row, col, core_size)
+#define src2d(row, col) array_2d_2_1d(src, row, col, c)
+#define res2d(row, col) array_2d_2_1d(pic_cp, row, col, c)
+    uint16_t l_tp, c_tp;
+    uint8_t rl, rc, core_radius = core_size / 2;
+    uint32_t tmp;
+    uint16_t core_sum = 0;
+    l_tp = core_size * core_size;
+    while (l_tp--)
+        core_sum += core[l_tp];
+
+    for (l_tp = 0; l_tp < l; l_tp++)
+    {
+        for (c_tp = 0; c_tp < c; c_tp++)
+        {
+            tmp = 0;
+            rl = core_size;
+            while (rl--)
+            {
+                if (l_tp + rl - core_radius >= 0 && l_tp + rl - core_radius < l)
+                {
+                    rc = core_size;
+                    while (rc--)
+                        if (c_tp + rc - core_radius >= 0 && c_tp + rc - core_radius < c)
+                            tmp +=
+                                src2d(l_tp + rl - core_radius, c_tp + rc - core_radius) * core2d(rl, rc);
+                }
+            }
+            res2d(l_tp, c_tp) = tmp / core_sum;
+        }
+    }
+    for (l_tp = 0; l_tp < c * l; l_tp++)
+        src[l_tp] = pic_cp[l_tp];
+
+    return pic_cp;
+}
+
+uint16_t gaussian[] = {
+    923, 1191, 923,
+    1191, 1538, 1191,
+    923, 1191, 923};
+
+uint8_t *gaussianFilter(uint8_t *img, uint16_t l, uint16_t c) { return conv(gaussian, 3, img, l, c); }
 
 // 图像标记
 #define PIXEL_LABEL_BLACK 255    // 黑点
@@ -218,7 +224,7 @@ uint32_t findPointCenter(uint8_t *img, uint8_t l, uint8_t c)
 #define PIXEL_LABEL_INFLECTION 10
 #define PIXEL_LABEL_WHITE 0 // 白点
 
-#define QUE_LENTH 1000
+#define QUE_LENTH 800
 
 uint8_t que_row[QUE_LENTH]; // 队列数组 行
 uint8_t que_col[QUE_LENTH]; // 队列数组 列
@@ -367,7 +373,7 @@ uint16_t BFS(uint8_t *image, uint16_t IMAGE_H, uint16_t IMAGE_W)
     return 0;
 }
 
-uint16_t findMax(uint8_t *img, uint16_t height, uint8_t width)
+uint16_t findMax(uint8_t *img, uint16_t height, uint16_t width)
 {
     uint16_t maxVal = *img;
     uint16_t maxIdx = 0;
@@ -381,4 +387,26 @@ uint16_t findMax(uint8_t *img, uint16_t height, uint8_t width)
         }
     THRESHOLD = maxVal * 0.75;
     return maxIdx;
+}
+
+void fuck_zaoDian(uint8_t *img, uint16_t l, uint16_t c)
+#define img2d(row, col) array_2d_2_1d(img, row, col, c)
+{
+    uint8_t *out = pic_cp;
+    for (uint8_t i = 1; i < l - 1; ++i)
+        for (uint8_t j = 1; j < c - 1; ++j)
+        {
+            uint8_t cnt = 0;
+            if (img2d(i, j) >= 100)
+            {
+                cnt += abs(img2d(i, j) - img2d(i - 1, j - 1)) > 10;
+                cnt += abs(img2d(i, j) - img2d(i - 1, j + 1)) > 10;
+                cnt += abs(img2d(i, j) - img2d(i + 1, j - 1)) > 10;
+                cnt += abs(img2d(i, j) - img2d(i + 1, j + 1)) > 10;
+            }
+            array_2d_2_1d(out, i, j, c) = (cnt >= 4 ? ((img2d(i - 1, j - 1) + img2d(i - 1, j) + img2d(i - 1, j + 1) + img2d(i, j - 1) + img2d(i, j) + img2d(i, j + 1) + img2d(i + 1, j - 1) + img2d(i + 1, j) + img2d(i + 1, j + 1)) / 9) : img2d(i, j));
+        }
+
+    for (uint16_t i = 0; i < PIC_COL * PIC_LINE; i++)
+        img[i] = out[i];
 }

@@ -14,7 +14,8 @@ ErrorStatus HSE_SysClock(void)
         RCC_HCLKConfig(RCC_SYSCLK_Div1);
         RCC_PCLK2Config(RCC_HCLK_Div1);
         RCC_PCLK1Config(RCC_HCLK_Div2);
-        RCC_PLLConfig(RCC_HSE_Div1, RCC_PLLMul_15);
+        // RCC_PLLConfig(RCC_HSE_Div1, RCC_PLLMul_15);
+        RCC_PLLConfig(RCC_HSE_Div1, RCC_PLLMul_16);
         RCC_PLLCmd(ENABLE);
         while (RCC_GetFlagStatus(RCC_FLAG_PLLRDY) == RESET)
             ;

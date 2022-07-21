@@ -107,8 +107,8 @@ void __cam_dma_init(void)
     NVIC_Init(&nvic);
 
     dma.DMA_M2M = DMA_M2M_Disable;
-    // dma.DMA_Mode = DMA_Mode_Normal;
-    dma.DMA_Mode = DMA_Mode_Circular;
+    dma.DMA_Mode = DMA_Mode_Normal;
+    // dma.DMA_Mode = DMA_Mode_Circular;
     dma.DMA_BufferSize = PIC_COL * PIC_LINE;
     dma.DMA_DIR = DMA_DIR_PeripheralSRC;
     dma.DMA_MemoryBaseAddr = (uint32_t) & (picReceive.pic);
@@ -118,7 +118,7 @@ void __cam_dma_init(void)
     dma.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
     dma.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
     dma.DMA_Priority = DMA_Priority_High;
-    dma.DMA_Auto_reload = DMA_Auto_Reload_Disable;
+    dma.DMA_Auto_reload = DMA_Auto_Reload_Enable;
     DMA_Init(CAM_DMA_CHANNEL, &dma);
 
     DMA_ITConfig(CAM_DMA_CHANNEL, DMA_IT_TC, ENABLE);
@@ -229,7 +229,7 @@ void cameraInit(void)
     __cam_uart_init();
     __cameraConfig(SET_COL, PIC_COL);
     __cameraConfig(SET_ROW, PIC_LINE);
-    __cameraConfig(EXP_TIME, 300);
+    __cameraConfig(EXP_TIME, 400);
     __cameraConfig(FPS, 20);
     __cameraConfig(INIT, 0);
     __cam_dma_init();
@@ -290,25 +290,46 @@ void CAM_DMA_NVIC_FUNCTION(void)
     }
 }
 
-void imgGray2Bin(uint8_t *img, uint8_t l, uint8_t c);
-uint16_t findMax(uint8_t *img, uint16_t height, uint8_t width);
-uint8_t OTSU(uint8_t *image, uint8_t IMAGE_H, uint8_t IMAGE_W);
+void imgGray2Bin(uint8_t *img, uint16_t l, uint16_t c);
+uint16_t findMax(uint8_t *img, uint16_t height, uint16_t width);
+uint8_t OTSU(uint8_t *image, uint16_t IMAGE_H, uint16_t IMAGE_W);
 uint16_t BFS(uint8_t *image, uint16_t IMAGE_H, uint16_t IMAGE_W);
-uint32_t findPointCenter(uint8_t *img, uint8_t l, uint8_t c);
+uint32_t findPointCenter(uint8_t *img, uint16_t l, uint16_t c);
+uint8_t *gaussianFilter(uint8_t *img, uint16_t l, uint16_t c);
 void LED_flip(void);
+void fuck_zaoDian(uint8_t *img, uint16_t l, uint16_t c);
 #include "stdio.h"
 int16_t camResult = 0;
+#define PIC_CUT_LINE 32
+#define PIC_CUT (PIC_COL * PIC_CUT_LINE)
 void cameraPicOption(void)
 {
     if (DMA_ok_flag)
     {
-        // printf("\r\npic is ok!\r\n");
+        uint16_t tmp;
+        for (tmp = 0; tmp < PIC_CUT; tmp++)
+            picReceive.pic[tmp] = 0;
         LED_flip();
-        uint16_t maxIdx;
+        // uint16_t maxIdx;
+        // gaussianFilter(picReceive.pic, PIC_LINE, PIC_COL);
+        gaussianFilter(picReceive.pic + PIC_CUT, PIC_LINE - PIC_CUT_LINE, PIC_COL);
+        // fuck_zaoDian(picReceive.pic, PIC_LINE, PIC_COL);
+        // findMax(picReceive.pic, PIC_LINE, PIC_COL);
         OTSU(picReceive.pic, PIC_LINE, PIC_COL);
-        // maxIdx = findMax(picReceive.pic, PIC_LINE, PIC_COL);
         imgGray2Bin(picReceive.pic, PIC_LINE, PIC_COL);
-        camResult = (findPointCenter(picReceive.pic, PIC_LINE, PIC_COL) & 0x00ff) - PIC_COL / 2;
+        // camResult = (findPointCenter(picReceive.pic, PIC_LINE, PIC_COL) & 0x00ff) - PIC_COL / 2;
+        // camResult = BFS(picReceive.pic, PIC_LINE, PIC_COL) - PIC_COL / 2;
+        uint32_t x = 0, cnt = 0;
+        for (tmp = PIC_CUT; tmp < PIC_COL * PIC_LINE; tmp++)
+            if (picReceive.pic[tmp] == 255)
+            {
+                cnt++;
+                x += (tmp % PIC_COL);
+            }
+        if (cnt)
+            camResult = x / cnt - PIC_COL / 2;
+        else
+            camResult = 0 - PIC_COL / 2;
         if (cameraFlag)
             picReceive.state = 1;
         DMA_ok_flag = 0;
