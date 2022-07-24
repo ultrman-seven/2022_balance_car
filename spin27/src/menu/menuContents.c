@@ -41,9 +41,12 @@ void goBackToLastMenu(void)
 }
 
 // main menu callback functions
-void runStart(void)
-{
-}
+void ph_car_home_cam_start(void);
+#define runStart ph_car_home_cam_start
+// void runStart(void)
+// {
+//     ph_car_home_cam_start();
+// }
 
 void gotoTests(void)
 {

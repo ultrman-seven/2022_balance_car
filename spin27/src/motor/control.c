@@ -35,7 +35,8 @@
 #include "mpu6050/filter.h"
 #include "oledio.h"
 
-int32_t balancePoint = 145;
+// int32_t balancePoint = 145;
+int32_t balancePoint = 110;
 int32_t baseSpeed = 0;
 enum ctrlModes pidMode = NullMode; // pwmMode;
 float accOutput = 0.0;
@@ -256,14 +257,18 @@ float getBellFunc(int val)
 
 // PID_paraTypdef turnPid = {.Kp = 10, .Kd = 2, .Ki = 0, .targetVal = 64};
 PID_paraTypdef turnPid = {.Kp = 0, .Kd = 0, .Ki = 0, .targetVal = 0};
-int imgPosition = 64;
+// int imgPosition = 64;
+point imgPosition = {0, 0};
+point imgLastPosition = {0, 0};
+point posi = {0, 0};
+int16_t img_x = 0;
 int cam_turn(int val, int16_t gyro, PID_paraTypdef *p)
 {
     int err = p->targetVal - val;
-    if (err > -5 && err < 5)
-        return err * p->Kp + (gyro * p->Kd) / 20;
+    if (err > -3 && err < 3)
+        return (err * p->Kp) / 10 + (gyro * p->Kd) / 20;
     else
-        return err * p->Kp;
+        return (err * p->Kp) / 10;
     // float kg = getBellFunc(err);
     // return err * p->Kp + (gyro * p->Kd * kg) / 10;
 }
@@ -305,27 +310,27 @@ int16_t getAcc(void)
 int16_t acc = 0;
 int Balance_Pwm, Velocity_Pwm, Moto1, Moto2, Turn_Pwm;
 extern uint8_t timerFlag;
-int16_t getImgData(void);
+point getImgData(void);
+#define PIC_LINE 120
+#define PIC_COL 188
+// int16_t getImgData(void);
 float pitch = 0;
 const uint8_t whiteLine[8] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+uint8_t picCnt = 0;
+uint8_t picLossCnt;
+uint8_t turnDir = 0;
+uint8_t pictureFlags = 0;
+enum pic_flags
+{
+    pic_flag_lamp_die,
+    pic_flag_lamp_miss
+};
+
+uint8_t lampDieFlag = 0;
+#define Wait_Time 4
 void pidUpdateFunction(void)
 {
     float y, r;
-    uint32_t i;
-    // getTimeStamp(&i);
-    // if (i > 5000)
-    //     Read_DMP(&pitch, &r, &y);
-
-    // uint8_t waitErr = 8;
-    // while (pitch < 0.000001 && pitch > -0.000001 && waitErr)
-    // {
-    //     Read_DMP(&pitch, &r, &y);
-    //     waitErr--;
-    // }
-    // if (waitErr)
-    //     lastPitch = pitch;
-    // else
-    //     pitch = lastPitch;
 
     switch (pidMode)
     {
@@ -380,27 +385,10 @@ void pidUpdateFunction(void)
         printf("a=%d,r=%d\r\n", acc, (int32_t)speedPidLeft.targetVal);
         break;
     case rockerMode:
-        do
-        {
-            Read_DMP(&pitch, &r, &y);
-        } while (pitch < 0.000001 && pitch > -0.000001);
-        anglePid.targetVal = balancePoint + linerSpeed;
-        speedPidLeft.targetVal =
-            speedPidRight.targetVal =
-                pidCtrlUpdate(pitch * 10, &anglePid) / 10;
-        speedPidLeft.targetVal += turnSpeed;
-        speedPidRight.targetVal -= turnSpeed;
-        pwmLeft = pwmLeft + pidIncrementalCtrlUpdate(getSpeed(LEFT), &speedPidLeft) / 10;
-        pwmRight = pwmRight + pidIncrementalCtrlUpdate(getSpeed(RIGHT), &speedPidRight) / 10;
-        setPower(pwmLeft, LEFT);
-        setPower(pwmRight, RIGHT);
+        // 代码见历史
+        break;
     case picAngularSpeedTestMode:
-        speedPidLeft.targetVal = turnSpeed;
-        speedPidRight.targetVal = -turnSpeed;
-        pwmLeft = pwmLeft + pidIncrementalCtrlUpdate(getSpeed(LEFT), &speedPidLeft) / 10;
-        pwmRight = pwmRight + pidIncrementalCtrlUpdate(getSpeed(RIGHT), &speedPidRight) / 10;
-        setPower(pwmLeft, LEFT);
-        setPower(pwmRight, RIGHT);
+        // 代码见历史
         break;
     case balanceModifyMode:
         // 代码见历史
@@ -423,8 +411,59 @@ void pidUpdateFunction(void)
         //     Read_DMP(&pitch, &r, &y);
         // } while (pitch < 0.000001 && pitch > -0.000001);
         ph_car_home_anglePid.targetVal = balancePoint;
-        ph_car_home_speedPid_left.targetVal = baseSpeed;  // + ph_turn_speed;
-        ph_car_home_speedPid_right.targetVal = baseSpeed; // - ph_turn_speed;
+
+        if (++picCnt == 4)
+        {
+            // posi = getImgData();
+            turnDir = (imgPosition.x < (PIC_COL / 2));
+            imgPosition = getImgData();
+            picCnt = 0;
+        }
+
+        // if (posi.x == 0)
+        // {
+        //     if (imgPosition.x)
+        //     {
+        //         // if (picLossCnt == Wait_Time)
+        //         //     imgPosition.x = PIC_COL - imgPosition.x;
+        //         if (!picLossCnt--)
+        //         {
+        //             turnDir = (imgPosition.x > (PIC_COL / 2));
+        //             imgPosition.x = 0;
+        //         }
+        //     }
+        // }
+        // else
+        // {
+        //     picLossCnt = Wait_Time;
+        //     imgPosition.x = posi.x;
+        //     imgPosition.y = posi.y;
+        // }
+        img_x = imgPosition.x - (PIC_COL / 2);
+        if (imgPosition.x == 0)
+        {
+            ph_car_home_speedPid_left.targetVal = (baseSpeed / 2);
+            if (imgLastPosition.y >= 80)
+                lampDieFlag = 1;
+            // if (turnDir)
+            // if ((getSpeed(RIGHT) - getSpeed(LEFT)) > 10)
+            //     img_x = PIC_COL / 1.5;
+            // else if ((getSpeed(LEFT) - getSpeed(RIGHT)) > 10)
+            //     img_x = -(PIC_COL / 1.5);
+        }
+        else
+        {
+            ph_car_home_speedPid_left.targetVal = baseSpeed - (imgPosition.y* baseSpeed / 300 );
+            lampDieFlag = 0;
+        }
+        imgLastPosition = imgPosition;
+
+        if (lampDieFlag)
+        {
+            img_x = PIC_COL / 1.5;
+            ph_car_home_speedPid_left.targetVal = baseSpeed / 5;
+        }
+
         Balance_Pwm = ph_car_home_balance(
             pitch, (gyro[1]), &ph_car_home_anglePid); //===平衡PID控制
         // Balance_Pwm = ph_car_home_balance(
@@ -436,8 +475,7 @@ void pidUpdateFunction(void)
         // Turn_Pwm = ph_car_home_turn(getSpeed(LEFT), getSpeed(RIGHT), gyro[2]); //===转向环PID控制
 
         turnPid.targetVal = 0;
-        imgPosition = getImgData();
-        Turn_Pwm = cam_turn(imgPosition, gyro[2], &turnPid);
+        Turn_Pwm = cam_turn(img_x, gyro[2], &turnPid);
         // Turn_Pwm = cam_turn(imgPosition, Gyro_Turn, &turnPid);
         Velocity_Pwm = ph_car_home_velocity(getSpeed(LEFT), getSpeed(RIGHT), &ph_car_home_speedPid_left);
         Moto1 = Balance_Pwm - Velocity_Pwm + Turn_Pwm; //===计算左轮电机最终PWM
@@ -484,7 +522,7 @@ void setAngularVelocity(int8_t speed)
         speed = 50;
     if (speed < -50)
         speed = -50;
-    imgPosition = turnPid.targetVal + speed;
+    imgPosition.x = turnPid.targetVal + speed;
     // turnSpeed = speed;
     // if (speed > 40)
     // {
@@ -572,30 +610,6 @@ void adjustPara(uint8_t num, uint8_t *pidPara)
     tmp <<= 8;
     tmp += *pidPara++;
     pidList[num]->Kd = (int16_t)tmp;
-}
-
-//定时器16用于更新pid控制
-void time16Init(uint16_t period, uint16_t prescaler)
-{
-    TIM_TimeBaseInitTypeDef time;
-    NVIC_InitTypeDef nvic;
-
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM16, ENABLE);
-    time.TIM_ClockDivision = TIM_CKD_DIV1;
-    time.TIM_CounterMode = TIM_CounterMode_Up;
-    time.TIM_RepetitionCounter = 0;
-    time.TIM_Period = period;
-    time.TIM_Prescaler = prescaler;
-    TIM_TimeBaseInit(TIM16, &time);
-
-    nvic.NVIC_IRQChannel = TIM16_IRQn;
-    nvic.NVIC_IRQChannelCmd = ENABLE;
-    nvic.NVIC_IRQChannelPriority = 1;
-    NVIC_Init(&nvic);
-
-    TIM_ClearFlag(TIM16, TIM_FLAG_Update);
-    TIM_ITConfig(TIM16, TIM_IT_Update, ENABLE);
-    TIM_Cmd(TIM16, ENABLE);
 }
 
 void pidCtrlTimeInit(uint16_t us)

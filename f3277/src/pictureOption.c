@@ -625,12 +625,15 @@ uint8_t bright_area_ok(uint8_t b, uint16_t a)
     x6 = x3 * x3;
 
     result = -3981509.0 / x6 + 6123470.0 / x5 - 2473755.0 / x4 + 333106.0 / x3 + 1891.0 / x2 - 3386.0 / a + 200.1;
-    result -= b;
-    if (result <= 50)
+    // result = 29684.57 / x6 - 132074.725 / x5 + 189163.6 / x4 - 115328.5 / x3 + 32444.2 / x2 - 4075.34 / a + 203.14;
+    result /= b;
+    if (result <= 2)
+    // result -= b;
+    // if (result <= 40)
         return 1;
     return 0;
 }
-uint16_t findLamp(void)
+point findLamp(void)
 {
     uint8_t tmp, cnt = 1;
     uint8_t *l = (uint8_t *)calloc(maxLabelValue, sizeof(uint8_t));
@@ -650,11 +653,12 @@ uint16_t findLamp(void)
         if (bright_area_ok(f.arvGray, f.area))
         {
             free(l);
-            return f.position.x;
+            return f.position;
         }
     }
     free(l);
-    return 0;
+    point p = {0, 0};
+    return p;
 }
 
 // uint16_t findLamp(void)
@@ -697,7 +701,7 @@ void fuck_zaoDian(uint8_t *img, uint16_t l, uint16_t c)
         for (uint8_t j = 1; j < c - 1; ++j)
         {
             uint8_t cnt = 0;
-            if (img2d(i, j) >= 100)
+            if (img2d(i, j) >= 30)
             {
                 cnt += abs(img2d(i, j) - img2d(i - 1, j - 1)) > 10;
                 cnt += abs(img2d(i, j) - img2d(i - 1, j + 1)) > 10;
@@ -710,3 +714,56 @@ void fuck_zaoDian(uint8_t *img, uint16_t l, uint16_t c)
     for (uint16_t i = 0; i < PIC_COL * PIC_LINE; i++)
         img[i] = out[i];
 }
+
+//数组向前越界
+#define CONV_ABS(A) (((A) > 0) ? (A) : (-(A)))
+//数组向后越界
+#define CONV_OUT(A, B) (((A) >= (B)) ? ((B)*2 - 2 - (A)) : (A))
+void convFast(int16_t *core, uint8_t core_size, uint8_t *src, uint16_t l, uint16_t c)
+{
+    uint8_t *pic_cp_tmp = pic_cp;
+    uint16_t l_tp, c_tp;
+    uint8_t r, core_radius = core_size / 2;
+    uint32_t tmp;
+    uint16_t core_sum = 0;
+    //求归一化系数g' (完整高斯核归一化系数的根号)
+    while (core_size--)
+        core_sum += core[core_size];
+
+    //第一次循环，行卷积核
+    for (l_tp = 0; l_tp < l; l_tp++)
+    {
+        for (c_tp = 0; c_tp < c; c_tp++)
+        {
+            tmp = src2d(l_tp, c_tp) * core[core_radius];
+            r = core_radius + 1;
+            while (--r)
+            {
+                tmp += src2d(l_tp, CONV_ABS(c_tp - r)) * core[core_radius - r];
+                tmp += src2d(l_tp, CONV_OUT(c_tp + r, PIC_COL)) * core[core_radius + r];
+            }
+            res2d(l_tp, c_tp) = tmp / core_sum;
+        }
+    }
+
+    //第二次循环，列卷积核
+    for (l_tp = 0; l_tp < l; l_tp++)
+    {
+        for (c_tp = 0; c_tp < c; c_tp++)
+        {
+            tmp = res2d(l_tp, c_tp) * core[core_radius];
+            r = core_radius + 1;
+            while (--r)
+            {
+                tmp += res2d(CONV_ABS(l_tp - r), c_tp) * core[core_radius - r];
+                tmp += res2d(CONV_OUT(l_tp + r, PIC_LINE), c_tp) * core[core_radius + r];
+            }
+            src2d(l_tp, c_tp) = tmp / (core_sum);
+        }
+    }
+}
+
+int16_t gaussian1D[] = {30, 39, 30};
+uint16_t sobel1D[] = {0};
+
+void gaussianFilterFast(uint8_t *img, uint16_t l, uint16_t c) { convFast(gaussian1D, 3, img, l, c); }

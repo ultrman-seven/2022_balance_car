@@ -14,7 +14,8 @@ typedef struct
     uint16_t x;
     uint16_t y;
 } point;
-extern int16_t camResult;
+extern point camResult;
+// extern int16_t camResult;
 void cameraInit(void);
 void cameraOn(void);
 void cameraOff(void);

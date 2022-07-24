@@ -3,7 +3,11 @@
 
 #include "HAL_conf.h"
 #include "MM32SPIN2xx_p.h"
-
+typedef struct
+{
+    uint16_t x;
+    uint16_t y;
+} point;
 typedef union
 {
     uint64_t val;

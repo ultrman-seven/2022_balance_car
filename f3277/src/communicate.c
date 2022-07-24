@@ -22,8 +22,14 @@
 void setExtiCallbackFunction(uint8_t line, void (*f)(void));
 void dat2spin27(void)
 {
-    GPIO_Write(DATA_PORT, (uint16_t)camResult);
-    delay(5);
+    GPIO_Write(DATA_PORT, camResult.x);
+    delay(10);
+    GPIO_SetBits(OK_PORT, OK_PIN);
+    delay(50);
+    GPIO_ResetBits(OK_PORT, OK_PIN);
+
+    GPIO_Write(DATA_PORT, camResult.y);
+    delay(15);
     GPIO_SetBits(OK_PORT, OK_PIN);
     delay(50);
     GPIO_ResetBits(OK_PORT, OK_PIN);

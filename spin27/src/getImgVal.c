@@ -42,20 +42,36 @@ typedef union
     int16_t s;
 }u16to16;
 
-int16_t getImgData(void)
+point getImgData(void)
 {
-    u16to16 dat;
+    point p;
     GPIO_ResetBits(REQUEST_PORT, REQUEST_PIN);
     while (!GPIO_ReadInputDataBit(OK_PORT,OK_PIN))
         ;
-    dat.us = GPIO_ReadInputData(DATA_PORT);
+    p.x = GPIO_ReadInputData(DATA_PORT);
+    while (GPIO_ReadInputDataBit(OK_PORT,OK_PIN))
+        ;
+    while (!GPIO_ReadInputDataBit(OK_PORT,OK_PIN))
+        ;
+    p.y = GPIO_ReadInputData(DATA_PORT);
     GPIO_SetBits(REQUEST_PORT, REQUEST_PIN);
-    return dat.s;
+    return p;
 }
+// int16_t getImgData(void)
+// {
+//     u16to16 dat;
+//     GPIO_ResetBits(REQUEST_PORT, REQUEST_PIN);
+//     while (!GPIO_ReadInputDataBit(OK_PORT,OK_PIN))
+//         ;
+//     dat.us = GPIO_ReadInputData(DATA_PORT);
+//     GPIO_SetBits(REQUEST_PORT, REQUEST_PIN);
+//     return dat.s;
+// }
 
 #include "oledio.h"
 void test3277(void)
 {
+    point p = getImgData();
     screenClear();
-    OLED_printf("img:%d", getImgData());
+    OLED_printf("img\nx:%d\ny:%d", p.x, p.y);
 }

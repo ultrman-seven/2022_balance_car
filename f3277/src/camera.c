@@ -23,6 +23,7 @@
 #define CAM_TX_AF GPIO_AF_8
 #define CAM_TX_RCC RCC_AHBPeriph_GPIOE
 
+#define _DBG_ 1
 void __cam_uart_init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -230,7 +231,7 @@ void cameraInit(void)
     __cameraConfig(SET_COL, PIC_COL);
     __cameraConfig(SET_ROW, PIC_LINE);
     __cameraConfig(EXP_TIME, 400);
-    __cameraConfig(FPS, 20);
+    __cameraConfig(FPS, _DBG_ ? 30 : 25);
     __cameraConfig(INIT, 0);
     __cam_dma_init();
     __cam_tim_init();
@@ -298,41 +299,76 @@ uint32_t findPointCenter(uint8_t *img, uint16_t l, uint16_t c);
 uint8_t *gaussianFilter(uint8_t *img, uint16_t l, uint16_t c);
 void LED_flip(void);
 void fuck_zaoDian(uint8_t *img, uint16_t l, uint16_t c);
-uint16_t findLamp(void);
+point findLamp(void);
 void twoPass(uint8_t *img, uint16_t l, uint16_t c);
+void gaussianFilterFast(uint8_t *img, uint16_t l, uint16_t c);
 #include "stdio.h"
 #include "string.h"
-int16_t camResult = 0;
+
+// int16_t camResult = PIC_COL / 2;
+point camResult = {0, 0};
+
 extern uint8_t pic_cp[PIC_COL * PIC_LINE];
+uint8_t cnt;
+#define Wait_Time 25
 void cameraPicOption(void)
 {
     if (DMA_ok_flag)
     {
         uint16_t tmp;
         uint16_t maxIdx, t;
+        int16_t lamp_x;
         LED_flip();
         memset(picReceive.pic, 0x00, PIC_CUT);
         // fuck_zaoDian(picReceive.pic, PIC_LINE, PIC_COL);
         // for (tmp = PIC_CUT; tmp < PIC_COL * PIC_LINE; tmp++)
         //     pic_cp[tmp] = picReceive.pic[tmp];
         // gaussianFilter(picReceive.pic + PIC_CUT, PIC_LINE - PIC_CUT_LINE, PIC_COL);
-        maxIdx = findMax(picReceive.pic, PIC_LINE, PIC_COL);
+        gaussianFilterFast(picReceive.pic + PIC_CUT, PIC_LINE - PIC_CUT_LINE, PIC_COL);
+        // maxIdx = findMax(picReceive.pic, PIC_LINE, PIC_COL);
         t = OTSU(picReceive.pic + PIC_CUT, PIC_LINE - PIC_CUT_LINE, PIC_COL);
-        if (picReceive.pic[maxIdx] <= 20 || t <= 8)
-            goto no_lamp;
+        // if (picReceive.pic[maxIdx] <= 2 && t <= 1)
+        //     goto no_lamp;
         imgGray2Bin(picReceive.pic, PIC_LINE, PIC_COL);
         twoPass(picReceive.pic, PIC_LINE, PIC_COL);
         // camResult = (findPointCenter(picReceive.pic, PIC_LINE, PIC_COL) & 0x00ff) - PIC_COL / 2;
         // camResult = BFS(picReceive.pic, PIC_LINE, PIC_COL) - PIC_COL / 2;
 
-        camResult = findLamp();
-        if (camResult)
-            camResult -= PIC_COL / 2;
+#if (!_DBG_)
+        lamp_x = findLamp();
+        if (lamp_x)
+        {
+            cnt = Wait_Time;
+            camResult = lamp_x - PIC_COL / 2;
+        }
         else
         {
         no_lamp:
-            camResult = PIC_COL / 2;
+            if (camResult != PIC_COL / 2)
+            {
+                if (cnt == Wait_Time)
+                    camResult = -(camResult * 2);
+                if (!cnt--)
+                    camResult = PIC_COL / 2;
+            }
         }
+#else
+        camResult = findLamp();
+        // if (camResult)
+        //     camResult -= PIC_COL / 2;
+        // else
+        // {
+        // no_lamp:
+        //     camResult = PIC_COL / 2;
+        // }
+#endif
+
+        if (cameraFlag)
+            picReceive.state = 1;
+        DMA_ok_flag = 0;
+        return;
+    no_lamp:
+        camResult.x = camResult.y = 0;
         if (cameraFlag)
             picReceive.state = 1;
         DMA_ok_flag = 0;
