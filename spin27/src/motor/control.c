@@ -311,8 +311,10 @@ int16_t acc = 0;
 int Balance_Pwm, Velocity_Pwm, Moto1, Moto2, Turn_Pwm;
 extern uint8_t timerFlag;
 point getImgData(void);
-#define PIC_LINE 120
-#define PIC_COL 188
+// #define PIC_LINE 120
+// #define PIC_COL 188
+#define PIC_LINE 60
+#define PIC_COL 94
 // int16_t getImgData(void);
 float pitch = 0;
 const uint8_t whiteLine[8] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
@@ -446,22 +448,24 @@ void pidUpdateFunction(void)
             if (imgLastPosition.y >= 80)
                 lampDieFlag = 1;
             // if (turnDir)
-            // if ((getSpeed(RIGHT) - getSpeed(LEFT)) > 10)
-            //     img_x = PIC_COL / 1.5;
-            // else if ((getSpeed(LEFT) - getSpeed(RIGHT)) > 10)
-            //     img_x = -(PIC_COL / 1.5);
+            if ((getSpeed(RIGHT) - getSpeed(LEFT)) > 10)
+                img_x = PIC_COL / 2;
+            else if ((getSpeed(LEFT) - getSpeed(RIGHT)) > 10)
+                img_x = -(PIC_COL / 2);
         }
         else
         {
-            ph_car_home_speedPid_left.targetVal = baseSpeed - (imgPosition.y* baseSpeed / 350 );
+            ph_car_home_speedPid_left.targetVal = baseSpeed - (imgPosition.y * baseSpeed / 350);
             lampDieFlag = 0;
         }
         imgLastPosition = imgPosition;
 
         if (lampDieFlag)
         {
-            img_x = PIC_COL / 1.5;
-            ph_car_home_speedPid_left.targetVal = baseSpeed / 5;
+            // img_x = PIC_COL / 1.5;
+            if (img_x <= PIC_COL / 2 && img_x >= -(PIC_COL / 2))
+                img_x *= 2;
+            ph_car_home_speedPid_left.targetVal = baseSpeed * 0.8;
         }
 
         Balance_Pwm = ph_car_home_balance(

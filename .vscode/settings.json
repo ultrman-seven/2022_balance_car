@@ -65,7 +65,8 @@
         "hal_device.h": "c",
         "camera.h": "c",
         "math.h": "c",
-        "filter.h": "c"
+        "filter.h": "c",
+        "algorithm": "c"
     },
     "cSpell.enableFiletypes": [
         "8051",

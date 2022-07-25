@@ -91,7 +91,7 @@ void imgGray2Bin(uint8_t *img, uint16_t l, uint16_t c)
     uint16_t t = THRESHOLD; // otsuThreshold(img, c, l);
     while (cnt--)
     {
-        pic_cp[cnt + PIC_CUT] = img[cnt];
+        // pic_cp[cnt + PIC_CUT] = img[cnt];
         img[cnt] = (img[cnt] > t) ? 255 : 0;
         // *img = (*img > t) ? 255 : 0;
         // img++;
@@ -625,8 +625,9 @@ uint8_t bright_area_ok(uint8_t b, uint16_t a)
     x5 = x3 * x2;
     x6 = x3 * x3;
 
-    // result = -3981509.0 / x6 + 6123470.0 / x5 - 2473755.0 / x4 + 333106.0 / x3 + 1891.0 / x2 - 3386.0 / a + 200.1;
-    result = 29684.57 / x6 - 132074.725 / x5 + 189163.6 / x4 - 115328.5 / x3 + 32444.2 / x2 - 4075.34 / a + 203.14;
+    // 1. result = -3981509.0 / x6 + 6123470.0 / x5 - 2473755.0 / x4 + 333106.0 / x3 + 1891.0 / x2 - 3386.0 / a + 200.1;
+    // 2. result = 29684.57 / x6 - 132074.725 / x5 + 189163.6 / x4 - 115328.5 / x3 + 32444.2 / x2 - 4075.34 / a + 203.14;
+    result = 197820.68 / x6 - 475894.5 / x5 + 425102.56 / x4 - 183491.17 / x3 + 40710.476 / x2 - 4438.88 / a + 208.96;
     result /= b;
     if (result <= 2)
         // result -= b;

@@ -13,7 +13,6 @@
 #define OK_PIN_SOURCE GPIO_PinSource14
 #define OK_PIN (0X01 << OK_PIN_SOURCE)
 
-
 void communicateInit(void)
 {
     GPIO_InitTypeDef gpio;
@@ -36,23 +35,27 @@ void communicateInit(void)
     GPIO_SetBits(REQUEST_PORT, REQUEST_PIN);
 }
 
-typedef union 
+typedef union
 {
     uint16_t us;
     int16_t s;
-}u16to16;
+} u16to16;
 
 point getImgData(void)
 {
     point p;
+    uint8_t max_wait;
     GPIO_ResetBits(REQUEST_PORT, REQUEST_PIN);
-    while (!GPIO_ReadInputDataBit(OK_PORT,OK_PIN))
-        ;
+    max_wait = 20;
+    while (!GPIO_ReadInputDataBit(OK_PORT, OK_PIN) && max_wait)
+        max_wait--;
     p.x = GPIO_ReadInputData(DATA_PORT);
-    while (GPIO_ReadInputDataBit(OK_PORT,OK_PIN))
-        ;
-    while (!GPIO_ReadInputDataBit(OK_PORT,OK_PIN))
-        ;
+    max_wait = 50;
+    while (GPIO_ReadInputDataBit(OK_PORT, OK_PIN) && max_wait)
+        max_wait--;
+    max_wait = 20;
+    while (!GPIO_ReadInputDataBit(OK_PORT, OK_PIN) && max_wait)
+        max_wait--;
     p.y = GPIO_ReadInputData(DATA_PORT);
     GPIO_SetBits(REQUEST_PORT, REQUEST_PIN);
     return p;

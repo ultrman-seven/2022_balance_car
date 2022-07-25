@@ -160,7 +160,7 @@ void __cam_tim_init(void)
     ic.TIM_Channel = CAM_TIM_CHANNEL;
     ic.TIM_ICFilter = 0;
     ic.TIM_ICPolarity = TIM_ICPolarity_Rising;
-    ic.TIM_ICPrescaler = TIM_ICPSC_DIV1;
+    ic.TIM_ICPrescaler = TIM_ICPSC_DIV2;
     ic.TIM_ICSelection = TIM_ICSelection_DirectTI;
     TIM_ICInit(CAM_TIM, &ic);
 
@@ -232,7 +232,7 @@ void cameraInit(void)
     NVIC_InitTypeDef nvic;
     EXTI_InitTypeDef exti;
     __cam_uart_init();
-    __cameraConfig(SET_COL, PIC_COL);
+    __cameraConfig(SET_COL, PIC_COL * 2);
     __cameraConfig(SET_ROW, PIC_LINE);
     __cameraConfig(EXP_TIME, 400);
     __cameraConfig(FPS, _DBG_ ? 30 : 25);
@@ -336,11 +336,13 @@ void cameraPicOption(void)
         // for (tmp = PIC_CUT; tmp < PIC_COL * PIC_LINE; tmp++)
         //     pic_cp[tmp] = picReceive.pic[tmp];
         // gaussianFilter(picReceive.pic + PIC_CUT, PIC_LINE - PIC_CUT_LINE, PIC_COL);
-        gaussianFilterFast(cam_pic + PIC_CUT, PIC_LINE - PIC_CUT_LINE, PIC_COL);
-        // maxIdx = findMax(picReceive.pic, PIC_LINE, PIC_COL);
+        // gaussianFilterFast(cam_pic + PIC_CUT, PIC_LINE - PIC_CUT_LINE, PIC_COL);
+        maxIdx = findMax(picReceive.pic, PIC_LINE, PIC_COL);
         t = OTSU(cam_pic + PIC_CUT, PIC_LINE - PIC_CUT_LINE, PIC_COL);
         // if (picReceive.pic[maxIdx] <= 2 && t <= 1)
-        //     goto no_lamp;
+        // if (cam_pic[maxIdx <= 20] || t <= 5)
+        if (cam_pic[maxIdx <= 15] || t <= 3)
+            goto no_lamp;
         imgGray2Bin(cam_pic + PIC_CUT, PIC_LINE - PIC_CUT_LINE, PIC_COL);
         twoPass(cam_pic, PIC_LINE, PIC_COL);
         // camResult = (findPointCenter(picReceive.pic, PIC_LINE, PIC_COL) & 0x00ff) - PIC_COL / 2;
