@@ -453,7 +453,7 @@ void pidUpdateFunction(void)
         }
         else
         {
-            ph_car_home_speedPid_left.targetVal = baseSpeed - (imgPosition.y* baseSpeed / 300 );
+            ph_car_home_speedPid_left.targetVal = baseSpeed - (imgPosition.y* baseSpeed / 350 );
             lampDieFlag = 0;
         }
         imgLastPosition = imgPosition;

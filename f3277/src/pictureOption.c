@@ -84,15 +84,17 @@ uint8_t OTSU(uint8_t *image, uint16_t IMAGE_H, uint16_t IMAGE_W)
     THRESHOLD = threshold;
     return threshold;
 }
-
+uint8_t pic_cp[PIC_COL * PIC_LINE] = {0};
 void imgGray2Bin(uint8_t *img, uint16_t l, uint16_t c)
 {
     uint32_t cnt = l * c;
     uint16_t t = THRESHOLD; // otsuThreshold(img, c, l);
     while (cnt--)
     {
-        *img = (*img > t) ? 255 : 0;
-        img++;
+        pic_cp[cnt + PIC_CUT] = img[cnt];
+        img[cnt] = (img[cnt] > t) ? 255 : 0;
+        // *img = (*img > t) ? 255 : 0;
+        // img++;
     }
     // printf("l%d:,c:%d,cnt:%d\r\n", l, c, cnt);
 }
@@ -158,7 +160,6 @@ uint32_t findPointCenter(uint8_t *img, uint16_t l, uint16_t c)
     return ((y << 8) & 0xff00) + x;
 }
 
-uint8_t pic_cp[PIC_COL * PIC_LINE] = {0};
 #define array_2d_2_1d(NAME, ROW, COL, A_C) NAME[((ROW) * (A_C)) + (COL)]
 
 uint8_t *conv(uint16_t *core, uint8_t core_size, uint8_t *src, uint16_t l, uint16_t c)
@@ -624,12 +625,12 @@ uint8_t bright_area_ok(uint8_t b, uint16_t a)
     x5 = x3 * x2;
     x6 = x3 * x3;
 
-    result = -3981509.0 / x6 + 6123470.0 / x5 - 2473755.0 / x4 + 333106.0 / x3 + 1891.0 / x2 - 3386.0 / a + 200.1;
-    // result = 29684.57 / x6 - 132074.725 / x5 + 189163.6 / x4 - 115328.5 / x3 + 32444.2 / x2 - 4075.34 / a + 203.14;
+    // result = -3981509.0 / x6 + 6123470.0 / x5 - 2473755.0 / x4 + 333106.0 / x3 + 1891.0 / x2 - 3386.0 / a + 200.1;
+    result = 29684.57 / x6 - 132074.725 / x5 + 189163.6 / x4 - 115328.5 / x3 + 32444.2 / x2 - 4075.34 / a + 203.14;
     result /= b;
     if (result <= 2)
-    // result -= b;
-    // if (result <= 40)
+        // result -= b;
+        // if (result <= 40)
         return 1;
     return 0;
 }

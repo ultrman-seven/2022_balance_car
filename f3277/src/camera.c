@@ -159,7 +159,7 @@ void __cam_tim_init(void)
 
     ic.TIM_Channel = CAM_TIM_CHANNEL;
     ic.TIM_ICFilter = 0;
-    ic.TIM_ICPolarity = TIM_ICPolarity_Falling;
+    ic.TIM_ICPolarity = TIM_ICPolarity_Rising;
     ic.TIM_ICPrescaler = TIM_ICPSC_DIV1;
     ic.TIM_ICSelection = TIM_ICSelection_DirectTI;
     TIM_ICInit(CAM_TIM, &ic);
@@ -217,10 +217,14 @@ void __cameraConfig(cameraCMD name, uint16_t val)
 #define CAM_V_INT_EXTI_LINE CAM_V_INT_PIN
 
 void setExtiCallbackFunction(uint8_t line, void (*f)(void));
+uint8_t DMA_ok_flag = 0;
 void v_int(void)
 {
     if (picReceive.state)
+    {
         DMA_Cmd(CAM_DMA_CHANNEL, ENABLE);
+        DMA_ok_flag = 0;
+    }
 }
 void cameraInit(void)
 {
@@ -260,7 +264,7 @@ void cameraInit(void)
 
     exti.EXTI_LineCmd = ENABLE;
     exti.EXTI_Mode = EXTI_Mode_Interrupt;
-    exti.EXTI_Trigger = EXTI_Trigger_Falling;
+    exti.EXTI_Trigger = EXTI_Trigger_Rising;
     exti.EXTI_Line = CAM_V_INT_EXTI_LINE;
     EXTI_Init(&exti);
     setExtiCallbackFunction(CAM_V_INT_EXTI_PIN_SOURCE, v_int);
@@ -278,7 +282,6 @@ void cameraOff(void)
     cameraFlag = 0;
 }
 
-uint8_t DMA_ok_flag = 0;
 void CAM_DMA_NVIC_FUNCTION(void)
 {
     if (DMA_GetITStatus(CAM_DMA_IT) == SET)
@@ -309,6 +312,8 @@ void gaussianFilterFast(uint8_t *img, uint16_t l, uint16_t c);
 point camResult = {0, 0};
 
 extern uint8_t pic_cp[PIC_COL * PIC_LINE];
+uint8_t cam_pic[PIC_COL * PIC_LINE] = {0};
+
 uint8_t cnt;
 #define Wait_Time 25
 void cameraPicOption(void)
@@ -319,18 +324,25 @@ void cameraPicOption(void)
         uint16_t maxIdx, t;
         int16_t lamp_x;
         LED_flip();
-        memset(picReceive.pic, 0x00, PIC_CUT);
+
+        // memset(picReceive.pic, 0x00, PIC_CUT);
+        for (tmp = PIC_CUT; tmp < PIC_COL * PIC_LINE; tmp++)
+            cam_pic[tmp] = picReceive.pic[tmp];
+
+        if (cameraFlag)
+            picReceive.state = 1;
+
         // fuck_zaoDian(picReceive.pic, PIC_LINE, PIC_COL);
         // for (tmp = PIC_CUT; tmp < PIC_COL * PIC_LINE; tmp++)
         //     pic_cp[tmp] = picReceive.pic[tmp];
         // gaussianFilter(picReceive.pic + PIC_CUT, PIC_LINE - PIC_CUT_LINE, PIC_COL);
-        gaussianFilterFast(picReceive.pic + PIC_CUT, PIC_LINE - PIC_CUT_LINE, PIC_COL);
+        gaussianFilterFast(cam_pic + PIC_CUT, PIC_LINE - PIC_CUT_LINE, PIC_COL);
         // maxIdx = findMax(picReceive.pic, PIC_LINE, PIC_COL);
-        t = OTSU(picReceive.pic + PIC_CUT, PIC_LINE - PIC_CUT_LINE, PIC_COL);
+        t = OTSU(cam_pic + PIC_CUT, PIC_LINE - PIC_CUT_LINE, PIC_COL);
         // if (picReceive.pic[maxIdx] <= 2 && t <= 1)
         //     goto no_lamp;
-        imgGray2Bin(picReceive.pic, PIC_LINE, PIC_COL);
-        twoPass(picReceive.pic, PIC_LINE, PIC_COL);
+        imgGray2Bin(cam_pic + PIC_CUT, PIC_LINE - PIC_CUT_LINE, PIC_COL);
+        twoPass(cam_pic, PIC_LINE, PIC_COL);
         // camResult = (findPointCenter(picReceive.pic, PIC_LINE, PIC_COL) & 0x00ff) - PIC_COL / 2;
         // camResult = BFS(picReceive.pic, PIC_LINE, PIC_COL) - PIC_COL / 2;
 
@@ -363,14 +375,12 @@ void cameraPicOption(void)
         // }
 #endif
 
-        if (cameraFlag)
-            picReceive.state = 1;
-        DMA_ok_flag = 0;
+        // DMA_ok_flag = 0;
         return;
     no_lamp:
         camResult.x = camResult.y = 0;
-        if (cameraFlag)
-            picReceive.state = 1;
-        DMA_ok_flag = 0;
+        // if (cameraFlag)
+        //     picReceive.state = 1;
+        // DMA_ok_flag = 0;
     }
 }
