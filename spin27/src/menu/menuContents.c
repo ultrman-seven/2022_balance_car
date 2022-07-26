@@ -66,7 +66,9 @@ void getSysState(void)
 
 void beepTest(void)
 {
-    beepForHundredMs(5);
+    // beepForHundredMs(5);
+    beep100Ms();
+    // beepFlip();
 }
 
 // mpu6050 callback functions

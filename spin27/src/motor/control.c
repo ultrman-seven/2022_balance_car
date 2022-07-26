@@ -34,6 +34,7 @@
 #include "quickSin.h"
 #include "mpu6050/filter.h"
 #include "oledio.h"
+#include "hardware/beep.h"
 
 // int32_t balancePoint = 145;
 int32_t balancePoint = 110;
@@ -446,12 +447,17 @@ void pidUpdateFunction(void)
         {
             ph_car_home_speedPid_left.targetVal = (baseSpeed / 2);
             if (imgLastPosition.y >= 80)
+            {
                 lampDieFlag = 1;
+                beep100Ms();
+            }
             // if (turnDir)
             if ((getSpeed(RIGHT) - getSpeed(LEFT)) > 10)
-                img_x = PIC_COL / 2;
+                // img_x = PIC_COL / 2;
+                img_x = PIC_COL;
             else if ((getSpeed(LEFT) - getSpeed(RIGHT)) > 10)
-                img_x = -(PIC_COL / 2);
+                // img_x = -(PIC_COL / 2);
+                img_x = -(PIC_COL);
         }
         else
         {
@@ -465,7 +471,7 @@ void pidUpdateFunction(void)
             // img_x = PIC_COL / 1.5;
             if (img_x <= PIC_COL / 2 && img_x >= -(PIC_COL / 2))
                 img_x *= 2;
-            ph_car_home_speedPid_left.targetVal = baseSpeed * 0.8;
+            ph_car_home_speedPid_left.targetVal = baseSpeed * 0.5;
         }
 
         Balance_Pwm = ph_car_home_balance(
@@ -482,8 +488,21 @@ void pidUpdateFunction(void)
         Turn_Pwm = cam_turn(img_x, gyro[2], &turnPid);
         // Turn_Pwm = cam_turn(imgPosition, Gyro_Turn, &turnPid);
         Velocity_Pwm = ph_car_home_velocity(getSpeed(LEFT), getSpeed(RIGHT), &ph_car_home_speedPid_left);
-        Moto1 = Balance_Pwm - Velocity_Pwm + Turn_Pwm; //===计算左轮电机最终PWM
-        Moto2 = Balance_Pwm - Velocity_Pwm - Turn_Pwm;
+        if (img_x > PIC_COL / 2)
+        {
+            Moto1 = Balance_Pwm - Velocity_Pwm; //===计算左轮电机最终PWM
+            Moto2 = Balance_Pwm - Velocity_Pwm - Turn_Pwm;
+        }
+        else if (img_x < -(PIC_COL / 2))
+        {
+            Moto1 = Balance_Pwm - Velocity_Pwm + Turn_Pwm; //===计算左轮电机最终PWM
+            Moto2 = Balance_Pwm - Velocity_Pwm;
+        }
+        else
+        {
+            Moto1 = Balance_Pwm - Velocity_Pwm + Turn_Pwm; //===计算左轮电机最终PWM
+            Moto2 = Balance_Pwm - Velocity_Pwm - Turn_Pwm;
+        }
         setPower(Moto1, LEFT);
         setPower(Moto2, RIGHT);
 

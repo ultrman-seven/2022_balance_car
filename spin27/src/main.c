@@ -83,7 +83,8 @@ void globalInit(void)
     sysClkState = HSE_SysClock();
     delayInit();
     boardLED_Init();
-    uartInit();
+    // uartInit();
+    beepInit();
     menuInit();
     encoderInit();
     motorInit();
