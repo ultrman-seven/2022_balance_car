@@ -95,7 +95,9 @@ void globalInit(void)
     communicateInit();
 }
 #define DangerSpeed 1200
+// #define DangerSpeed 1500
 void picProcess(void);
+void testStop(void);
 int main(void)
 {
     int32_t ledBright = 0;
@@ -111,9 +113,11 @@ int main(void)
         TIM2->CCR3 = ledBright;
 
         if (getSpeed(LEFT) >= DangerSpeed)
-            NVIC_SystemReset();
+            // NVIC_SystemReset();
+            testStop();
         if (getSpeed(LEFT) <= -DangerSpeed)
-            NVIC_SystemReset();
+            // NVIC_SystemReset();
+            testStop();
         // if (getSpeed(RIGHT) >= DangerSpeed)
         //     NVIC_SystemReset();
         // if (getSpeed(RIGHT) <= -DangerSpeed)

@@ -1,7 +1,7 @@
 from matplotlib import pyplot as plt
 import numpy as np
 
-
+np.set_printoptions(suppress=True)
 # 摄像头畸变矫正表计算
 
 def getDat(name):
@@ -61,7 +61,7 @@ if __name__ == '__main__':
 const uint8_t distortionList[{MAX_PIC_COL_NUM}] = {'{'}
     ''')
         for r in result:
-            f.write(f'{r[0]*10:.2}')
+            f.write(f'{r[0]*10}')
             if(r != result[-1]):
                 f.write(',')
         f.write('\r\n};')

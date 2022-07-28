@@ -38,6 +38,7 @@
 
 // int32_t balancePoint = 145;
 int32_t balancePoint = 110;
+// int32_t balancePoint = 130;
 int32_t baseSpeed = 0;
 enum ctrlModes pidMode = NullMode; // pwmMode;
 float accOutput = 0.0;
@@ -162,12 +163,6 @@ int ph_car_home_velocity(int speed_left, int speed_right, PID_paraTypdef *p)
 
 PID_paraTypdef ph_car_home_speedPid_left = {
     .Kp = 80, .Ki = 4, .Kd = 0, .targetVal = 0, .integral = 0.0, .proportionLast = 0.0};
-// PID_paraTypdef ph_car_home_speedPid_left = {
-//     .Kp = 40, .Ki = 2, .Kd = 0, .targetVal = 0, .integral = 0.0, .proportionLast = 0.0};
-// PID_paraTypdef ph_car_home_speedPid_left = {
-//     .Kp = 25, .Ki = 4, .Kd = 0, .targetVal = 0, .integral = 0.0, .proportionLast = 0.0};
-// PID_paraTypdef ph_car_home_speedPid_left = {
-//     .Kp = 32, .Ki = 2, .Kd = 0, .targetVal = 0, .integral = 0.0, .proportionLast = 0.0};
 PID_paraTypdef ph_car_home_speedPid_right = {
     .Kp = 25, .Ki = 4, .Kd = 0, .targetVal = 0, .integral = 0.0, .proportionLast = 0.0};
 
@@ -257,7 +252,7 @@ float getBellFunc(int val)
 }
 
 // PID_paraTypdef turnPid = {.Kp = 10, .Kd = 2, .Ki = 0, .targetVal = 64};
-PID_paraTypdef turnPid = {.Kp = 0, .Kd = 0, .Ki = 0, .targetVal = 0};
+PID_paraTypdef turnPid = {.Kp = 0, .Kd = 0, .Ki = 1, .targetVal = 0, .integral = 0};
 // int imgPosition = 64;
 point imgPosition = {0, 0};
 point imgLastPosition = {0, 0};
@@ -266,10 +261,16 @@ int16_t img_x = 0;
 int cam_turn(int val, int16_t gyro, PID_paraTypdef *p)
 {
     int err = p->targetVal - val;
-    if (err > -3 && err < 3)
-        return (err * p->Kp) / 10 + (gyro * p->Kd) / 20;
-    else
-        return (err * p->Kp) / 10;
+    // if (err > -3 && err < 3)
+    //     return (err * p->Kp) / 10 + (gyro * p->Kd) / 20;
+    // else
+    p->integral *= 0.9;
+    p->integral += err;
+    if (p->integral >= 7000)
+        p->integral = 7000;
+    if (p->integral <= -7000)
+        p->integral = -7000;
+    return (err * p->Kp + p->integral * p->Ki / 10) / 10;
     // float kg = getBellFunc(err);
     // return err * p->Kp + (gyro * p->Kd * kg) / 10;
 }
@@ -322,21 +323,173 @@ const uint8_t whiteLine[8] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 uint8_t picCnt = 0;
 uint8_t picLossCnt;
 uint8_t turnDir = 0;
-uint8_t pictureFlags = 0;
+
+// const uint8_t distortionList[47] = {
+//     0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+//     10, 11, 12, 13, 15, 17, 19, 21, 23, 25,
+//     27, 29, 31, 33, 35, 37, 39, 41, 43, 46,
+//     49, 42, 45, 50, 55, 60, 66, 72, 78, 84,
+//     90, 97, 105, 115, 125, 145, 165};
+const uint8_t distortionList[] = {
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+    10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+    20, 21, 22, 23, 24, 25, 26, 27, 28, 30,
+    32, 34, 36, 38, 41, 44, 48, 53, 57,
+    62, 67, 73, 80, 87, 94, 102, 110, 130, 160};
+// const float distortionList[47] = {
+//     0.2438802118050742, 1.2285700431656867, 2.1597664764399265,
+//     3.038938158872247, 3.8681537365632517, 4.650081854469695,
+//     5.387991156404483, 6.085750285036666, 6.747827881891453,
+//     7.379292587350195, 7.985813040650398, 8.573657879885717,
+//     9.149695742005957, 9.72139526281707, 10.296825076981168,
+//     10.8846538180165, 11.494150118297473, 12.13518260905464,
+//     12.818219920374712, 13.554330681200542, 14.355183519331135,
+//     15.233047061421649, 16.200789932983387, 17.271880758383805,
+//     18.460388160846513, 19.780980762451264, 21.24892718413396,
+//     22.88009604568667, 24.690955965757595, 26.69857556185109,
+//     28.920623450327657, 31.375368246403962, 34.08167856415281,
+//     37.05902301650315, 40.3274702152401, 43.90768877100491,
+//     47.82094729329499, 52.089114390463905, 56.73465866972137,
+//     61.780648737133205, 67.25075319762145, 73.16924065496426,
+//     79.56097971179594, 86.45143896960695, 93.86668702874388,
+//     101.83339248840952, 110.37882394666272};
+
+int8_t img_sign = 1;
+uint8_t lampDieFlag = 0;
+int16_t jb_tmp;
+#define Wait_Time 4
+
+uint8_t img_reGet_cnt = 0;
+uint8_t img_reGet_flag = 0;
+
+uint16_t pictureFlags = 0;
+uint8_t pictureCnts[16] = {0};
 enum pic_flags
 {
     pic_flag_lamp_die,
-    pic_flag_lamp_miss
+    pic_flag_lamp_miss,
+    pic_flag_reGet
 };
 
-uint8_t lampDieFlag = 0;
-#define Wait_Time 4
+#define PIC_FLAG_SET(flag) pictureFlags |= (0x0001 << (flag))
+
+#define IF_CONTINUE_RUNNING(flag, times)   \
+    if ((pictureFlags >> (flag)) & 0x0001) \
+        if (pictureCnts[flag]++ <= times)  \
+        {
+
+#define END_CONTINUE_RUNNING(flag)           \
+    }                                        \
+    else                                     \
+    {                                        \
+        pictureCnts[flag] = 0;               \
+        pictureFlags &= ~(0x0001 << (flag)); \
+    }
+
 void pidUpdateFunction(void)
 {
     float y, r;
 
     switch (pidMode)
     {
+    case balanceCarHomeMode:
+        pitch = MPU_pitch;
+        ph_car_home_anglePid.targetVal = balancePoint;
+
+        if (++picCnt == 4)
+        {
+            turnDir = (imgPosition.x < (PIC_COL / 2));
+            imgPosition = getImgData();
+
+            jb_tmp = imgPosition.x - (PIC_COL / 2);
+            img_sign = (jb_tmp >= 0) ? 1 : -1;
+            jb_tmp *= img_sign;
+            jb_tmp = distortionList[jb_tmp];
+            jb_tmp *= img_sign;
+            picCnt = 0;
+        }
+
+        img_x = jb_tmp;
+
+        if (imgPosition.x == 0) //找不到灯
+        {
+            if (imgLastPosition.x && imgLastPosition.y >= 80) //刚灭完灯
+            {
+                // lampDieFlag = 1;
+                PIC_FLAG_SET(pic_flag_lamp_die);
+                ph_car_home_speedPid_left.targetVal = (baseSpeed / 2);
+                // beep100Ms();
+            }
+            else //纯找不到灯
+            {
+            }
+
+            //顺势转
+            if ((getSpeed(RIGHT) - getSpeed(LEFT)) > 5)
+                img_x = distortionList[40];
+            else if ((getSpeed(LEFT) - getSpeed(RIGHT)) > 5)
+                img_x = -distortionList[40];
+            // beepSet(DISABLE);
+        }
+        else //有灯
+        {
+            ph_car_home_speedPid_left.targetVal = baseSpeed - (imgPosition.y * baseSpeed / 350);
+            lampDieFlag = 0;
+            if (imgLastPosition.x == 0) //转的时候刚找到灯
+            {
+                // img_reGet_flag = 1;
+                PIC_FLAG_SET(pic_flag_reGet);
+                beep100Ms();
+            }
+            // beepSet(ENABLE);
+        }
+        imgLastPosition = imgPosition;
+
+        IF_CONTINUE_RUNNING(pic_flag_reGet, 15)
+        if ((getSpeed(RIGHT) - getSpeed(LEFT)) > 2)
+            img_x = -distortionList[46];
+        else if ((getSpeed(LEFT) - getSpeed(RIGHT)) > 2)
+            img_x = distortionList[46];
+        END_CONTINUE_RUNNING(pic_flag_reGet)
+
+        IF_CONTINUE_RUNNING(pic_flag_lamp_die, 10)
+        // if (lampDieFlag)
+        // {
+        // img_x = PIC_COL / 1.5;
+        // if (img_x <= PIC_COL / 2 && img_x >= -(PIC_COL / 2))
+        //     img_x *= 2;
+        ph_car_home_speedPid_left.targetVal = baseSpeed * 0.5;
+        if ((getSpeed(RIGHT) - getSpeed(LEFT)) > 2)
+            img_x = -distortionList[20];
+        else if ((getSpeed(LEFT) - getSpeed(RIGHT)) > 2)
+            img_x = distortionList[20];
+        // }
+        END_CONTINUE_RUNNING(pic_flag_lamp_die)
+
+        Balance_Pwm = ph_car_home_balance(
+            pitch, (gyro[1]), &ph_car_home_anglePid); //===平衡PID控制
+
+        turnPid.targetVal = 0;
+        Turn_Pwm = cam_turn(img_x, gyro[2], &turnPid);
+        Velocity_Pwm = ph_car_home_velocity(getSpeed(LEFT), getSpeed(RIGHT), &ph_car_home_speedPid_left);
+        // if (img_x > PIC_COL / 2)
+        // {
+        //     Moto1 = Balance_Pwm - Velocity_Pwm; //===计算左轮电机最终PWM
+        //     Moto2 = Balance_Pwm - Velocity_Pwm - Turn_Pwm;
+        // }
+        // else if (img_x < -(PIC_COL / 2))
+        // {
+        //     Moto1 = Balance_Pwm - Velocity_Pwm + Turn_Pwm; //===计算左轮电机最终PWM
+        //     Moto2 = Balance_Pwm - Velocity_Pwm;
+        // }
+        // else
+        {
+            Moto1 = Balance_Pwm - Velocity_Pwm + Turn_Pwm; //===计算左轮电机最终PWM
+            Moto2 = Balance_Pwm - Velocity_Pwm - Turn_Pwm;
+        }
+        setPower(Moto1, LEFT);
+        setPower(Moto2, RIGHT);
+        break;
     case pwmMode:
         pwmLeft = speedPidLeft.targetVal;
         pwmRight = speedPidRight.targetVal;
@@ -404,115 +557,6 @@ void pidUpdateFunction(void)
         break;
     case angleMode_accOutput:
         // 代码见历史
-        break;
-    case balanceCarHomeMode:
-        // Read_DMP(&pitch, &r, &y);
-        // Get_Angle(3);
-        pitch = MPU_pitch;
-        // do
-        // {
-        //     Read_DMP(&pitch, &r, &y);
-        // } while (pitch < 0.000001 && pitch > -0.000001);
-        ph_car_home_anglePid.targetVal = balancePoint;
-
-        if (++picCnt == 4)
-        {
-            // posi = getImgData();
-            turnDir = (imgPosition.x < (PIC_COL / 2));
-            imgPosition = getImgData();
-            picCnt = 0;
-        }
-
-        // if (posi.x == 0)
-        // {
-        //     if (imgPosition.x)
-        //     {
-        //         // if (picLossCnt == Wait_Time)
-        //         //     imgPosition.x = PIC_COL - imgPosition.x;
-        //         if (!picLossCnt--)
-        //         {
-        //             turnDir = (imgPosition.x > (PIC_COL / 2));
-        //             imgPosition.x = 0;
-        //         }
-        //     }
-        // }
-        // else
-        // {
-        //     picLossCnt = Wait_Time;
-        //     imgPosition.x = posi.x;
-        //     imgPosition.y = posi.y;
-        // }
-        img_x = imgPosition.x - (PIC_COL / 2);
-        if (imgPosition.x == 0)
-        {
-            ph_car_home_speedPid_left.targetVal = (baseSpeed / 2);
-            if (imgLastPosition.y >= 80)
-            {
-                lampDieFlag = 1;
-                beep100Ms();
-            }
-            // if (turnDir)
-            if ((getSpeed(RIGHT) - getSpeed(LEFT)) > 10)
-                // img_x = PIC_COL / 2;
-                img_x = PIC_COL;
-            else if ((getSpeed(LEFT) - getSpeed(RIGHT)) > 10)
-                // img_x = -(PIC_COL / 2);
-                img_x = -(PIC_COL);
-        }
-        else
-        {
-            ph_car_home_speedPid_left.targetVal = baseSpeed - (imgPosition.y * baseSpeed / 350);
-            lampDieFlag = 0;
-        }
-        imgLastPosition = imgPosition;
-
-        if (lampDieFlag)
-        {
-            // img_x = PIC_COL / 1.5;
-            if (img_x <= PIC_COL / 2 && img_x >= -(PIC_COL / 2))
-                img_x *= 2;
-            ph_car_home_speedPid_left.targetVal = baseSpeed * 0.5;
-        }
-
-        Balance_Pwm = ph_car_home_balance(
-            pitch, (gyro[1]), &ph_car_home_anglePid); //===平衡PID控制
-        // Balance_Pwm = ph_car_home_balance(
-        //     pitch, Gyro_Balance, &ph_car_home_anglePid); //===平衡PID控制
-        // Velocity_Pwm = ph_car_home_velocity(
-        //     getSpeed(LEFT), getSpeed(RIGHT),
-        //     &ph_car_home_speedPid);
-        //===速度环PID控制	 记住，速度反馈是正反馈，就是小车快的时候要慢下来就需要再跑快一点
-        // Turn_Pwm = ph_car_home_turn(getSpeed(LEFT), getSpeed(RIGHT), gyro[2]); //===转向环PID控制
-
-        turnPid.targetVal = 0;
-        Turn_Pwm = cam_turn(img_x, gyro[2], &turnPid);
-        // Turn_Pwm = cam_turn(imgPosition, Gyro_Turn, &turnPid);
-        Velocity_Pwm = ph_car_home_velocity(getSpeed(LEFT), getSpeed(RIGHT), &ph_car_home_speedPid_left);
-        if (img_x > PIC_COL / 2)
-        {
-            Moto1 = Balance_Pwm - Velocity_Pwm; //===计算左轮电机最终PWM
-            Moto2 = Balance_Pwm - Velocity_Pwm - Turn_Pwm;
-        }
-        else if (img_x < -(PIC_COL / 2))
-        {
-            Moto1 = Balance_Pwm - Velocity_Pwm + Turn_Pwm; //===计算左轮电机最终PWM
-            Moto2 = Balance_Pwm - Velocity_Pwm;
-        }
-        else
-        {
-            Moto1 = Balance_Pwm - Velocity_Pwm + Turn_Pwm; //===计算左轮电机最终PWM
-            Moto2 = Balance_Pwm - Velocity_Pwm - Turn_Pwm;
-        }
-        setPower(Moto1, LEFT);
-        setPower(Moto2, RIGHT);
-
-        // screenClear();
-        // tmp = imgPosition + 64;
-        // if (tmp < 0)
-        //     tmp = 0;
-        // if (tmp >= 128)
-        //     tmp = 127;
-        // Picture_display(whiteLine, tmp, 0, 64, 1);
         break;
     default:
         break;

@@ -48,22 +48,63 @@ void LED_flip(void)
         GPIO_SetBits(LED_PORT, LED_PIN);
 }
 
+#define CAM_RED_PIN_SOURCE GPIO_PinSource0
+#define CAM_RED_PIN (0x01 << CAM_RED_PIN_SOURCE)
+#define CAM_RED_PORT GPIOE
+#define CAM_RED_RCC RCC_AHBPeriph_GPIOE
+#define CAM_RED CAM_RED_PORT, CAM_RED_PIN
+
+#define CAM_GREEN_PIN_SOURCE GPIO_PinSource1
+#define CAM_GREEN_PIN (0x01 << CAM_GREEN_PIN_SOURCE)
+#define CAM_GREEN_PORT GPIOE
+#define CAM_GREEN_RCC RCC_AHBPeriph_GPIOE
+#define CAM_GREEN CAM_GREEN_PORT, CAM_GREEN_PIN
+
+void cam_LED_init(void)
+{
+    RCC_AHBPeriphClockCmd(CAM_RED_RCC, ENABLE);
+    RCC_AHBPeriphClockCmd(CAM_GREEN_RCC, ENABLE);
+
+    GPIO_InitTypeDef g;
+    g.GPIO_Mode = GPIO_Mode_Out_PP;
+    g.GPIO_Pin = CAM_RED_PIN;
+    g.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(CAM_RED_PORT, &g);
+
+    g.GPIO_Pin = CAM_GREEN_PIN;
+    GPIO_Init(CAM_GREEN_PORT, &g);
+
+    GPIO_ResetBits(CAM_RED);
+    GPIO_ResetBits(CAM_GREEN);
+}
+
 void communicateInit(void);
 int main(void)
 {
     HSE_SysClock();
     delayInit();
-    computerUART_init();
+    // computerUART_init();
     cameraInit();
     cameraOn();
 
     delayMs(5000);
     communicateInit();
     boardLED_init();
+    cam_LED_init();
 
     while (1)
     {
         cameraPicOption();
+        if (camResult.x)
+        {
+            GPIO_SetBits(CAM_RED);
+            GPIO_ResetBits(CAM_GREEN);
+        }
+        else
+        {
+            GPIO_SetBits(CAM_GREEN);
+            GPIO_ResetBits(CAM_RED);
+        }
         // delayMs(20);
     }
 }

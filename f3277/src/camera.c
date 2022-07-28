@@ -235,7 +235,7 @@ void cameraInit(void)
     __cameraConfig(SET_COL, PIC_COL * 2);
     __cameraConfig(SET_ROW, PIC_LINE);
     __cameraConfig(EXP_TIME, 400);
-    __cameraConfig(FPS, _DBG_ ? 30 : 25);
+    __cameraConfig(FPS, 30);
     __cameraConfig(INIT, 0);
     __cam_dma_init();
     __cam_tim_init();
@@ -340,42 +340,17 @@ void cameraPicOption(void)
         maxIdx = findMax(picReceive.pic, PIC_LINE, PIC_COL);
         t = OTSU(cam_pic + PIC_CUT, PIC_LINE - PIC_CUT_LINE, PIC_COL);
         // if (picReceive.pic[maxIdx] <= 2 && t <= 1)
-        // if (cam_pic[maxIdx <= 20] || t <= 5)
-        if (cam_pic[maxIdx <= 15] || t <= 3)
+        if (cam_pic[maxIdx <= 20] || t <= 5)
+            // if (cam_pic[maxIdx <= 15] || t <= 3)
             goto no_lamp;
         imgGray2Bin(cam_pic + PIC_CUT, PIC_LINE - PIC_CUT_LINE, PIC_COL);
         twoPass(cam_pic, PIC_LINE, PIC_COL);
         // camResult = (findPointCenter(picReceive.pic, PIC_LINE, PIC_COL) & 0x00ff) - PIC_COL / 2;
         // camResult = BFS(picReceive.pic, PIC_LINE, PIC_COL) - PIC_COL / 2;
 
-#if (!_DBG_)
-        lamp_x = findLamp();
-        if (lamp_x)
-        {
-            cnt = Wait_Time;
-            camResult = lamp_x - PIC_COL / 2;
-        }
-        else
-        {
-        no_lamp:
-            if (camResult != PIC_COL / 2)
-            {
-                if (cnt == Wait_Time)
-                    camResult = -(camResult * 2);
-                if (!cnt--)
-                    camResult = PIC_COL / 2;
-            }
-        }
-#else
         camResult = findLamp();
-        // if (camResult)
-        //     camResult -= PIC_COL / 2;
-        // else
-        // {
-        // no_lamp:
-        //     camResult = PIC_COL / 2;
-        // }
-#endif
+        if (camResult.x == 90 && camResult.y == 46)
+            goto no_lamp;
 
         // DMA_ok_flag = 0;
         return;
