@@ -36,8 +36,8 @@
 #include "oledio.h"
 #include "hardware/beep.h"
 
-// int32_t balancePoint = 145;
-int32_t balancePoint = 110;
+int32_t balancePoint = 145;
+// int32_t balancePoint = 110;
 // int32_t balancePoint = 130;
 int32_t baseSpeed = 0;
 enum ctrlModes pidMode = NullMode; // pwmMode;
@@ -407,6 +407,9 @@ void pidUpdateFunction(void)
             jb_tmp = distortionList[jb_tmp];
             jb_tmp *= img_sign;
             picCnt = 0;
+
+            if (imgPosition.y >= 90)
+                jb_tmp *= 3;
         }
 
         img_x = jb_tmp;
