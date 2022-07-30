@@ -467,9 +467,11 @@ void pidUpdateFunction(void)
         //     img_x *= 2;
         ph_car_home_speedPid_left.targetVal = baseSpeed * 0.5;
         if ((getSpeed(RIGHT) - getSpeed(LEFT)) > 2)
-            img_x = distortionList[35];
+            // img_x = distortionList[35];
+            img_x = distortionList[38];
         else if ((getSpeed(LEFT) - getSpeed(RIGHT)) > 2)
-            img_x = -distortionList[35];
+            // img_x = -distortionList[35];
+            img_x = -distortionList[38];
         // }
         END_CONTINUE_RUNNING(pic_flag_lamp_die)
 
