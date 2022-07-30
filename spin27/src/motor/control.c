@@ -372,6 +372,9 @@ enum pic_flags
 };
 
 #define PIC_FLAG_SET(flag) pictureFlags |= (0x0001 << (flag))
+#define PIC_FLAG_RESET(flag)             \
+    pictureFlags &= ~(0x0001 << (flag)); \
+    pictureCnts[flag] = 0
 
 #define IF_CONTINUE_RUNNING(flag, times)   \
     if ((pictureFlags >> (flag)) & 0x0001) \
@@ -408,7 +411,7 @@ void pidUpdateFunction(void)
             jb_tmp *= img_sign;
             picCnt = 0;
 
-            if (imgPosition.y >= 90)
+            if (imgPosition.y >= 80)
                 jb_tmp *= 3;
         }
 
@@ -421,7 +424,7 @@ void pidUpdateFunction(void)
                 // lampDieFlag = 1;
                 PIC_FLAG_SET(pic_flag_lamp_die);
                 ph_car_home_speedPid_left.targetVal = (baseSpeed / 2);
-                // beep100Ms();
+                beep100Ms();
             }
             else //纯找不到灯
             {
@@ -437,12 +440,13 @@ void pidUpdateFunction(void)
         else //有灯
         {
             ph_car_home_speedPid_left.targetVal = baseSpeed - (imgPosition.y * baseSpeed / 350);
-            lampDieFlag = 0;
+            // lampDieFlag = 0;
+            PIC_FLAG_RESET(pic_flag_lamp_die);
             if (imgLastPosition.x == 0) //转的时候刚找到灯
             {
                 // img_reGet_flag = 1;
                 PIC_FLAG_SET(pic_flag_reGet);
-                beep100Ms();
+                // beep100Ms();
             }
             // beepSet(ENABLE);
         }
@@ -455,7 +459,7 @@ void pidUpdateFunction(void)
             img_x = distortionList[46];
         END_CONTINUE_RUNNING(pic_flag_reGet)
 
-        IF_CONTINUE_RUNNING(pic_flag_lamp_die, 10)
+        IF_CONTINUE_RUNNING(pic_flag_lamp_die, 150)
         // if (lampDieFlag)
         // {
         // img_x = PIC_COL / 1.5;
@@ -463,9 +467,9 @@ void pidUpdateFunction(void)
         //     img_x *= 2;
         ph_car_home_speedPid_left.targetVal = baseSpeed * 0.5;
         if ((getSpeed(RIGHT) - getSpeed(LEFT)) > 2)
-            img_x = -distortionList[20];
+            img_x = distortionList[35];
         else if ((getSpeed(LEFT) - getSpeed(RIGHT)) > 2)
-            img_x = distortionList[20];
+            img_x = -distortionList[35];
         // }
         END_CONTINUE_RUNNING(pic_flag_lamp_die)
 
