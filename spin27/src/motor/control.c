@@ -37,7 +37,8 @@
 #include "hardware/beep.h"
 
 int32_t balancePoint = 145;
-// int32_t balancePoint = 120;
+// int32_t balancePoint = 155;
+// int32_t balancePoint = 190;
 // int32_t balancePoint = 110;
 // int32_t balancePoint = 130;
 int32_t baseSpeed = 0;
@@ -374,6 +375,7 @@ enum pic_flags
     pic_miss_plan2,
     pic_miss_plan3,
     pic_miss_plan4,
+    pic_running_end
 };
 
 #define PIC_FLAG_SET(flag) pictureFlags |= (0x0001 << (flag))
@@ -428,7 +430,7 @@ void pidUpdateFunction(void)
             picCnt = 0;
 
             if (imgPosition.y >= 80)
-                jb_tmp *= 3;
+                jb_tmp *= 2.5;
         }
 
         img_x = jb_tmp;
@@ -460,7 +462,7 @@ void pidUpdateFunction(void)
             if (imgPosition.y >= 80)
                 ph_car_home_speedPid_left.targetVal = baseSpeed - (imgPosition.y * baseSpeed / 550);
             else
-                ph_car_home_speedPid_left.targetVal = baseSpeed * 1.8 - (imgPosition.y) * baseSpeed / 120;
+                ph_car_home_speedPid_left.targetVal = baseSpeed * 1.7 - (imgPosition.y) * baseSpeed / 120;
             // lampDieFlag = 0;
             PIC_FLAG_RESET(pic_flag_lamp_die);
             if (imgLastPosition.x == 0) //转的时候刚找到灯
@@ -480,28 +482,34 @@ void pidUpdateFunction(void)
             img_x = distortionList[46];
         END_CONTINUE_RUNNING(pic_flag_reGet)
 
-        IF_CONTINUE_RUNNING(pic_flag_lamp_die, 120)
+        IF_CONTINUE_RUNNING(pic_flag_lamp_die, 100)
         // img_x = PIC_COL / 1.5;
         // if (img_x <= PIC_COL / 2 && img_x >= -(PIC_COL / 2))
         //     img_x *= 2;
         PIC_FLAG_RESET(pic_flag_lamp_miss);
-        ph_car_home_speedPid_left.targetVal = baseSpeed * 0.3;
+        ph_car_home_speedPid_left.targetVal = baseSpeed * 0.6;
         if ((getSpeed(RIGHT) - getSpeed(LEFT)) > 2)
-            img_x = distortionList[41];
+            img_x = distortionList[40];
         // img_x = distortionList[38];
         else if ((getSpeed(LEFT) - getSpeed(RIGHT)) > 2)
-            img_x = -distortionList[41];
+            img_x = -distortionList[40];
         // img_x = -distortionList[38];
         // END_CONTINUE_RUNNING(pic_flag_lamp_die)
         END_AND_GO_TO_NEXT_CONTINUE_RUNNING(pic_flag_lamp_die, pic_flag_lamp_miss);
 
         IF_CONTINUE_RUNNING(pic_flag_lamp_miss, 180)
-        ph_car_home_speedPid_left.targetVal = baseSpeed * 0.3;
+        ph_car_home_speedPid_left.targetVal = baseSpeed * 0.5;
         img_x = 0;
-        END_AND_GO_TO_NEXT_CONTINUE_RUNNING(pic_flag_lamp_miss, pic_flag_lamp_die)
+        // END_AND_GO_TO_NEXT_CONTINUE_RUNNING(pic_flag_lamp_miss, pic_miss_plan1);
+        END_AND_GO_TO_NEXT_CONTINUE_RUNNING(pic_flag_lamp_miss, pic_flag_lamp_die);
 
-        // IF_CONTINUE_RUNNING(pic_miss_plan1,180)
-
+        IF_CONTINUE_RUNNING(pic_miss_plan1, 100)
+        ph_car_home_speedPid_left.targetVal = baseSpeed * 0.5;
+        if ((getSpeed(RIGHT) - getSpeed(LEFT)) > 2)
+            img_x = distortionList[40];
+        else if ((getSpeed(LEFT) - getSpeed(RIGHT)) > 2)
+            img_x = -distortionList[40];
+        END_AND_GO_TO_NEXT_CONTINUE_RUNNING(pic_miss_plan1, pic_flag_lamp_miss);
         // END_CONTINUE_RUNNING(pic_miss_plan1)
 
         Balance_Pwm = ph_car_home_balance(
