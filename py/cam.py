@@ -3,8 +3,8 @@ import serial
 import numpy as np
 import cv2
 
-PIC_LINE = 60
-PIC_COL = 94
+PIC_LINE = 120
+PIC_COL = 188
 pic_FLAG_BYTES=[0xff,0xf0,0xf0,0xf0, 0x00,0xff]
 def judgeStart(com:serial.Serial)->bool:
     for i in pic_FLAG_BYTES:
@@ -24,13 +24,17 @@ def judgeStart(com:serial.Serial)->bool:
         
     
 if __name__=='__main__':
-    mm32 = openCom('com13',115200)
-    mm32.write(bytes([0x97, 0x02, 0xf0,0xa5]))
+    mm32 = openCom('com14',115200)
+    # mm32.write(bytes([0x97, 0x02, 0xf0,0xa5]))
     while(True):
-        if (judgeStart(mm32)):
+        # if (judgeStart(mm32)):
+        if True:
             data = []
+            n=0
             for i in range(PIC_COL*PIC_LINE):
                 tmp = mm32.read().hex()
+                n+=1
+                print(n)
                 while(len(tmp)<=1):
                     tmp = mm32.read().hex()
                 data.append(int(tmp,16))
