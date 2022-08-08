@@ -2,7 +2,6 @@
 #include "stdlib.h"
 #include "menu.h"
 
-#define MAX_DISPLAY_LINE 4
 
 uint8_t currentChoose = 0;
 
@@ -15,6 +14,7 @@ void menuInit(void)
     chooseLine = 0;
     screenClear();
     keyInterruptInit();
+    variableMenuInit();
     menuManager.append(mainMenu);
     showMenu(menuManager.getCurrentMenu());
 }

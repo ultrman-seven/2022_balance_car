@@ -1,4 +1,4 @@
-/*
+﻿/*
  *                        _oo0oo_
  *                       o8888888o
  *                       88" . "88
@@ -35,16 +35,16 @@
 #include "mpu6050/filter.h"
 #include "oledio.h"
 #include "hardware/beep.h"
+#include "menu.h"
 
-int32_t balancePoint = 145;
+int32_t balancePoint = 117;
 // int32_t balancePoint = 155;
 // int32_t balancePoint = 190;
 // int32_t balancePoint = 110;
 // int32_t balancePoint = 130;
 int32_t baseSpeed = 0;
 enum ctrlModes pidMode = NullMode; // pwmMode;
-float accOutput = 0.0;
-int16_t tmp;
+
 PID_paraTypdef speedPidLeft = {
     .Kp = 25, .Ki = 25, .Kd = 7, .integral = 0, .proportionLast = 0, .proportionLastLast = 0, .targetVal = 0};
 PID_paraTypdef speedPidRight = {
@@ -78,44 +78,18 @@ void setBaseSpeed(int32_t s)
 {
     baseSpeed = s;
 }
-// PID_paraTypdef ph_car_home_anglePid = {
-//     .Kp = 132, .Kd = 83, .Ki = 0, .targetVal = 0};
 PID_paraTypdef ph_car_home_anglePid = {
     .Kp = 88, .Kd = 39, .Ki = 0, .targetVal = 0, .proportionLast = 0};
-
-// PID_paraTypdef ph_car_home_anglePid = {
-//     .Kp = 44, .Kd = 6, .Ki = 0, .targetVal = 0};
-
-// PID_paraTypdef ph_car_home_anglePid = {
-//     .Kp = 48, .Kd = 14, .Ki = 0, .targetVal = 0};
 PID_paraTypdef ph_car_home_speedPid = {
     .Kp = 25, .Ki = 4, .Kd = 0, .targetVal = 0};
 
-/**
- * @description:
- * @param {float} Angle
- * @param {float} Gyro
- * @param {PID_paraTypdef} *p
- * @return pwm
- */
 float gyro_y = 0.0;
 int ph_car_home_balance(float Angle, float Gyro, PID_paraTypdef *p)
 {
     float Bias; //, kp = 300, kd = 1;
     int balance;
-    // if (gyro_y == 0)
-    //     gyro_y = Gyro;
-    // else
-    //     gyro_y = gyro_y * 0.6 + Gyro * 0.4;
-
     gyro_y = Gyro;
-
     Bias = (float)(p->targetVal) / 10.0 - Angle; //===求出平衡的角度中值 和机械相关
-
-    // gyro_y = Bias - p->proportionLast;
-    // p->proportionLast = Bias;
-
-    // balance = kp * Bias + Gyro * kd; //===计算平衡控制的电机PWM  PD控制   kp是P系数 kd是D系数
     balance = (p->Kp) * Bias + (gyro_y * (p->Kd)) / 50.0;
     return balance;
 }
@@ -258,7 +232,6 @@ PID_paraTypdef turnPid = {.Kp = 0, .Kd = 0, .Ki = 1, .targetVal = 0, .integral =
 // int imgPosition = 64;
 point imgPosition = {0, 0};
 point imgLastPosition = {0, 0};
-point posi = {0, 0};
 int16_t img_x = 0;
 int cam_turn(int val, int16_t gyro, PID_paraTypdef *p)
 {
@@ -295,22 +268,10 @@ int32_t pidCtrlAngle(int32_t currentVal)
 }
 
 int32_t pwmRight = 0, pwmLeft = 0;
-int32_t accSpeedLeft = 0, accSpeedRight = 0;
 int32_t turnSpeed = 0;
-int32_t linerSpeed = 0;
-// globalPidUpdate
-float lastPitch = 0.0;
 int32_t balanceModify = 0;
 #define MAX_Modify 80
-// void TIM16_IRQHandler(void)
-int16_t getAcc(void)
-{
-    int16_t result;
-    float p, r, y;
-    Read_DMP(&p, &r, &y);
-    result = (accel[0] + 500 - 168 * quickSin(p * 10)) / 100 - 5;
-    return result;
-}
+
 int16_t acc = 0;
 int Balance_Pwm, Velocity_Pwm, Moto1, Moto2, Turn_Pwm;
 extern uint8_t timerFlag;
@@ -319,50 +280,23 @@ point getImgData(void);
 // #define PIC_COL 188
 #define PIC_LINE 60
 #define PIC_COL 94
-// int16_t getImgData(void);
 float pitch = 0;
 const uint8_t whiteLine[8] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 uint8_t picCnt = 0;
 uint8_t picLossCnt;
 uint8_t turnDir = 0;
 
-// const uint8_t distortionList[47] = {
-//     0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-//     10, 11, 12, 13, 15, 17, 19, 21, 23, 25,
-//     27, 29, 31, 33, 35, 37, 39, 41, 43, 46,
-//     49, 42, 45, 50, 55, 60, 66, 72, 78, 84,
-//     90, 97, 105, 115, 125, 145, 165};
+// const uint8_t distortionList[49]
 const uint8_t distortionList[] = {
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
     10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
     20, 21, 22, 23, 24, 25, 26, 27, 28, 30,
     32, 34, 36, 38, 41, 44, 48, 53, 57,
     62, 67, 73, 80, 87, 94, 102, 110, 130, 160};
-// const float distortionList[47] = {
-//     0.2438802118050742, 1.2285700431656867, 2.1597664764399265,
-//     3.038938158872247, 3.8681537365632517, 4.650081854469695,
-//     5.387991156404483, 6.085750285036666, 6.747827881891453,
-//     7.379292587350195, 7.985813040650398, 8.573657879885717,
-//     9.149695742005957, 9.72139526281707, 10.296825076981168,
-//     10.8846538180165, 11.494150118297473, 12.13518260905464,
-//     12.818219920374712, 13.554330681200542, 14.355183519331135,
-//     15.233047061421649, 16.200789932983387, 17.271880758383805,
-//     18.460388160846513, 19.780980762451264, 21.24892718413396,
-//     22.88009604568667, 24.690955965757595, 26.69857556185109,
-//     28.920623450327657, 31.375368246403962, 34.08167856415281,
-//     37.05902301650315, 40.3274702152401, 43.90768877100491,
-//     47.82094729329499, 52.089114390463905, 56.73465866972137,
-//     61.780648737133205, 67.25075319762145, 73.16924065496426,
-//     79.56097971179594, 86.45143896960695, 93.86668702874388,
-//     101.83339248840952, 110.37882394666272};
 
 int8_t img_sign = 1;
 uint8_t lampDieFlag = 0;
 int16_t jb_tmp;
-#define Wait_Time 4
-
-uint8_t img_reGet_cnt = 0;
-uint8_t img_reGet_flag = 0;
 
 uint16_t pictureFlags = 0;
 uint8_t pictureCnts[16] = {0};
@@ -378,6 +312,7 @@ enum pic_flags
     pic_running_end
 };
 
+#define GET_PIC_FLAG(flag) ((pictureFlags >> (flag)) & 0x0001)
 #define PIC_FLAG_SET(flag) pictureFlags |= (0x0001 << (flag))
 #define PIC_FLAG_RESET(flag)             \
     pictureFlags &= ~(0x0001 << (flag)); \
@@ -407,6 +342,47 @@ enum pic_flags
         pictureFlags &= ~(0x0001 << (flag));            \
     }
 
+int32_t y_position2killLamp = 95;
+// int32_t y_position2changePara = 80;
+int32_t y_position2changePara = 70;
+int32_t y_positionLampDie = 80;
+int32_t y_position2ChangeSpeed = 80;
+
+// int32_t speedMul1 = 520;
+int32_t speedMul1 = 500;
+int32_t speedMul2 = 120;
+int32_t basSpeedMul = 15;
+
+int32_t paraMul = 27;
+
+// int32_t die_waitTime = 160;
+int32_t die_waitTime = 80;
+int32_t miss_waitTime = 100;
+int32_t reGet_waitTime = 20;
+
+int32_t reGet_TurnSpeed = 100;
+void variableListInit(void)
+{
+    pushVariable("平衡点", &balancePoint);
+    pushVariable("速度", &baseSpeed);
+
+    pushVariable("变参倍率", &paraMul);
+
+    pushVariable("变参时机", &y_position2changePara);
+    pushVariable("转弯时机", &y_position2killLamp);
+    pushVariable("灭灯标记", &y_positionLampDie);
+
+    pushVariable("速度倍数", &basSpeedMul);
+    pushVariable("减速衰减", &speedMul1);
+    pushVariable("加速衰减", &speedMul2);
+
+    pushVariable("灭后持续", &die_waitTime);
+    pushVariable("丢灯持续", &miss_waitTime);
+    pushVariable("重见持续", &reGet_waitTime);
+
+    pushVariable("重见转速", &reGet_TurnSpeed);
+}
+
 void pidUpdateFunction(void)
 {
     float y, r;
@@ -417,7 +393,7 @@ void pidUpdateFunction(void)
         pitch = MPU_pitch;
         ph_car_home_anglePid.targetVal = balancePoint;
 
-        if (++picCnt == 4)
+        if (++picCnt == 3)
         {
             turnDir = (imgPosition.x < (PIC_COL / 2));
             imgPosition = getImgData();
@@ -429,22 +405,23 @@ void pidUpdateFunction(void)
             jb_tmp *= img_sign;
             picCnt = 0;
 
-            if (imgPosition.y >= 80)
-                jb_tmp *= 2.5;
+            if (imgPosition.y >= y_position2changePara)
+                jb_tmp = jb_tmp * paraMul / 10;
         }
 
         img_x = jb_tmp;
 
         if (imgPosition.x == 0) //找不到灯
         {
-            if (imgLastPosition.x && imgLastPosition.y >= 80) //刚灭完灯
+            if (imgLastPosition.x && imgLastPosition.y >= y_positionLampDie) //刚灭完灯
             {
                 // lampDieFlag = 1;
                 PIC_FLAG_SET(pic_flag_lamp_die);
                 ph_car_home_speedPid_left.targetVal = (baseSpeed / 2);
                 beep100Ms();
             }
-            else //纯找不到灯
+            else if (!GET_PIC_FLAG(pic_flag_reGet))
+            //纯找不到灯
             {
                 PIC_FLAG_SET(pic_flag_lamp_miss);
             }
@@ -459,35 +436,45 @@ void pidUpdateFunction(void)
         else //有灯
         {
             // ph_car_home_speedPid_left.targetVal = baseSpeed - (imgPosition.y * baseSpeed / 350);
-            if (imgPosition.y >= 80)
-                ph_car_home_speedPid_left.targetVal = baseSpeed - (imgPosition.y * baseSpeed / 550);
+            if (imgPosition.y >= y_position2ChangeSpeed)
+                ph_car_home_speedPid_left.targetVal = baseSpeed - (imgPosition.y * baseSpeed / speedMul1);
             else
-                ph_car_home_speedPid_left.targetVal = baseSpeed * 1.7 - (imgPosition.y) * baseSpeed / 120;
+                ph_car_home_speedPid_left.targetVal = baseSpeed * basSpeedMul / 10 - (imgPosition.y) * baseSpeed / speedMul2;
             // lampDieFlag = 0;
             PIC_FLAG_RESET(pic_flag_lamp_die);
+            // PIC_FLAG_RESET(pic_flag_reGet);
+            // PIC_FLAG_RESET(pic_flag_lamp_miss);
             if (imgLastPosition.x == 0) //转的时候刚找到灯
             {
                 // img_reGet_flag = 1;
                 PIC_FLAG_SET(pic_flag_reGet);
                 // beep100Ms();
             }
+            if (imgPosition.y >= y_position2killLamp)
+            {
+                if ((getSpeed(RIGHT) - getSpeed(LEFT)) > 2)
+                    img_x = distortionList[45];
+                else
+                    img_x = -distortionList[45];
+            }
             // beepSet(ENABLE);
         }
         imgLastPosition = imgPosition;
 
-        IF_CONTINUE_RUNNING(pic_flag_reGet, 15)
-        if ((getSpeed(RIGHT) - getSpeed(LEFT)) > 2)
-            img_x = -distortionList[46];
-        else if ((getSpeed(LEFT) - getSpeed(RIGHT)) > 2)
-            img_x = distortionList[46];
+        IF_CONTINUE_RUNNING(pic_flag_reGet, reGet_waitTime)
+        // if ((getSpeed(RIGHT) - getSpeed(LEFT)) > 2)
+        //     img_x = -distortionList[46];
+        // else if ((getSpeed(LEFT) - getSpeed(RIGHT)) > 2)
+        //     img_x = distortionList[46];
+        img_x = (turnDir ? -1 : 1) * reGet_TurnSpeed;
         END_CONTINUE_RUNNING(pic_flag_reGet)
 
-        IF_CONTINUE_RUNNING(pic_flag_lamp_die, 100)
+        IF_CONTINUE_RUNNING(pic_flag_lamp_die, die_waitTime)
         // img_x = PIC_COL / 1.5;
         // if (img_x <= PIC_COL / 2 && img_x >= -(PIC_COL / 2))
         //     img_x *= 2;
         PIC_FLAG_RESET(pic_flag_lamp_miss);
-        ph_car_home_speedPid_left.targetVal = baseSpeed * 0.6;
+        ph_car_home_speedPid_left.targetVal = baseSpeed * 0.7;
         if ((getSpeed(RIGHT) - getSpeed(LEFT)) > 2)
             img_x = distortionList[40];
         // img_x = distortionList[38];
@@ -497,13 +484,13 @@ void pidUpdateFunction(void)
         // END_CONTINUE_RUNNING(pic_flag_lamp_die)
         END_AND_GO_TO_NEXT_CONTINUE_RUNNING(pic_flag_lamp_die, pic_flag_lamp_miss);
 
-        IF_CONTINUE_RUNNING(pic_flag_lamp_miss, 180)
+        IF_CONTINUE_RUNNING(pic_flag_lamp_miss, miss_waitTime)
         ph_car_home_speedPid_left.targetVal = baseSpeed * 0.5;
         img_x = 0;
         // END_AND_GO_TO_NEXT_CONTINUE_RUNNING(pic_flag_lamp_miss, pic_miss_plan1);
         END_AND_GO_TO_NEXT_CONTINUE_RUNNING(pic_flag_lamp_miss, pic_flag_lamp_die);
 
-        IF_CONTINUE_RUNNING(pic_miss_plan1, 100)
+        IF_CONTINUE_RUNNING(pic_miss_plan1, 30)
         ph_car_home_speedPid_left.targetVal = baseSpeed * 0.5;
         if ((getSpeed(RIGHT) - getSpeed(LEFT)) > 2)
             img_x = distortionList[40];
@@ -625,7 +612,6 @@ void setPidMode(enum ctrlModes m)
 
 void setLinerSpeed(int8_t speed)
 {
-    // linerSpeed = speed;
     baseSpeed = speed / 2;
 }
 

@@ -348,10 +348,11 @@ void ph_car_home_start(void)
 void ph_car_home_cam_start(void)
 {
     setPidMode(balanceCarHomeMode);
-    turnPid.Kp = 86; // 76; // 60; // 90; // 41;
+    turnPid.Kp = 114; // 76; // 60; // 90; // 41;
     turnPid.Kd = 3;
+    turnPid.Ki = 6;
     // baseSpeed = -115;
-    baseSpeed = -135;
+    baseSpeed = -150;
 }
 void ph_set_speed(void)
 {
@@ -391,7 +392,7 @@ MenuTypedef ph_car_home_menu[] = {
     {.caption = "摄像头开始", .left = ph_car_home_cam_start, .mid = ph_car_home_cam_start, .right = ph_car_home_cam_start},
     {.caption = "结束", .left = testStop, .right = testStop, .mid = testStop},
     {.caption = "平衡点调整", .left = mpu6050DmpTest, .mid = NULL, .right = mpu6050DmpTest},
-        {.caption = "保存", .left = pidParaSave, .right = pidParaSave, .mid = pidParaSave},
+    {.caption = "保存", .left = pidParaSave, .right = pidParaSave, .mid = pidParaSave},
     {.caption = "载入", .left = pidParaLoad, .right = pidParaLoad, .mid = pidParaLoad},
     // {.caption = "转弯", .left = showTurn, .right = showTurn},
     GO_BACK_MENU,
@@ -432,12 +433,12 @@ void pidParaSave(void)
     loadPidPara2Buf(dat + 12, &ph_car_home_anglePid);
     loadPidPara2Buf(dat + 15, &ph_car_home_speedPid_left);
     loadPidPara2Buf(dat + 18, &turnPid);
-    Flash_saveData(dat, PID_NUM * 3);
+    Flash_saveData(FlashPage_PID, dat, PID_NUM * 3);
 }
 void pidParaLoad(void)
 {
     uint32_t buf[PID_NUM * 3] = {0};
-    Flash_loadData(buf, PID_NUM * 3);
+    Flash_loadData(FlashPage_PID, buf, PID_NUM * 3);
     loadBuf2PidPara(buf, &speedPidLeft);
     loadBuf2PidPara(buf, &speedPidRight);
     loadBuf2PidPara(buf + 3, &anglePid);

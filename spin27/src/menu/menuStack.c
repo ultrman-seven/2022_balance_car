@@ -8,7 +8,8 @@ MenuTypedef *menuStackRecoder[MAX_MENU_RECODER];
 
 void pushMenu(MenuTypedef *menu)
 {
-    if (currentChoose < MAX_MENU_RECODER)
+    // if (currentChoose < MAX_MENU_RECODER)
+    if (currentStackIndex < MAX_MENU_RECODER)
         menuStackRecoder[currentStackIndex++] = menu;
 }
 

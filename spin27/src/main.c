@@ -75,6 +75,7 @@ void boardLED_Init(void)
 
 ErrorStatus sysClkState = ERROR;
 uint8_t mpuDmpState;
+void variableListInit(void);
 void globalInit(void)
 {
     void menuInit(void);
@@ -83,9 +84,10 @@ void globalInit(void)
     sysClkState = HSE_SysClock();
     delayInit();
     boardLED_Init();
-    // uartInit();
+    uartInit();
     beepInit();
     menuInit();
+    variableListInit();
     encoderInit();
     motorInit();
     MPU6050_initialize();
@@ -122,5 +124,9 @@ int main(void)
         //     NVIC_SystemReset();
         // if (getSpeed(RIGHT) <= -DangerSpeed)
         //     NVIC_SystemReset();
+        // printf("x%.2fy%.2f\n", position_x, position_y);
+        printf("p=%.2f,r=%.2f,y=%.2f\r\n", MPU_pitch, MPU_roll, MPU_yaw);
     }
 }
+// x-885.15y219.95
+// x-359.95y-199.72

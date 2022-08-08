@@ -16,7 +16,7 @@ void time17Init(uint16_t period, uint16_t prescaler)
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM17, ENABLE);
     time.TIM_ClockDivision = TIM_CKD_DIV1;
     time.TIM_CounterMode = TIM_CounterMode_Up;
-    time.TIM_RepetitionCounter = 0; 
+    time.TIM_RepetitionCounter = 0;
     time.TIM_Period = period;
     time.TIM_Prescaler = prescaler;
     TIM_TimeBaseInit(TIM17, &time);
@@ -137,21 +137,24 @@ int lastCNT[2] = {0};
 // int lastLCircle[2] = {0};
 uint8_t timerFlag = 0;
 
+float position_x = 0;
+float position_y = 0;
+
+#define yawErr 107.5
+#define PI 3.1415926535
+#include "math.h"
+#include "mpu6050.h"
 void tim17Callback(void)
 {
     int32_t currintCnt;
     int speed;
-    // uint32_t time;
+    int32_t dx = 0;
+    float yaw = yawErr - MPU_yaw;
+
     timerFlag = 1;
     currintCnt = circleCount[LEFT] * 1024 * 4 + TIM_Left->CNT;
-    // getTimeStamp(&time);
-    // if (ms++ % 10 == 0)
-        // printf("%d//////%d\n", time, timeLast);
-        // printf("t1=%d,t2=%d,", time, timeLast);
-        // printf("t1=%d\r\n", time- timeLast);
-    // speed = (int32_t)HWDivider_Calc((uint32_t)(currintCnt - lastCNT[LEFT]) * GearAndDiameter, time - timeLast) * LeftDIR;
-    // speed = (time - timeLast) * 10;
     speed = ((currintCnt - lastCNT[LEFT]) * GearAndDiameter) * LeftDIR;
+    dx += speed;
     motorSpeed[LEFT] = (motorSpeed[LEFT] * 2 + speed * 8) / 10;
     // motorSpeed[LEFT] = speed;
 
@@ -166,10 +169,11 @@ void tim17Callback(void)
         lastCNT[LEFT] = currintCnt + 4096;
     }
     else
-    lastCNT[LEFT] = currintCnt;
+        lastCNT[LEFT] = currintCnt;
 
     currintCnt = circleCount[RIGHT] * 1024 * 4 + TIM_Right->CNT;
     speed = ((currintCnt - lastCNT[RIGHT]) * GearAndDiameter) / RightDIR;
+    dx += speed;
     motorSpeed[RIGHT] = (motorSpeed[RIGHT] * 2 + speed * 8) / 10;
     if (currintCnt > 4096)
     {
@@ -183,6 +187,14 @@ void tim17Callback(void)
     }
     else
         lastCNT[RIGHT] = currintCnt;
+
+    if (yaw > 180)
+        yaw -= 360;
+    if (yaw < -180)
+        yaw += 360;
+
+    position_x += dx * sin(yaw * PI / 180.0) / 500.0;
+    position_y += dx * cos(yaw * PI / 180.0) / 500.0;
 }
 
 void TIM17_IRQHandler(void)

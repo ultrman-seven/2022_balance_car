@@ -93,8 +93,8 @@ void mpu6050DmpTest(void)
         // p = MPU_pitch;
         // r = MPU_roll;
         screenClear();
-        OLED_printf("who:%d\np:%f\ngy:%f\ngz:%f", MPU_who, p, Gyro_Balance, Gyro_Turn);
-        // printf("地址:%d\n俯仰角:%f\troll:%f\tyaw:%f\n", MPU_who, p, r, y);
+        // OLED_printf("who:%d\np:%f\ngy:%f\ngz:%f", MPU_who, p, Gyro_Balance, Gyro_Turn);
+        OLED_printf("mpu地址:0x%x\n俯仰角:%.2f\n横滚角:%.2f\n偏航角:%.2f\n", MPU_who, p, r, y);
         delayMs(50);
     }
     mpuIntCMD(ENABLE);
@@ -211,7 +211,8 @@ void gotoParaMenu(void)
 }
 
 MenuTypedef mainMenu[] = {
-    {.caption = "调参", .mid = gotoParaMenu, .right = gotoParaMenu, .right = gotoParaMenu},
+    {.caption = "调参:pid", .mid = gotoParaMenu, .left = gotoParaMenu, .right = gotoParaMenu},
+    {.caption = "调参:其他变量", .mid = gotoVariableMenu, .left = gotoVariableMenu, .right = gotoVariableMenu},
     {.caption = "功能测试", .mid = gotoTests, .right = gotoTests, .left = gotoTests},
     {.caption = "run", .mid = runStart, .right = runStart, .left = runStart},
     {.caption = "系统状态", .left = getSysState, .right = getSysState, .mid = getSysState},

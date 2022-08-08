@@ -619,11 +619,6 @@
               <FilePath>.\src\quickSin.c</FilePath>
             </File>
             <File>
-              <FileName>pictureOption.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\camera\pictureOption.c</FilePath>
-            </File>
-            <File>
               <FileName>wy_exti.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\wy_exti.c</FilePath>
@@ -637,6 +632,11 @@
               <FileName>filter.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\mpu6050\filter.c</FilePath>
+            </File>
+            <File>
+              <FileName>allVariable.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\menu\allVariable.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -22,17 +22,18 @@ void uartInit(void)
     NVIC_Init(&nvic);
 
     GPIO_PinAFConfig(GPIOC, GPIO_PinSource4, GPIO_AF_3);
-    GPIO_PinAFConfig(GPIOC, GPIO_PinSource4, GPIO_AF_3);
+    // GPIO_PinAFConfig(GPIOC, GPIO_PinSource4, GPIO_AF_3);
 
     UART_InitStructure.UART_BaudRate = 115200;
     UART_InitStructure.UART_WordLength = UART_WordLength_8b;
     UART_InitStructure.UART_StopBits = UART_StopBits_1;
     UART_InitStructure.UART_Parity = UART_Parity_No;
     UART_InitStructure.UART_HardwareFlowControl = UART_HardwareFlowControl_None;
-    UART_InitStructure.UART_Mode = UART_Mode_Rx | UART_Mode_Tx;
+    // UART_InitStructure.UART_Mode = UART_Mode_Rx | UART_Mode_Tx;
+    UART_InitStructure.UART_Mode = UART_Mode_Tx;
 
     UART_Init(UART2, &UART_InitStructure);
-    UART_ITConfig(UART2, UART_IT_RXIEN, ENABLE);
+    // UART_ITConfig(UART2, UART_IT_RXIEN, ENABLE);
     UART_Cmd(UART2, ENABLE);
 
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
@@ -40,9 +41,9 @@ void uartInit(void)
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
     GPIO_Init(GPIOC, &GPIO_InitStructure);
 
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-    GPIO_Init(GPIOC, &GPIO_InitStructure);
+    // GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
+    // GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    // GPIO_Init(GPIOC, &GPIO_InitStructure);
 }
 
 void uart1SendWord(uint32_t dat)

@@ -9,7 +9,7 @@ typedef struct
     void (*left)(void);
     void (*right)(void);
 } MenuTypedef;
-
+#define MAX_DISPLAY_LINE 4
 typedef struct
 {
     void (*append)(MenuTypedef *);
@@ -58,4 +58,8 @@ void gotoNextMenu(MenuTypedef *menu);
 
 void valueAdjust_32(KeyChoose key, int32_t *val, int64_t maxVal, int64_t minVal, uint8_t step, void (*menuUpdataCallbackFunction)(void));
 void valueAdjust_u16(KeyChoose key, uint16_t *val, uint64_t maxVal,uint8_t step, void (*menuUpdataCallbackFunction)(void));
+
+void variableMenuInit(void);
+void gotoVariableMenu(void);
+void pushVariable(const char *name, int32_t *val);
 #endif /* __WY_LIB_MENU_H__ */
