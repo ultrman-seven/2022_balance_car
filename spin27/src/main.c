@@ -124,9 +124,10 @@ int main(void)
         //     NVIC_SystemReset();
         // if (getSpeed(RIGHT) <= -DangerSpeed)
         //     NVIC_SystemReset();
-        // printf("x%.2fy%.2f\n", position_x, position_y);
-        printf("p=%.2f,r=%.2f,y=%.2f\r\n", MPU_pitch, MPU_roll, MPU_yaw);
+        printf("x%.2fy%.2f\n", position_x, position_y);
+        // printf("p=%.2f,r=%.2f,y=%.2f\r\n", MPU_pitch, MPU_roll, MPU_yaw);
+        // printf("x=%d,y=%d,z=%d\r\n", gyro[0], gyro[1], gyro[2]);
+        // printf("l=%d,r=%d\r\n", getSpeed(LEFT),getSpeed(RIGHT));
     }
 }
-// x-885.15y219.95
-// x-359.95y-199.72
+// x:+-1400, y:2000

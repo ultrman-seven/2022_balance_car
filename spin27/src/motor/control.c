@@ -79,7 +79,9 @@ void setBaseSpeed(int32_t s)
     baseSpeed = s;
 }
 PID_paraTypdef ph_car_home_anglePid = {
-    .Kp = 88, .Kd = 39, .Ki = 0, .targetVal = 0, .proportionLast = 0};
+    .Kp = 180, .Kd = 112, .Ki = 0, .targetVal = 0, .proportionLast = 0};
+// PID_paraTypdef ph_car_home_anglePid = {
+//     .Kp = 88, .Kd = 39, .Ki = 0, .targetVal = 0, .proportionLast = 0};
 PID_paraTypdef ph_car_home_speedPid = {
     .Kp = 25, .Ki = 4, .Kd = 0, .targetVal = 0};
 
@@ -88,7 +90,7 @@ int ph_car_home_balance(float Angle, float Gyro, PID_paraTypdef *p)
 {
     float Bias; //, kp = 300, kd = 1;
     int balance;
-    gyro_y = Gyro;
+    gyro_y = -Gyro;
     Bias = (float)(p->targetVal) / 10.0 - Angle; //===求出平衡的角度中值 和机械相关
     balance = (p->Kp) * Bias + (gyro_y * (p->Kd)) / 50.0;
     return balance;
@@ -138,7 +140,9 @@ int ph_car_home_velocity(int speed_left, int speed_right, PID_paraTypdef *p)
 }
 
 PID_paraTypdef ph_car_home_speedPid_left = {
-    .Kp = 80, .Ki = 4, .Kd = 0, .targetVal = 0, .integral = 0.0, .proportionLast = 0.0};
+    .Kp = 120, .Ki = 7, .Kd = 0, .targetVal = 0, .integral = 0.0, .proportionLast = 0.0};
+// PID_paraTypdef ph_car_home_speedPid_left = {
+//     .Kp = 80, .Ki = 4, .Kd = 0, .targetVal = 0, .integral = 0.0, .proportionLast = 0.0};
 PID_paraTypdef ph_car_home_speedPid_right = {
     .Kp = 25, .Ki = 4, .Kd = 0, .targetVal = 0, .integral = 0.0, .proportionLast = 0.0};
 
@@ -247,7 +251,7 @@ int cam_turn(int val, int16_t gyro, PID_paraTypdef *p)
         p->integral = -7000;
     return (err * p->Kp + p->integral * p->Ki / 10) / 10;
     // float kg = getBellFunc(err);
-    // return err * p->Kp + (gyro * p->Kd * kg) / 10;
+    // return err * p->Kp + (-gyro * p->Kd * kg) / 10;
 }
 
 int32_t pidCtrlAngle(int32_t currentVal)
@@ -397,6 +401,8 @@ void pidUpdateFunction(void)
         {
             turnDir = (imgPosition.x < (PIC_COL / 2));
             imgPosition = getImgData();
+            // imgPosition.x = PIC_COL / 2;
+            // imgPosition.y = PIC_LINE / 2;
 
             jb_tmp = imgPosition.x - (PIC_COL / 2);
             img_sign = (jb_tmp >= 0) ? 1 : -1;

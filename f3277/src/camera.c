@@ -218,8 +218,11 @@ void __cameraConfig(cameraCMD name, uint16_t val)
 
 void setExtiCallbackFunction(uint8_t line, void (*f)(void));
 uint8_t DMA_ok_flag = 0;
+void LED_flip(void);
+
 void v_int(void)
 {
+    // LED_flip();
     if (picReceive.state)
     {
         DMA_Cmd(CAM_DMA_CHANNEL, ENABLE);
@@ -300,7 +303,6 @@ uint8_t OTSU(uint8_t *image, uint16_t IMAGE_H, uint16_t IMAGE_W);
 uint16_t BFS(uint8_t *image, uint16_t IMAGE_H, uint16_t IMAGE_W);
 uint32_t findPointCenter(uint8_t *img, uint16_t l, uint16_t c);
 uint8_t *gaussianFilter(uint8_t *img, uint16_t l, uint16_t c);
-void LED_flip(void);
 void fuck_zaoDian(uint8_t *img, uint16_t l, uint16_t c);
 point findLamp(void);
 void twoPass(uint8_t *img, uint16_t l, uint16_t c);

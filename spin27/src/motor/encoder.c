@@ -101,8 +101,8 @@ void encoderInit(void)
 // 0:正向
 // #define LeftDIR  0x80000000  //-
 // #define RightDIR 0x00000000 //+
-#define LeftDIR -1
-#define RightDIR 1
+#define LeftDIR 1
+#define RightDIR -1
 int circleCount[2] = {0};
 void TIM1_BRK_UP_TRG_COM_IRQHandler(void)
 {
@@ -140,7 +140,7 @@ uint8_t timerFlag = 0;
 float position_x = 0;
 float position_y = 0;
 
-#define yawErr 107.5
+#define yawErr 0.9
 #define PI 3.1415926535
 #include "math.h"
 #include "mpu6050.h"

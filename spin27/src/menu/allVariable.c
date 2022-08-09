@@ -39,9 +39,9 @@ void variableAdjust_32(KeyChoose key, int32_t *val[MAX_PARA_NUM], int64_t maxVal
             *val[currentChoose] += step;
         menuUpdataCallbackFunction();
         showMenu(menuManager.getCurrentMenu());
-        while (GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_11) == 0 && waitTime--)
+        while (GPIO_ReadInputDataBit(Button_Right_Key) == 0 && waitTime--)
             delayMs(10);
-        while (GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_11) == 0)
+        while (GPIO_ReadInputDataBit(Button_Right_Key) == 0)
         {
             if (*val[currentChoose] < maxVal)
                 *val[currentChoose] += step;
@@ -56,9 +56,9 @@ void variableAdjust_32(KeyChoose key, int32_t *val[MAX_PARA_NUM], int64_t maxVal
             *val[currentChoose] -= step;
         menuUpdataCallbackFunction();
         showMenu(menuManager.getCurrentMenu());
-        while (GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_12) == 0 && waitTime--)
+        while (GPIO_ReadInputDataBit(Button_Left_Key) == 0 && waitTime--)
             delayMs(10);
-        while (GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_12) == 0)
+        while (GPIO_ReadInputDataBit(Button_Left_Key) == 0)
         {
             if (*val[currentChoose] > minVal)
                 *val[currentChoose] -= step;

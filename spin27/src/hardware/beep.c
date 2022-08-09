@@ -1,7 +1,7 @@
 #include "common.h"
 // #include "spin27/src/common.h"
 
-#define BEEP GPIOC, GPIO_Pin_5
+#define BEEP GPIOD, GPIO_Pin_4
 
 void __time16Init(uint16_t period, uint16_t prescaler)
 {
@@ -34,11 +34,11 @@ void TIM16_IRQHandler(void)
 void beepInit(void)
 {
     GPIO_InitTypeDef bep;
-    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOC, ENABLE);
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOD, ENABLE);
     bep.GPIO_Mode = GPIO_Mode_Out_PP;
-    bep.GPIO_Pin = GPIO_Pin_5;
+    bep.GPIO_Pin = GPIO_Pin_4;
     bep.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(GPIOC, &bep);
+    GPIO_Init(GPIOD, &bep);
     GPIO_ResetBits(BEEP);
     __time16Init(1000, 9599);
 }

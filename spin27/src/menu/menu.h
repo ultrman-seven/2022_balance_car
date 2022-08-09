@@ -28,6 +28,9 @@ typedef struct
 
 #define MID_KEY_EXTI_LINE EXTI_Line12
 
+#define Button_Left_Key GPIOB, GPIO_Pin_4
+#define Button_Right_Key GPIOB, GPIO_Pin_3
+
 extern MenuRecorderObject menuManager;
 extern uint8_t currentChoose;
 extern MenuTypedef mainMenu[];

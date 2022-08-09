@@ -14,8 +14,8 @@ ErrorStatus HSE_SysClock(void)
         RCC_HCLKConfig(RCC_SYSCLK_Div1);
         RCC_PCLK2Config(RCC_HCLK_Div1);
         RCC_PCLK1Config(RCC_HCLK_Div2);
-        // RCC_PLLConfig(RCC_HSE_Div1, RCC_PLLMul_15);
-        RCC_PLLConfig(RCC_HSE_Div1, RCC_PLLMul_16);
+        // 24 ---PLL_MUL_6---> 144 MHz
+        RCC_PLLConfig(RCC_HSE_Div1, RCC_PLLMul_5);
         RCC_PLLCmd(ENABLE);
         while (RCC_GetFlagStatus(RCC_FLAG_PLLRDY) == RESET)
             ;
@@ -48,13 +48,13 @@ void LED_flip(void)
         GPIO_SetBits(LED_PORT, LED_PIN);
 }
 
-#define CAM_RED_PIN_SOURCE GPIO_PinSource0
+#define CAM_RED_PIN_SOURCE GPIO_PinSource14
 #define CAM_RED_PIN (0x01 << CAM_RED_PIN_SOURCE)
 #define CAM_RED_PORT GPIOE
 #define CAM_RED_RCC RCC_AHBPeriph_GPIOE
 #define CAM_RED CAM_RED_PORT, CAM_RED_PIN
 
-#define CAM_GREEN_PIN_SOURCE GPIO_PinSource1
+#define CAM_GREEN_PIN_SOURCE GPIO_PinSource13
 #define CAM_GREEN_PIN (0x01 << CAM_GREEN_PIN_SOURCE)
 #define CAM_GREEN_PORT GPIOE
 #define CAM_GREEN_RCC RCC_AHBPeriph_GPIOE
@@ -81,7 +81,7 @@ void cam_LED_init(void)
 void communicateInit(void);
 int main(void)
 {
-    HSE_SysClock();
+    // HSE_SysClock();
     delayInit();
     // computerUART_init();
     cameraInit();
@@ -94,6 +94,7 @@ int main(void)
 
     while (1)
     {
+        // LED_flip();
         cameraPicOption();
         if (camResult.x)
         {
