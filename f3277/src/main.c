@@ -2,6 +2,8 @@
 #include "camera.h"
 #include "uart.h"
 #include "stdio.h"
+#include "SEEKFREE_IPS114_SPI.h"
+
 ErrorStatus HSE_SysClock(void)
 {
     ErrorStatus HSE_StartUpState = ERROR;
@@ -86,6 +88,8 @@ int main(void)
     // computerUART_init();
     cameraInit();
     cameraOn();
+    ips114_init();
+    ips114_clear(0xffff);
 
     delayMs(5000);
     communicateInit();

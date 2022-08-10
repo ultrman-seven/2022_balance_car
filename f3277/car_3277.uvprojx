@@ -573,6 +573,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\pictureOption.c</FilePath>
             </File>
+            <File>
+              <FileName>SEEKFREE_IPS114_SPI.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\SEEKFREE_IPS114_SPI.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>
