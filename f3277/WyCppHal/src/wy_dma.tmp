@@ -1,0 +1,324 @@
+void DMA1_Channel1_IRQHandler(void)
+{
+    if (DMA1->ISR & DMA1_IT_TC1)
+    {
+        DMA1->IFCR = DMA1_IT_TC1;
+        if (dma1TC_CallbackFun[0] != nullptr)
+            dma1TC_CallbackFun[0]();
+    }
+    if (DMA1->ISR & DMA1_IT_HT1)
+    {
+        DMA1->IFCR = DMA1_IT_HT1;
+        if (dma1HT_CallbackFun[0] != nullptr)
+            dma1HT_CallbackFun[0]();
+    }
+    if (DMA1->ISR & DMA1_IT_TE1)
+    {
+        DMA1->IFCR = DMA1_IT_TE1;
+        if (dma1TE_CallbackFun[0] != nullptr)
+            dma1TE_CallbackFun[0]();
+    }
+    if (DMA1->ISR & DMA1_IT_GL1)
+    {
+        DMA1->IFCR = DMA1_IT_GL1;
+        if (dma1GL_CallbackFun[0] != nullptr)
+            dma1GL_CallbackFun[0]();
+    }
+}
+void DMA1_Channel2_IRQHandler(void)
+{
+    if (DMA1->ISR & DMA1_IT_TC2)
+    {
+        DMA1->IFCR = DMA1_IT_TC2;
+        if (dma1TC_CallbackFun[1] != nullptr)
+            dma1TC_CallbackFun[1]();
+    }
+    if (DMA1->ISR & DMA1_IT_HT2)
+    {
+        DMA1->IFCR = DMA1_IT_HT2;
+        if (dma1HT_CallbackFun[1] != nullptr)
+            dma1HT_CallbackFun[1]();
+    }
+    if (DMA1->ISR & DMA1_IT_TE2)
+    {
+        DMA1->IFCR = DMA1_IT_TE2;
+        if (dma1TE_CallbackFun[1] != nullptr)
+            dma1TE_CallbackFun[1]();
+    }
+    if (DMA1->ISR & DMA1_IT_GL2)
+    {
+        DMA1->IFCR = DMA1_IT_GL2;
+        if (dma1GL_CallbackFun[1] != nullptr)
+            dma1GL_CallbackFun[1]();
+    }
+}
+void DMA1_Channel3_IRQHandler(void)
+{
+    if (DMA1->ISR & DMA1_IT_TC3)
+    {
+        DMA1->IFCR = DMA1_IT_TC3;
+        if (dma1TC_CallbackFun[2] != nullptr)
+            dma1TC_CallbackFun[2]();
+    }
+    if (DMA1->ISR & DMA1_IT_HT3)
+    {
+        DMA1->IFCR = DMA1_IT_HT3;
+        if (dma1HT_CallbackFun[2] != nullptr)
+            dma1HT_CallbackFun[2]();
+    }
+    if (DMA1->ISR & DMA1_IT_TE3)
+    {
+        DMA1->IFCR = DMA1_IT_TE3;
+        if (dma1TE_CallbackFun[2] != nullptr)
+            dma1TE_CallbackFun[2]();
+    }
+    if (DMA1->ISR & DMA1_IT_GL3)
+    {
+        DMA1->IFCR = DMA1_IT_GL3;
+        if (dma1GL_CallbackFun[2] != nullptr)
+            dma1GL_CallbackFun[2]();
+    }
+}
+void DMA1_Channel4_IRQHandler(void)
+{
+    if (DMA1->ISR & DMA1_IT_TC4)
+    {
+        DMA1->IFCR = DMA1_IT_TC4;
+        if (dma1TC_CallbackFun[3] != nullptr)
+            dma1TC_CallbackFun[3]();
+    }
+    if (DMA1->ISR & DMA1_IT_HT4)
+    {
+        DMA1->IFCR = DMA1_IT_HT4;
+        if (dma1HT_CallbackFun[3] != nullptr)
+            dma1HT_CallbackFun[3]();
+    }
+    if (DMA1->ISR & DMA1_IT_TE4)
+    {
+        DMA1->IFCR = DMA1_IT_TE4;
+        if (dma1TE_CallbackFun[3] != nullptr)
+            dma1TE_CallbackFun[3]();
+    }
+    if (DMA1->ISR & DMA1_IT_GL4)
+    {
+        DMA1->IFCR = DMA1_IT_GL4;
+        if (dma1GL_CallbackFun[3] != nullptr)
+            dma1GL_CallbackFun[3]();
+    }
+}
+void DMA1_Channel5_IRQHandler(void)
+{
+    if (DMA1->ISR & DMA1_IT_TC5)
+    {
+        DMA1->IFCR = DMA1_IT_TC5;
+        if (dma1TC_CallbackFun[4] != nullptr)
+            dma1TC_CallbackFun[4]();
+    }
+    if (DMA1->ISR & DMA1_IT_HT5)
+    {
+        DMA1->IFCR = DMA1_IT_HT5;
+        if (dma1HT_CallbackFun[4] != nullptr)
+            dma1HT_CallbackFun[4]();
+    }
+    if (DMA1->ISR & DMA1_IT_TE5)
+    {
+        DMA1->IFCR = DMA1_IT_TE5;
+        if (dma1TE_CallbackFun[4] != nullptr)
+            dma1TE_CallbackFun[4]();
+    }
+    if (DMA1->ISR & DMA1_IT_GL5)
+    {
+        DMA1->IFCR = DMA1_IT_GL5;
+        if (dma1GL_CallbackFun[4] != nullptr)
+            dma1GL_CallbackFun[4]();
+    }
+}
+void DMA1_Channel6_IRQHandler(void)
+{
+    if (DMA1->ISR & DMA1_IT_TC6)
+    {
+        DMA1->IFCR = DMA1_IT_TC6;
+        if (dma1TC_CallbackFun[5] != nullptr)
+            dma1TC_CallbackFun[5]();
+    }
+    if (DMA1->ISR & DMA1_IT_HT6)
+    {
+        DMA1->IFCR = DMA1_IT_HT6;
+        if (dma1HT_CallbackFun[5] != nullptr)
+            dma1HT_CallbackFun[5]();
+    }
+    if (DMA1->ISR & DMA1_IT_TE6)
+    {
+        DMA1->IFCR = DMA1_IT_TE6;
+        if (dma1TE_CallbackFun[5] != nullptr)
+            dma1TE_CallbackFun[5]();
+    }
+    if (DMA1->ISR & DMA1_IT_GL6)
+    {
+        DMA1->IFCR = DMA1_IT_GL6;
+        if (dma1GL_CallbackFun[5] != nullptr)
+            dma1GL_CallbackFun[5]();
+    }
+}
+void DMA1_Channel7_IRQHandler(void)
+{
+    if (DMA1->ISR & DMA1_IT_TC7)
+    {
+        DMA1->IFCR = DMA1_IT_TC7;
+        if (dma1TC_CallbackFun[6] != nullptr)
+            dma1TC_CallbackFun[6]();
+    }
+    if (DMA1->ISR & DMA1_IT_HT7)
+    {
+        DMA1->IFCR = DMA1_IT_HT7;
+        if (dma1HT_CallbackFun[6] != nullptr)
+            dma1HT_CallbackFun[6]();
+    }
+    if (DMA1->ISR & DMA1_IT_TE7)
+    {
+        DMA1->IFCR = DMA1_IT_TE7;
+        if (dma1TE_CallbackFun[6] != nullptr)
+            dma1TE_CallbackFun[6]();
+    }
+    if (DMA1->ISR & DMA1_IT_GL7)
+    {
+        DMA1->IFCR = DMA1_IT_GL7;
+        if (dma1GL_CallbackFun[6] != nullptr)
+            dma1GL_CallbackFun[6]();
+    }
+}
+void DMA2_Channel1_IRQHandler(void)
+{
+    if (DMA2->ISR & DMA2_IT_TC1)
+    {
+        DMA2->IFCR = DMA2_IT_TC1;
+        if (dma2TC_CallbackFun[0] != nullptr)
+            dma2TC_CallbackFun[0]();
+    }
+    if (DMA2->ISR & DMA2_IT_HT1)
+    {
+        DMA2->IFCR = DMA2_IT_HT1;
+        if (dma2HT_CallbackFun[0] != nullptr)
+            dma2HT_CallbackFun[0]();
+    }
+    if (DMA2->ISR & DMA2_IT_TE1)
+    {
+        DMA2->IFCR = DMA2_IT_TE1;
+        if (dma2TE_CallbackFun[0] != nullptr)
+            dma2TE_CallbackFun[0]();
+    }
+    if (DMA2->ISR & DMA2_IT_GL1)
+    {
+        DMA2->IFCR = DMA2_IT_GL1;
+        if (dma2GL_CallbackFun[0] != nullptr)
+            dma2GL_CallbackFun[0]();
+    }
+}
+void DMA2_Channel2_IRQHandler(void)
+{
+    if (DMA2->ISR & DMA2_IT_TC2)
+    {
+        DMA2->IFCR = DMA2_IT_TC2;
+        if (dma2TC_CallbackFun[1] != nullptr)
+            dma2TC_CallbackFun[1]();
+    }
+    if (DMA2->ISR & DMA2_IT_HT2)
+    {
+        DMA2->IFCR = DMA2_IT_HT2;
+        if (dma2HT_CallbackFun[1] != nullptr)
+            dma2HT_CallbackFun[1]();
+    }
+    if (DMA2->ISR & DMA2_IT_TE2)
+    {
+        DMA2->IFCR = DMA2_IT_TE2;
+        if (dma2TE_CallbackFun[1] != nullptr)
+            dma2TE_CallbackFun[1]();
+    }
+    if (DMA2->ISR & DMA2_IT_GL2)
+    {
+        DMA2->IFCR = DMA2_IT_GL2;
+        if (dma2GL_CallbackFun[1] != nullptr)
+            dma2GL_CallbackFun[1]();
+    }
+}
+void DMA2_Channel3_IRQHandler(void)
+{
+    if (DMA2->ISR & DMA2_IT_TC3)
+    {
+        DMA2->IFCR = DMA2_IT_TC3;
+        if (dma2TC_CallbackFun[2] != nullptr)
+            dma2TC_CallbackFun[2]();
+    }
+    if (DMA2->ISR & DMA2_IT_HT3)
+    {
+        DMA2->IFCR = DMA2_IT_HT3;
+        if (dma2HT_CallbackFun[2] != nullptr)
+            dma2HT_CallbackFun[2]();
+    }
+    if (DMA2->ISR & DMA2_IT_TE3)
+    {
+        DMA2->IFCR = DMA2_IT_TE3;
+        if (dma2TE_CallbackFun[2] != nullptr)
+            dma2TE_CallbackFun[2]();
+    }
+    if (DMA2->ISR & DMA2_IT_GL3)
+    {
+        DMA2->IFCR = DMA2_IT_GL3;
+        if (dma2GL_CallbackFun[2] != nullptr)
+            dma2GL_CallbackFun[2]();
+    }
+}
+void DMA2_Channel4_IRQHandler(void)
+{
+    if (DMA2->ISR & DMA2_IT_TC4)
+    {
+        DMA2->IFCR = DMA2_IT_TC4;
+        if (dma2TC_CallbackFun[3] != nullptr)
+            dma2TC_CallbackFun[3]();
+    }
+    if (DMA2->ISR & DMA2_IT_HT4)
+    {
+        DMA2->IFCR = DMA2_IT_HT4;
+        if (dma2HT_CallbackFun[3] != nullptr)
+            dma2HT_CallbackFun[3]();
+    }
+    if (DMA2->ISR & DMA2_IT_TE4)
+    {
+        DMA2->IFCR = DMA2_IT_TE4;
+        if (dma2TE_CallbackFun[3] != nullptr)
+            dma2TE_CallbackFun[3]();
+    }
+    if (DMA2->ISR & DMA2_IT_GL4)
+    {
+        DMA2->IFCR = DMA2_IT_GL4;
+        if (dma2GL_CallbackFun[3] != nullptr)
+            dma2GL_CallbackFun[3]();
+    }
+}
+void DMA2_Channel5_IRQHandler(void)
+{
+    if (DMA2->ISR & DMA2_IT_TC5)
+    {
+        DMA2->IFCR = DMA2_IT_TC5;
+        if (dma2TC_CallbackFun[4] != nullptr)
+            dma2TC_CallbackFun[4]();
+    }
+    if (DMA2->ISR & DMA2_IT_HT5)
+    {
+        DMA2->IFCR = DMA2_IT_HT5;
+        if (dma2HT_CallbackFun[4] != nullptr)
+            dma2HT_CallbackFun[4]();
+    }
+    if (DMA2->ISR & DMA2_IT_TE5)
+    {
+        DMA2->IFCR = DMA2_IT_TE5;
+        if (dma2TE_CallbackFun[4] != nullptr)
+            dma2TE_CallbackFun[4]();
+    }
+    if (DMA2->ISR & DMA2_IT_GL5)
+    {
+        DMA2->IFCR = DMA2_IT_GL5;
+        if (dma2GL_CallbackFun[4] != nullptr)
+            dma2GL_CallbackFun[4]();
+    }
+}

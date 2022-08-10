@@ -31,8 +31,8 @@ __initial_sp
 ; <h> Heap Configuration
 ;   <o>  Heap Size (in Bytes) <0x0-0xFFFFFFFF:8>
 ; </h>
-Heap_Size       EQU     0x00000600
 ;Heap_Size       EQU     0x00000200
+Heap_Size       EQU     0x00002000
 
                 AREA    HEAP, NOINIT, READWRITE, ALIGN=3
 __heap_base
@@ -50,93 +50,93 @@ __heap_limit
 
 __Vectors       DCD     __initial_sp                                            ;         Top of Stack
                 DCD     Reset_Handler                                           ;         Reset Handler
-                DCD     NMI_Handler                                             ; -14     NMI Handler
-                DCD     HardFault_Handler                                       ; -13     Hard Fault Handler
-                DCD     MemManage_Handler                                       ; -12     MPU Fault Handler
-                DCD     BusFault_Handler                                        ; -11     Bus Fault Handler
-                DCD     UsageFault_Handler                                      ; -10     Usage Fault Handler
+                DCD     _Z11NMI_Handlerv                                             ; -14     NMI Handler
+                DCD     _Z17HardFault_Handlerv                                       ; -13     Hard Fault Handler
+                DCD     _Z17MemManage_Handlerv                                       ; -12     MPU Fault Handler
+                DCD     _Z16BusFault_Handlerv                                        ; -11     Bus Fault Handler
+                DCD     _Z18UsageFault_Handlerv                                      ; -10     Usage Fault Handler
 __vector_table_0x1c
                 DCD     0                                                       ; -9      Reserved
                 DCD     0                                                       ; -8      Reserved
                 DCD     0                                                       ; -7      Reserved
                 DCD     0                                                       ; -6      Reserved
-                DCD     SVC_Handler                                             ; -5      SVCall Handler
-                DCD     DebugMon_Handler                                        ; -4      Debug Monitor Handler
+                DCD     _Z11SVC_Handlerv                                             ; -5      SVCall Handler
+                DCD     _Z16DebugMon_Handlerv                                        ; -4      Debug Monitor Handler
                 DCD     0                                                       ; -3      Reserved
-                DCD     PendSV_Handler                                          ; -2      PendSV Handler
-                DCD     SysTick_Handler                                         ; -1      SysTick Handler  ; External Interrupts     
-                DCD     WWDG_IRQHandler                                         ; 0       Window Watchdog
-                DCD     PVD_IRQHandler                                          ; 1       PVD through EXTI Line detect
-                DCD     TAMPER_IRQHandler                                       ; 2       Tamper
-                DCD     RTC_IRQHandler                                          ; 3       RTC
-                DCD     FLASH_IRQHandler                                        ; 4       Flash
-                DCD     RCC_CRS_IRQHandler                                      ; 5       RCC
-                DCD     EXTI0_IRQHandler                                        ; 6       EXTI Line 0
-                DCD     EXTI1_IRQHandler                                        ; 7       EXTI Line 1
-                DCD     EXTI2_IRQHandler                                        ; 8       EXTI Line 2
-                DCD     EXTI3_IRQHandler                                        ; 9       EXTI Line 3
-                DCD     EXTI4_IRQHandler                                        ; 10      EXTI Line 4
-                DCD     DMA1_Channel1_IRQHandler                                ; 11      DMA1 Channel 1
-                DCD     DMA1_Channel2_IRQHandler                                ; 12      DMA1 Channel 2
-                DCD     DMA1_Channel3_IRQHandler                                ; 13      DMA1 Channel 3
-                DCD     DMA1_Channel4_IRQHandler                                ; 14      DMA1 Channel 4
-                DCD     DMA1_Channel5_IRQHandler                                ; 15      DMA1 Channel 5
-                DCD     DMA1_Channel6_IRQHandler                                ; 16      DMA1 Channel 6
-                DCD     DMA1_Channel7_IRQHandler                                ; 17      DMA1 Channel 7
-                DCD     ADC1_2_IRQHandler                                       ; 18      ADC1 and ADC2
-                DCD     FlashCache_IRQHandler                                   ; 19      FlashCache outage
+                DCD     _Z14PendSV_Handlerv                                          ; -2      PendSV Handler
+                DCD     _Z15SysTick_Handlerv                                         ; -1      SysTick Handler  ; External Interrupts     
+                DCD     _Z15WWDG_IRQHandlerv                                         ; 0       Window Watchdog
+                DCD     _Z14PVD_IRQHandlerv                                          ; 1       PVD through EXTI Line detect
+                DCD     _Z17TAMPER_IRQHandlerv                                       ; 2       Tamper
+                DCD     _Z14RTC_IRQHandlerv                                          ; 3       RTC
+                DCD     _Z16FLASH_IRQHandlerv                                        ; 4       Flash
+                DCD     _Z18RCC_CRS_IRQHandlerv                                      ; 5       RCC
+                DCD     _Z16EXTI0_IRQHandlerv                                        ; 6       EXTI Line 0
+                DCD     _Z16EXTI1_IRQHandlerv                                        ; 7       EXTI Line 1
+                DCD     _Z16EXTI2_IRQHandlerv                                        ; 8       EXTI Line 2
+                DCD     _Z16EXTI3_IRQHandlerv                                        ; 9       EXTI Line 3
+                DCD     _Z16EXTI4_IRQHandlerv                                        ; 10      EXTI Line 4
+                DCD     _Z24DMA1_Channel1_IRQHandlerv                                ; 11      DMA1 Channel 1
+                DCD     _Z24DMA1_Channel2_IRQHandlerv                                ; 12      DMA1 Channel 2
+                DCD     _Z24DMA1_Channel3_IRQHandlerv                                ; 13      DMA1 Channel 3
+                DCD     _Z24DMA1_Channel4_IRQHandlerv                                ; 14      DMA1 Channel 4
+                DCD     _Z24DMA1_Channel5_IRQHandlerv                                ; 15      DMA1 Channel 5
+                DCD     _Z24DMA1_Channel6_IRQHandlerv                                ; 16      DMA1 Channel 6
+                DCD     _Z24DMA1_Channel7_IRQHandlerv                                ; 17      DMA1 Channel 7
+                DCD     _Z17ADC1_2_IRQHandlerv                                       ; 18      ADC1 and ADC2
+                DCD     _Z21FlashCache_IRQHandlerv                                   ; 19      FlashCache outage
                 DCD     0                                                       ; 20      Reserved
-                DCD     CAN1_RX_IRQHandler                                      ; 21      CAN1_RX
+                DCD     _Z18CAN1_RX_IRQHandlerv                                      ; 21      CAN1_RX
                 DCD     0                                                       ; 22      Reserved
-                DCD     EXTI9_5_IRQHandler                                      ; 23      EXTI Line 9..5
-                DCD     TIM1_BRK_IRQHandler                                     ; 24      TIM1 Break
-                DCD     TIM1_UP_IRQHandler                                      ; 25      TIM1 Update
-                DCD     TIM1_TRG_COM_IRQHandler                                 ; 26      TIM1 Trigger and Commutation
-                DCD     TIM1_CC_IRQHandler                                      ; 27      TIM1 Capture Compare
-                DCD     TIM2_IRQHandler                                         ; 28      TIM2
-                DCD     TIM3_IRQHandler                                         ; 29      TIM3
-                DCD     TIM4_IRQHandler                                         ; 30      TIM4
-                DCD     I2C1_IRQHandler                                         ; 31      I2C1 Event
+                DCD     _Z18EXTI9_5_IRQHandlerv                                      ; 23      EXTI Line 9..5
+                DCD     _Z19TIM1_BRK_IRQHandlerv                                     ; 24      TIM1 Break
+                DCD     _Z18TIM1_UP_IRQHandlerv                                      ; 25      TIM1 Update
+                DCD     _Z23TIM1_TRG_COM_IRQHandlerv                                 ; 26      TIM1 Trigger and Commutation
+                DCD     _Z18TIM1_CC_IRQHandlerv                                      ; 27      TIM1 Capture Compare
+                DCD     _Z15TIM2_IRQHandlerv                                         ; 28      TIM2
+                DCD     _Z15TIM3_IRQHandlerv                                         ; 29      TIM3
+                DCD     _Z15TIM4_IRQHandlerv                                         ; 30      TIM4
+                DCD     _Z15I2C1_IRQHandlerv                                         ; 31      I2C1 Event
                 DCD     0                                                       ; 32      Reserved
-                DCD     I2C2_IRQHandler                                         ; 33      I2C2 Event
+                DCD     _Z15I2C2_IRQHandlerv                                         ; 33      I2C2 Event
                 DCD     0                                                       ; 34      Reserved
-                DCD     SPI1_IRQHandler                                         ; 35      SPI1
-                DCD     SPI2_IRQHandler                                         ; 36      SPI2
-                DCD     UART1_IRQHandler                                        ; 37      UART1
-                DCD     UART2_IRQHandler                                        ; 38      UART2
-                DCD     UART3_IRQHandler                                        ; 39      UART3
-                DCD     EXTI15_10_IRQHandler                                    ; 40      EXTI Line 15..10
-                DCD     RTCAlarm_IRQHandler                                     ; 41      RTC Alarm through EXTI Line 17
-                DCD     OTG_FS_WKUP_IRQHandler                                  ; 42      USB OTG FS Wakeup through EXTI line
-                DCD     TIM8_BRK_IRQHandler                                     ; 43      TIM8 Break
-                DCD     TIM8_UP_IRQHandler                                      ; 44      TIM8 Update
-                DCD     TIM8_TRG_COM_IRQHandler                                 ; 45      TIM8 Trigger and Commutation
-                DCD     TIM8_CC_IRQHandler                                      ; 46      TIM8 Capture Compare
-                DCD     ADC3_IRQHandler                                         ; 47      ADC3
+                DCD     _Z15SPI1_IRQHandlerv                                         ; 35      SPI1
+                DCD     _Z15SPI2_IRQHandlerv                                         ; 36      SPI2
+                DCD     _Z16UART1_IRQHandlerv                                        ; 37      UART1
+                DCD     _Z16UART2_IRQHandlerv                                        ; 38      UART2
+                DCD     _Z16UART3_IRQHandlerv                                        ; 39      UART3
+                DCD     _Z20EXTI15_10_IRQHandlerv                                    ; 40      EXTI Line 15..10
+                DCD     _Z19RTCAlarm_IRQHandlerv                                     ; 41      RTC Alarm through EXTI Line 17
+                DCD     _Z22OTG_FS_WKUP_IRQHandlerv                                  ; 42      USB OTG FS Wakeup through EXTI line
+                DCD     _Z19TIM8_BRK_IRQHandlerv                                     ; 43      TIM8 Break
+                DCD     _Z18TIM8_UP_IRQHandlerv                                      ; 44      TIM8 Update
+                DCD     _Z23TIM8_TRG_COM_IRQHandlerv                                 ; 45      TIM8 Trigger and Commutation
+                DCD     _Z18TIM8_CC_IRQHandlerv                                      ; 46      TIM8 Capture Compare
+                DCD     _Z15ADC3_IRQHandlerv                                         ; 47      ADC3
                 DCD     0                                                       ; 48      Reserved
-                DCD     SDIO_IRQHandler                                         ; 49      SDIO
-                DCD     TIM5_IRQHandler                                         ; 50      TIM5
-                DCD     SPI3_IRQHandler                                         ; 51      SPI3
-                DCD     UART4_IRQHandler                                        ; 52      UART4
-                DCD     UART5_IRQHandler                                        ; 53      UART5
-                DCD     TIM6_IRQHandler                                         ; 54      TIM6
-                DCD     TIM7_IRQHandler                                         ; 55      TIM7
-                DCD     DMA2_Channel1_IRQHandler                                ; 56      DMA2 Channel 1
-                DCD     DMA2_Channel2_IRQHandler                                ; 57      DMA2 Channel 2
-                DCD     DMA2_Channel3_IRQHandler                                ; 58      DMA2 Channel 3
-                DCD     DMA2_Channel4_IRQHandler                                ; 59      DMA2 Channel 4
-                DCD     DMA2_Channel5_IRQHandler                                ; 60      DMA2 Channel 5
-                DCD     ETH_IRQHandler                                          ; 61      Ethernet
+                DCD     _Z15SDIO_IRQHandlerv                                         ; 49      SDIO
+                DCD     _Z15TIM5_IRQHandlerv                                         ; 50      TIM5
+                DCD     _Z15SPI3_IRQHandlerv                                         ; 51      SPI3
+                DCD     _Z16UART4_IRQHandlerv                                        ; 52      UART4
+                DCD     _Z16UART5_IRQHandlerv                                        ; 53      UART5
+                DCD     _Z15TIM6_IRQHandlerv                                         ; 54      TIM6
+                DCD     _Z15TIM7_IRQHandlerv                                         ; 55      TIM7
+                DCD     _Z24DMA2_Channel1_IRQHandlerv                                ; 56      DMA2 Channel 1
+                DCD     _Z24DMA2_Channel2_IRQHandlerv                                ; 57      DMA2 Channel 2
+                DCD     _Z24DMA2_Channel3_IRQHandlerv                                ; 58      DMA2 Channel 3
+                DCD     _Z24DMA2_Channel4_IRQHandlerv                                ; 59      DMA2 Channel 4
+                DCD     _Z24DMA2_Channel5_IRQHandlerv                                ; 60      DMA2 Channel 5
+                DCD     _Z14ETH_IRQHandlerv                                          ; 61      Ethernet
                 DCD     0                                                       ; 62      Reserved
                 DCD     0                                                       ; 63      Reserved
-                DCD     COMP1_2_IRQHandler                                      ; 64      COMP1,COMP2
+                DCD     _Z18COMP1_2_IRQHandlerv                                      ; 64      COMP1,COMP2
                 DCD     0                                                       ; 65      Reserved
                 DCD     0                                                       ; 66      Reserved
-                DCD     OTG_FS_IRQHandler                                       ; 67      USB OTG_FullSpeed
+                DCD     _Z17OTG_FS_IRQHandlerv                                       ; 67      USB OTG_FullSpeed
                 DCD     0                                                       ; 68      Reserved
                 DCD     0                                                       ; 69      Reserved
                 DCD     0                                                       ; 70      Reserved
-                DCD     UART6_IRQHandler                                        ; 71      UART6  
+                DCD     _Z16UART6_IRQHandlerv                                        ; 71      UART6  
                 DCD     0                                                       ; 72      Reserved
                 DCD     0                                                       ; 73      Reserved
                 DCD     0                                                       ; 74      Reserved
@@ -147,8 +147,8 @@ __vector_table_0x1c
                 DCD     0                                                       ; 79      Reserved
                 DCD     0                                                       ; 80      Reserved
                 DCD     0                                                       ; 81      Reserved
-                DCD     UART7_IRQHandler                                        ; 82      UART7
-                DCD     UART8_IRQHandler                                        ; 83      UART8
+                DCD     _Z16UART7_IRQHandlerv                                        ; 82      UART7
+                DCD     _Z16UART8_IRQHandlerv                                        ; 83      UART8
                                 
 __Vectors_End
 
@@ -160,8 +160,8 @@ __Vectors_Size  EQU     __Vectors_End - __Vectors
 Reset_Handler   PROC
                 EXPORT  Reset_Handler              [WEAK]
                 IMPORT  __main
-                IMPORT  SystemInit
-                LDR     R0, =SystemInit
+                IMPORT  _Z10SystemInitv
+                LDR     R0, =_Z10SystemInitv
                 BLX     R0
                 LDR     R0, =__main
                 BX      R0
@@ -169,175 +169,175 @@ Reset_Handler   PROC
 
 ; Dummy Exception Handlers (infinite loops which can be modified)
 
-NMI_Handler     PROC
-                EXPORT  NMI_Handler                [WEAK]
+_Z11NMI_Handlerv     PROC
+                EXPORT  _Z11NMI_Handlerv                [WEAK]
                 B       .
                 ENDP
-HardFault_Handler\
+_Z17HardFault_Handlerv\
                 PROC
-                EXPORT  HardFault_Handler          [WEAK]
+                EXPORT  _Z17HardFault_Handlerv          [WEAK]
                 B       .
                 ENDP
-MemManage_Handler\
+_Z17MemManage_Handlerv\
                 PROC
-                EXPORT  MemManage_Handler          [WEAK]
+                EXPORT  _Z17MemManage_Handlerv          [WEAK]
                 B       .
                 ENDP
-BusFault_Handler\
+_Z16BusFault_Handlerv\
                 PROC
-                EXPORT  BusFault_Handler           [WEAK]
+                EXPORT  _Z16BusFault_Handlerv           [WEAK]
                 B       .
                 ENDP
-UsageFault_Handler\
+_Z18UsageFault_Handlerv\
                 PROC
-                EXPORT  UsageFault_Handler         [WEAK]
+                EXPORT  _Z18UsageFault_Handlerv         [WEAK]
                 B       .
                 ENDP
-SVC_Handler     PROC
-                EXPORT  SVC_Handler                [WEAK]
+_Z11SVC_Handlerv     PROC
+                EXPORT  _Z11SVC_Handlerv                [WEAK]
                 B       .
                 ENDP
-DebugMon_Handler\
+_Z16DebugMon_Handlerv\
                 PROC
-                EXPORT  DebugMon_Handler           [WEAK]
+                EXPORT  _Z16DebugMon_Handlerv           [WEAK]
                 B       .
                 ENDP
-PendSV_Handler  PROC
-                EXPORT  PendSV_Handler             [WEAK]
+_Z14PendSV_Handlerv  PROC
+                EXPORT  _Z14PendSV_Handlerv             [WEAK]
                 B       .
                 ENDP
-SysTick_Handler PROC
-                EXPORT  SysTick_Handler            [WEAK]
+_Z15SysTick_Handlerv PROC
+                EXPORT  _Z15SysTick_Handlerv            [WEAK]
                 B       .
                 ENDP
 
 Default_Handler PROC
 
-                EXPORT  WWDG_IRQHandler            [WEAK]
-                EXPORT  PVD_IRQHandler             [WEAK]
-                EXPORT  TAMPER_IRQHandler          [WEAK]
-                EXPORT  RTC_IRQHandler             [WEAK]
-                EXPORT  FLASH_IRQHandler           [WEAK]
-                EXPORT  RCC_CRS_IRQHandler         [WEAK]
-                EXPORT  EXTI0_IRQHandler           [WEAK]
-                EXPORT  EXTI1_IRQHandler           [WEAK]
-                EXPORT  EXTI2_IRQHandler           [WEAK]
-                EXPORT  EXTI3_IRQHandler           [WEAK]
-                EXPORT  EXTI4_IRQHandler           [WEAK]
-                EXPORT  DMA1_Channel1_IRQHandler   [WEAK]
-                EXPORT  DMA1_Channel2_IRQHandler   [WEAK]
-                EXPORT  DMA1_Channel3_IRQHandler   [WEAK]
-                EXPORT  DMA1_Channel4_IRQHandler   [WEAK]
-                EXPORT  DMA1_Channel5_IRQHandler   [WEAK]
-                EXPORT  DMA1_Channel6_IRQHandler   [WEAK]
-                EXPORT  DMA1_Channel7_IRQHandler   [WEAK]
-                EXPORT  ADC1_2_IRQHandler          [WEAK]
-                EXPORT  FlashCache_IRQHandler      [WEAK]
-                EXPORT  CAN1_RX_IRQHandler         [WEAK]
-                EXPORT  EXTI9_5_IRQHandler         [WEAK]
-                EXPORT  TIM1_BRK_IRQHandler        [WEAK]
-                EXPORT  TIM1_UP_IRQHandler         [WEAK]
-                EXPORT  TIM1_TRG_COM_IRQHandler    [WEAK]
-                EXPORT  TIM1_CC_IRQHandler         [WEAK]
-                EXPORT  TIM2_IRQHandler            [WEAK]
-                EXPORT  TIM3_IRQHandler            [WEAK]
-                EXPORT  TIM4_IRQHandler            [WEAK]
-                EXPORT  I2C1_IRQHandler            [WEAK]
-                EXPORT  I2C2_IRQHandler            [WEAK]
-                EXPORT  SPI1_IRQHandler            [WEAK]
-                EXPORT  SPI2_IRQHandler            [WEAK]
-                EXPORT  UART1_IRQHandler           [WEAK]
-                EXPORT  UART2_IRQHandler           [WEAK]
-                EXPORT  UART3_IRQHandler           [WEAK]
-                EXPORT  EXTI15_10_IRQHandler       [WEAK]
-                EXPORT  RTCAlarm_IRQHandler        [WEAK]
-                EXPORT  OTG_FS_WKUP_IRQHandler     [WEAK]
-                EXPORT  TIM8_BRK_IRQHandler        [WEAK]
-                EXPORT  TIM8_UP_IRQHandler         [WEAK]
-                EXPORT  TIM8_TRG_COM_IRQHandler    [WEAK]
-                EXPORT  TIM8_CC_IRQHandler         [WEAK]
-                EXPORT  ADC3_IRQHandler            [WEAK]
-                EXPORT  SDIO_IRQHandler            [WEAK]
-                EXPORT  TIM5_IRQHandler            [WEAK]
-                EXPORT  SPI3_IRQHandler            [WEAK]
-                EXPORT  UART4_IRQHandler           [WEAK]
-                EXPORT  UART5_IRQHandler           [WEAK]
-                EXPORT  TIM6_IRQHandler            [WEAK]
-                EXPORT  TIM7_IRQHandler            [WEAK]
-                EXPORT  DMA2_Channel1_IRQHandler   [WEAK]
-                EXPORT  DMA2_Channel2_IRQHandler   [WEAK]
-                EXPORT  DMA2_Channel3_IRQHandler   [WEAK]
-                EXPORT  DMA2_Channel4_IRQHandler   [WEAK]
-                EXPORT  DMA2_Channel5_IRQHandler   [WEAK]
-                EXPORT  ETH_IRQHandler             [WEAK]
-                EXPORT  COMP1_2_IRQHandler         [WEAK]
-                EXPORT  OTG_FS_IRQHandler          [WEAK]
-                EXPORT  UART6_IRQHandler           [WEAK]
-                EXPORT  UART7_IRQHandler           [WEAK]
-                EXPORT  UART8_IRQHandler           [WEAK]
+                EXPORT  _Z15WWDG_IRQHandlerv            [WEAK]
+                EXPORT  _Z14PVD_IRQHandlerv             [WEAK]
+                EXPORT  _Z17TAMPER_IRQHandlerv          [WEAK]
+                EXPORT  _Z14RTC_IRQHandlerv             [WEAK]
+                EXPORT  _Z16FLASH_IRQHandlerv           [WEAK]
+                EXPORT  _Z18RCC_CRS_IRQHandlerv         [WEAK]
+                EXPORT  _Z16EXTI0_IRQHandlerv           [WEAK]
+                EXPORT  _Z16EXTI1_IRQHandlerv           [WEAK]
+                EXPORT  _Z16EXTI2_IRQHandlerv           [WEAK]
+                EXPORT  _Z16EXTI3_IRQHandlerv           [WEAK]
+                EXPORT  _Z16EXTI4_IRQHandlerv           [WEAK]
+                EXPORT  _Z24DMA1_Channel1_IRQHandlerv   [WEAK]
+                EXPORT  _Z24DMA1_Channel2_IRQHandlerv   [WEAK]
+                EXPORT  _Z24DMA1_Channel3_IRQHandlerv   [WEAK]
+                EXPORT  _Z24DMA1_Channel4_IRQHandlerv   [WEAK]
+                EXPORT  _Z24DMA1_Channel5_IRQHandlerv   [WEAK]
+                EXPORT  _Z24DMA1_Channel6_IRQHandlerv   [WEAK]
+                EXPORT  _Z24DMA1_Channel7_IRQHandlerv   [WEAK]
+                EXPORT  _Z17ADC1_2_IRQHandlerv          [WEAK]
+                EXPORT  _Z21FlashCache_IRQHandlerv      [WEAK]
+                EXPORT  _Z18CAN1_RX_IRQHandlerv         [WEAK]
+                EXPORT  _Z18EXTI9_5_IRQHandlerv         [WEAK]
+                EXPORT  _Z19TIM1_BRK_IRQHandlerv        [WEAK]
+                EXPORT  _Z18TIM1_UP_IRQHandlerv         [WEAK]
+                EXPORT  _Z23TIM1_TRG_COM_IRQHandlerv    [WEAK]
+                EXPORT  _Z18TIM1_CC_IRQHandlerv         [WEAK]
+                EXPORT  _Z15TIM2_IRQHandlerv            [WEAK]
+                EXPORT  _Z15TIM3_IRQHandlerv            [WEAK]
+                EXPORT  _Z15TIM4_IRQHandlerv            [WEAK]
+                EXPORT  _Z15I2C1_IRQHandlerv            [WEAK]
+                EXPORT  _Z15I2C2_IRQHandlerv            [WEAK]
+                EXPORT  _Z15SPI1_IRQHandlerv            [WEAK]
+                EXPORT  _Z15SPI2_IRQHandlerv            [WEAK]
+                EXPORT  _Z16UART1_IRQHandlerv           [WEAK]
+                EXPORT  _Z16UART2_IRQHandlerv           [WEAK]
+                EXPORT  _Z16UART3_IRQHandlerv           [WEAK]
+                EXPORT  _Z20EXTI15_10_IRQHandlerv       [WEAK]
+                EXPORT  _Z19RTCAlarm_IRQHandlerv        [WEAK]
+                EXPORT  _Z22OTG_FS_WKUP_IRQHandlerv     [WEAK]
+                EXPORT  _Z19TIM8_BRK_IRQHandlerv        [WEAK]
+                EXPORT  _Z18TIM8_UP_IRQHandlerv         [WEAK]
+                EXPORT  _Z23TIM8_TRG_COM_IRQHandlerv    [WEAK]
+                EXPORT  _Z18TIM8_CC_IRQHandlerv         [WEAK]
+                EXPORT  _Z15ADC3_IRQHandlerv            [WEAK]
+                EXPORT  _Z15SDIO_IRQHandlerv            [WEAK]
+                EXPORT  _Z15TIM5_IRQHandlerv            [WEAK]
+                EXPORT  _Z15SPI3_IRQHandlerv            [WEAK]
+                EXPORT  _Z16UART4_IRQHandlerv           [WEAK]
+                EXPORT  _Z16UART5_IRQHandlerv           [WEAK]
+                EXPORT  _Z15TIM6_IRQHandlerv            [WEAK]
+                EXPORT  _Z15TIM7_IRQHandlerv            [WEAK]
+                EXPORT  _Z24DMA2_Channel1_IRQHandlerv   [WEAK]
+                EXPORT  _Z24DMA2_Channel2_IRQHandlerv   [WEAK]
+                EXPORT  _Z24DMA2_Channel3_IRQHandlerv   [WEAK]
+                EXPORT  _Z24DMA2_Channel4_IRQHandlerv   [WEAK]
+                EXPORT  _Z24DMA2_Channel5_IRQHandlerv   [WEAK]
+                EXPORT  _Z14ETH_IRQHandlerv             [WEAK]
+                EXPORT  _Z18COMP1_2_IRQHandlerv         [WEAK]
+                EXPORT  _Z17OTG_FS_IRQHandlerv          [WEAK]
+                EXPORT  _Z16UART6_IRQHandlerv           [WEAK]
+                EXPORT  _Z16UART7_IRQHandlerv           [WEAK]
+                EXPORT  _Z16UART8_IRQHandlerv           [WEAK]
                 
-WWDG_IRQHandler           
-PVD_IRQHandler            
-TAMPER_IRQHandler         
-RTC_IRQHandler            
-FLASH_IRQHandler          
-RCC_CRS_IRQHandler        
-EXTI0_IRQHandler          
-EXTI1_IRQHandler          
-EXTI2_IRQHandler          
-EXTI3_IRQHandler          
-EXTI4_IRQHandler          
-DMA1_Channel1_IRQHandler  
-DMA1_Channel2_IRQHandler  
-DMA1_Channel3_IRQHandler  
-DMA1_Channel4_IRQHandler  
-DMA1_Channel5_IRQHandler  
-DMA1_Channel6_IRQHandler  
-DMA1_Channel7_IRQHandler  
-ADC1_2_IRQHandler           
-FlashCache_IRQHandler     
-CAN1_RX_IRQHandler        
-EXTI9_5_IRQHandler        
-TIM1_BRK_IRQHandler       
-TIM1_UP_IRQHandler        
-TIM1_TRG_COM_IRQHandler   
-TIM1_CC_IRQHandler        
-TIM2_IRQHandler           
-TIM3_IRQHandler           
-TIM4_IRQHandler           
-I2C1_IRQHandler           
-I2C2_IRQHandler           
-SPI1_IRQHandler           
-SPI2_IRQHandler           
-UART1_IRQHandler          
-UART2_IRQHandler          
-UART3_IRQHandler          
-EXTI15_10_IRQHandler      
-RTCAlarm_IRQHandler       
-OTG_FS_WKUP_IRQHandler       
-TIM8_BRK_IRQHandler       
-TIM8_UP_IRQHandler        
-TIM8_TRG_COM_IRQHandler   
-TIM8_CC_IRQHandler        
-ADC3_IRQHandler           
-SDIO_IRQHandler           
-TIM5_IRQHandler           
-SPI3_IRQHandler           
-UART4_IRQHandler          
-UART5_IRQHandler          
-TIM6_IRQHandler           
-TIM7_IRQHandler           
-DMA2_Channel1_IRQHandler  
-DMA2_Channel2_IRQHandler  
-DMA2_Channel3_IRQHandler  
-DMA2_Channel4_IRQHandler  
-DMA2_Channel5_IRQHandler  
-ETH_IRQHandler     
-COMP1_2_IRQHandler        
-OTG_FS_IRQHandler     
-UART6_IRQHandler          
-UART7_IRQHandler          
-UART8_IRQHandler          
+_Z15WWDG_IRQHandlerv           
+_Z14PVD_IRQHandlerv            
+_Z17TAMPER_IRQHandlerv         
+_Z14RTC_IRQHandlerv            
+_Z16FLASH_IRQHandlerv          
+_Z18RCC_CRS_IRQHandlerv        
+_Z16EXTI0_IRQHandlerv          
+_Z16EXTI1_IRQHandlerv          
+_Z16EXTI2_IRQHandlerv          
+_Z16EXTI3_IRQHandlerv          
+_Z16EXTI4_IRQHandlerv          
+_Z24DMA1_Channel1_IRQHandlerv  
+_Z24DMA1_Channel2_IRQHandlerv  
+_Z24DMA1_Channel3_IRQHandlerv  
+_Z24DMA1_Channel4_IRQHandlerv  
+_Z24DMA1_Channel5_IRQHandlerv  
+_Z24DMA1_Channel6_IRQHandlerv  
+_Z24DMA1_Channel7_IRQHandlerv  
+_Z17ADC1_2_IRQHandlerv           
+_Z21FlashCache_IRQHandlerv     
+_Z18CAN1_RX_IRQHandlerv        
+_Z18EXTI9_5_IRQHandlerv        
+_Z19TIM1_BRK_IRQHandlerv       
+_Z18TIM1_UP_IRQHandlerv        
+_Z23TIM1_TRG_COM_IRQHandlerv   
+_Z18TIM1_CC_IRQHandlerv        
+_Z15TIM2_IRQHandlerv           
+_Z15TIM3_IRQHandlerv           
+_Z15TIM4_IRQHandlerv           
+_Z15I2C1_IRQHandlerv           
+_Z15I2C2_IRQHandlerv           
+_Z15SPI1_IRQHandlerv           
+_Z15SPI2_IRQHandlerv           
+_Z16UART1_IRQHandlerv          
+_Z16UART2_IRQHandlerv          
+_Z16UART3_IRQHandlerv          
+_Z20EXTI15_10_IRQHandlerv      
+_Z19RTCAlarm_IRQHandlerv       
+_Z22OTG_FS_WKUP_IRQHandlerv       
+_Z19TIM8_BRK_IRQHandlerv       
+_Z18TIM8_UP_IRQHandlerv        
+_Z23TIM8_TRG_COM_IRQHandlerv   
+_Z18TIM8_CC_IRQHandlerv        
+_Z15ADC3_IRQHandlerv           
+_Z15SDIO_IRQHandlerv           
+_Z15TIM5_IRQHandlerv           
+_Z15SPI3_IRQHandlerv           
+_Z16UART4_IRQHandlerv          
+_Z16UART5_IRQHandlerv          
+_Z15TIM6_IRQHandlerv           
+_Z15TIM7_IRQHandlerv           
+_Z24DMA2_Channel1_IRQHandlerv  
+_Z24DMA2_Channel2_IRQHandlerv  
+_Z24DMA2_Channel3_IRQHandlerv  
+_Z24DMA2_Channel4_IRQHandlerv  
+_Z24DMA2_Channel5_IRQHandlerv  
+_Z14ETH_IRQHandlerv     
+_Z18COMP1_2_IRQHandlerv        
+_Z17OTG_FS_IRQHandlerv     
+_Z16UART6_IRQHandlerv          
+_Z16UART7_IRQHandlerv          
+_Z16UART8_IRQHandlerv          
 
                              
                 B       .    
