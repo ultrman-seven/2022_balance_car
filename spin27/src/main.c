@@ -9,6 +9,7 @@
 #include "iicsoft.h"
 #include <stdio.h>
 #include "uart.h"
+#include "battery.h"
 
 ErrorStatus HSE_SysClock(void)
 {
@@ -93,6 +94,7 @@ void globalInit(void)
     MPU6050_initialize();
     mpuDmpState = DMP_Init();
     MPU6050_INT_Ini();
+    // batteryInit();
     delayMs(1000);
     communicateInit();
 }
@@ -126,6 +128,7 @@ void TIM17_IRQHandler(void)
     TIM_ClearITPendingBit(TIM17, TIM_FLAG_Update);
     TIM_Cmd(TIM17, DISABLE);
     yawErr = MPU_yaw;
+    beep100Ms();
 }
 // #define DangerSpeed 1500
 void picProcess(void);
@@ -135,7 +138,7 @@ int main(void)
     int32_t ledBright = 0;
     globalInit();
 
-    // __time17Init(250)
+    __time17Init(30000, 0xffff);
     // delayMs(2000);
     while (1)
     {
@@ -156,9 +159,14 @@ int main(void)
         // if (getSpeed(RIGHT) <= -DangerSpeed)
         //     NVIC_SystemReset();
         // printf("x%.2fy%.2f\n", position_x, position_y);
-        printf("p=%.2f,r=%.2f,y=%.2f\r\n", MPU_pitch, MPU_roll, MPU_yaw);
+        // printf("v=%.2f\r\n", getVoltage());
+        // printf("p=%.2f,r=%.2f,y=%.2f\r\n", MPU_pitch, MPU_roll, MPU_yaw);
         // printf("x=%d,y=%d,z=%d\r\n", gyro[0], gyro[1], gyro[2]);
         // printf("l=%d,r=%d\r\n", getSpeed(LEFT),getSpeed(RIGHT));
     }
 }
-// x:+-1400, y:2000
+// x:+-1500, y:2100
+// 1: 1047,-232.69
+// 2: 1028,-887.87
+// 3: 917.95,-1576.82
+// 4: -868.211,-1191.82

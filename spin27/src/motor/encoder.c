@@ -145,8 +145,7 @@ float yawErr = 0.9;
 #define PI 3.1415926535
 #include "math.h"
 #include "mpu6050.h"
-    void
-    tim17Callback(void)
+void tim17Callback(void)
 {
     int32_t currintCnt;
     int speed;
@@ -199,19 +198,19 @@ float yawErr = 0.9;
     position_y += dx * cos(yaw * PI / 180.0) / 500.0;
 }
 
-void TIM17_IRQHandler(void)
-{
-    TIM_ClearITPendingBit(TIM17, TIM_FLAG_Update);
-    tim17Callback();
-    // currentCNT = (lastLCircle[LEFT] - circleCount[LEFT]) * 1024 * 4 + TIM_Left->CNT;
-    // lastLCircle[LEFT] = circleCount[LEFT];
-    // motorSpeed[LEFT] = (currentCNT - lastCNT[LEFT]) * GearAndDiameter;
-    // lastCNT[LEFT] = currentCNT;
-    // motorSpeed[LEFT] = TIM_Left->CNT;
-    // timeLast = time;
+// void TIM17_IRQHandler(void)
+// {
+//     TIM_ClearITPendingBit(TIM17, TIM_FLAG_Update);
+//     tim17Callback();
+//     // currentCNT = (lastLCircle[LEFT] - circleCount[LEFT]) * 1024 * 4 + TIM_Left->CNT;
+//     // lastLCircle[LEFT] = circleCount[LEFT];
+//     // motorSpeed[LEFT] = (currentCNT - lastCNT[LEFT]) * GearAndDiameter;
+//     // lastCNT[LEFT] = currentCNT;
+//     // motorSpeed[LEFT] = TIM_Left->CNT;
+//     // timeLast = time;
 
-    // pidUpdateFunction();
-}
+//     // pidUpdateFunction();
+// }
 
 int getCircleCount(MotorChoose side)
 {

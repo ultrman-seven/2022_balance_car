@@ -5,19 +5,19 @@ void batteryInit(void)
     GPIO_InitTypeDef gpio;
     ADC_InitTypeDef adc;
 
-    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC2, ENABLE);
 
     gpio.GPIO_Mode = GPIO_Mode_AIN;
     gpio.GPIO_Speed = GPIO_Speed_50MHz;
-    gpio.GPIO_Pin = GPIO_Pin_10;
-    GPIO_Init(GPIOA, &gpio);
+    gpio.GPIO_Pin = GPIO_Pin_0;
+    GPIO_Init(GPIOB, &gpio);
 
     ADC_StructInit(&adc);
     // adc.ADC_Mode=ADC_Mode_Single_Period;
     ADC_Init(ADC2, &adc);
 
-    ADC_RegularChannelConfig(ADC2, ADC_Channel_0, 0, ADC_SampleTime_239_5Cycles);
+    ADC_RegularChannelConfig(ADC2, ADC_Channel_8, 0, ADC_SampleTime_239_5Cycles);
 
     // ADC_DMACmd(ADC2,ENABLE);
     ADC_Cmd(ADC2, ENABLE);
@@ -33,6 +33,7 @@ float getVoltage(void)
     result = ADC_GetConversionValue(ADC2);
     ADC_SoftwareStartConvCmd(ADC2, DISABLE);
     ADC_ClearFlag(ADC2, ADC_FLAG_EOC);
+    result = result / 215.34;
     return result;
 }
 

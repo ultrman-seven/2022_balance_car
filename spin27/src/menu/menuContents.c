@@ -10,6 +10,7 @@
 #include "pid.h"
 #include "motor/control.h"
 #include "quickSin.h"
+#include "battery.h"
 
 char menuCaptionStr1[20];
 char menuCaptionStr2[20];
@@ -58,7 +59,8 @@ extern uint8_t mpuDmpState;
 void getSysState(void)
 {
     screenClear();
-    OLED_printf("sys clock: %s\nmpu dmp:%d\n", (sysClkState == SUCCESS) ? "ok" : "error", mpuDmpState);
+    OLED_printf("外部时钟: %s\n", (sysClkState == SUCCESS) ? "ok/96MHz" : "error");
+    OLED_printf("电池电量: NC\n" ); // getVoltage());
     OLED_printf("mpu: 0x%x", I2C_ReadOneByte((0x68 << 1), 0x75));
 }
 
