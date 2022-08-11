@@ -37,7 +37,7 @@
 #include "hardware/beep.h"
 #include "menu.h"
 
-int32_t balancePoint = 117;
+int32_t balancePoint = 120;
 // int32_t balancePoint = 155;
 // int32_t balancePoint = 190;
 // int32_t balancePoint = 110;
@@ -79,7 +79,7 @@ void setBaseSpeed(int32_t s)
     baseSpeed = s;
 }
 PID_paraTypdef ph_car_home_anglePid = {
-    .Kp = 180, .Kd = 112, .Ki = 0, .targetVal = 0, .proportionLast = 0};
+    .Kp = 180, .Kd = 60, .Ki = 0, .targetVal = 0, .proportionLast = 0};
 // PID_paraTypdef ph_car_home_anglePid = {
 //     .Kp = 88, .Kd = 39, .Ki = 0, .targetVal = 0, .proportionLast = 0};
 PID_paraTypdef ph_car_home_speedPid = {
@@ -351,7 +351,7 @@ int32_t y_position2killLamp = 95;
 int32_t y_position2changePara = 70;
 int32_t y_positionLampDie = 80;
 int32_t y_position2ChangeSpeed = 80;
-
+int32_t lampDieSpeed = 70;
 // int32_t speedMul1 = 520;
 int32_t speedMul1 = 500;
 int32_t speedMul2 = 120;
@@ -375,6 +375,7 @@ void variableListInit(void)
     pushVariable("变参时机", &y_position2changePara);
     pushVariable("转弯时机", &y_position2killLamp);
     pushVariable("灭灯标记", &y_positionLampDie);
+    pushVariable("灭后转速", &lampDieSpeed);
 
     pushVariable("速度倍数", &basSpeedMul);
     pushVariable("减速衰减", &speedMul1);
@@ -482,11 +483,11 @@ void pidUpdateFunction(void)
         PIC_FLAG_RESET(pic_flag_lamp_miss);
         ph_car_home_speedPid_left.targetVal = baseSpeed * 0.7;
         if ((getSpeed(RIGHT) - getSpeed(LEFT)) > 2)
-            img_x = distortionList[40];
-        // img_x = distortionList[38];
-        else if ((getSpeed(LEFT) - getSpeed(RIGHT)) > 2)
-            img_x = -distortionList[40];
-        // img_x = -distortionList[38];
+            // img_x = distortionList[40];
+            img_x = lampDieSpeed;
+        else
+            // img_x = -distortionList[40];
+            img_x = -lampDieSpeed;
         // END_CONTINUE_RUNNING(pic_flag_lamp_die)
         END_AND_GO_TO_NEXT_CONTINUE_RUNNING(pic_flag_lamp_die, pic_flag_lamp_miss);
 
@@ -511,21 +512,10 @@ void pidUpdateFunction(void)
         turnPid.targetVal = 0;
         Turn_Pwm = cam_turn(img_x, gyro[2], &turnPid);
         Velocity_Pwm = ph_car_home_velocity(getSpeed(LEFT), getSpeed(RIGHT), &ph_car_home_speedPid_left);
-        // if (img_x > PIC_COL / 2)
-        // {
-        //     Moto1 = Balance_Pwm - Velocity_Pwm; //===计算左轮电机最终PWM
-        //     Moto2 = Balance_Pwm - Velocity_Pwm - Turn_Pwm;
-        // }
-        // else if (img_x < -(PIC_COL / 2))
-        // {
-        //     Moto1 = Balance_Pwm - Velocity_Pwm + Turn_Pwm; //===计算左轮电机最终PWM
-        //     Moto2 = Balance_Pwm - Velocity_Pwm;
-        // }
-        // else
-        {
-            Moto1 = Balance_Pwm - Velocity_Pwm + Turn_Pwm; //===计算左轮电机最终PWM
-            Moto2 = Balance_Pwm - Velocity_Pwm - Turn_Pwm;
-        }
+
+        Moto1 = Balance_Pwm - Velocity_Pwm + Turn_Pwm; //===计算左轮电机最终PWM
+        Moto2 = Balance_Pwm - Velocity_Pwm - Turn_Pwm;
+
         setPower(Moto1, LEFT);
         setPower(Moto2, RIGHT);
         break;

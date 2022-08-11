@@ -97,6 +97,36 @@ void globalInit(void)
     communicateInit();
 }
 #define DangerSpeed 1200
+
+void __time17Init(uint16_t period, uint16_t prescaler)
+{
+    TIM_TimeBaseInitTypeDef time;
+    NVIC_InitTypeDef nvic;
+
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM17, ENABLE);
+    time.TIM_ClockDivision = TIM_CKD_DIV4;
+    time.TIM_CounterMode = TIM_CounterMode_Up;
+    time.TIM_RepetitionCounter = 0;
+    time.TIM_Period = period;
+    time.TIM_Prescaler = prescaler;
+    TIM_TimeBaseInit(TIM17, &time);
+
+    nvic.NVIC_IRQChannel = TIM17_IRQn;
+    nvic.NVIC_IRQChannelCmd = ENABLE;
+    nvic.NVIC_IRQChannelPriority = 0;
+    NVIC_Init(&nvic);
+
+    TIM_ClearFlag(TIM17, TIM_FLAG_Update);
+    TIM_ITConfig(TIM17, TIM_IT_Update, ENABLE);
+    TIM_Cmd(TIM17, ENABLE);
+}
+extern float yawErr;
+void TIM17_IRQHandler(void)
+{
+    TIM_ClearITPendingBit(TIM17, TIM_FLAG_Update);
+    TIM_Cmd(TIM17, DISABLE);
+    yawErr = MPU_yaw;
+}
 // #define DangerSpeed 1500
 void picProcess(void);
 void testStop(void);
@@ -105,6 +135,7 @@ int main(void)
     int32_t ledBright = 0;
     globalInit();
 
+    // __time17Init(250)
     // delayMs(2000);
     while (1)
     {
@@ -124,8 +155,8 @@ int main(void)
         //     NVIC_SystemReset();
         // if (getSpeed(RIGHT) <= -DangerSpeed)
         //     NVIC_SystemReset();
-        printf("x%.2fy%.2f\n", position_x, position_y);
-        // printf("p=%.2f,r=%.2f,y=%.2f\r\n", MPU_pitch, MPU_roll, MPU_yaw);
+        // printf("x%.2fy%.2f\n", position_x, position_y);
+        printf("p=%.2f,r=%.2f,y=%.2f\r\n", MPU_pitch, MPU_roll, MPU_yaw);
         // printf("x=%d,y=%d,z=%d\r\n", gyro[0], gyro[1], gyro[2]);
         // printf("l=%d,r=%d\r\n", getSpeed(LEFT),getSpeed(RIGHT));
     }
