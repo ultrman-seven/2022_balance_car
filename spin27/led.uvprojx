@@ -638,6 +638,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\menu\allVariable.c</FilePath>
             </File>
+            <File>
+              <FileName>locate.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\motor\locate.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

@@ -36,6 +36,7 @@
 #include "oledio.h"
 #include "hardware/beep.h"
 #include "menu.h"
+#include "locate.h"
 
 int32_t balancePoint = 120;
 // int32_t balancePoint = 155;
@@ -346,21 +347,21 @@ enum pic_flags
         pictureFlags &= ~(0x0001 << (flag));            \
     }
 
-int32_t y_position2killLamp = 95;
+int32_t y_position2killLamp = 94;
 // int32_t y_position2changePara = 80;
-int32_t y_position2changePara = 70;
-int32_t y_positionLampDie = 80;
+int32_t y_position2changePara = 81;
+int32_t y_positionLampDie = 90;
 int32_t y_position2ChangeSpeed = 80;
-int32_t lampDieSpeed = 70;
+int32_t lampDieSpeed = 79;
 // int32_t speedMul1 = 520;
 int32_t speedMul1 = 500;
 int32_t speedMul2 = 120;
 int32_t basSpeedMul = 15;
 
-int32_t paraMul = 27;
+int32_t paraMul = 24;
 
 // int32_t die_waitTime = 160;
-int32_t die_waitTime = 80;
+int32_t die_waitTime = 50;
 int32_t miss_waitTime = 100;
 int32_t reGet_waitTime = 20;
 
@@ -375,6 +376,7 @@ void variableListInit(void)
     pushVariable("变参时机", &y_position2changePara);
     pushVariable("转弯时机", &y_position2killLamp);
     pushVariable("灭灯标记", &y_positionLampDie);
+    pushVariable("加减速点", &y_position2ChangeSpeed);
     pushVariable("灭后转速", &lampDieSpeed);
 
     pushVariable("速度倍数", &basSpeedMul);
@@ -415,6 +417,12 @@ void pidUpdateFunction(void)
             if (imgPosition.y >= y_position2changePara)
                 jb_tmp = jb_tmp * paraMul / 10;
         }
+
+        // imgPosition.x = PIC_COL / 2;
+        // imgPosition.y = PIC_LINE / 2;
+        // jb_tmp = getLocationAngleErr();
+        // if (getDistance2Center() <= 100)
+        //     setPidMode(NullMode);
 
         img_x = jb_tmp;
 

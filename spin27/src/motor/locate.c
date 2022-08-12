@@ -1,24 +1,34 @@
-#include "common.h"
-#include "mpu6050.h"
-#include "encoder.h"
-#include "math.h"
+#include "locate.h"
 
-float position_x = 0;
-float position_y = 0;
-
-#define yawErr 110
 #define PI 3.1415926535
 
-void positionUpdate(void)
+#define Center_X 0
+#define Center_Y -1000
+// x:+-1500, y:-2100
+
+float getDistance2Center(void)
 {
-    float dx = (getSpeed(LEFT) + getSpeed(RIGHT)) / 2.0;
-    float yaw = yawErr - MPU_yaw;
+    int32_t dx, dy;
+    float result;
+    dx = position_x - Center_X;
+    dy = position_y - Center_Y;
+    result = dx * dx + dy * dy;
+    result = sqrt(result);
+    return result;
+}
 
-    if (yaw > 180)
-        yaw -= 360;
-    if (yaw < -180)
-        yaw += 360;
-
-    position_x += dx * sin(yaw * PI / 180);
-    position_y += dx * cos(yaw * PI / 180);
+float getLocationAngleErr(void)
+{
+    int32_t dx, dy;
+    float theta;
+    dx = position_x - Center_X;
+    dy = position_y - Center_Y;
+    theta = atan2(dy, dx);
+    theta = theta * 180 / PI;
+    theta = 90 + MPU_yaw - theta - yawErr;
+    if (theta >= 360)
+        theta -= 360;
+    if (theta <= -360)
+        theta += 360;
+    return theta;
 }

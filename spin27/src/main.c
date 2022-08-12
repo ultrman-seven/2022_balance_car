@@ -1,15 +1,14 @@
 #include "common.h"
 #include "oledio.h"
-#include "font.h"
 #include "beep.h"
 #include "motor.h"
-#include "encoder.h"
 #include "mpu6050.h"
 #include "inv_mpu.h"
 #include "iicsoft.h"
 #include <stdio.h>
 #include "uart.h"
 #include "battery.h"
+#include "locate.h"
 
 ErrorStatus HSE_SysClock(void)
 {
@@ -122,7 +121,7 @@ void __time17Init(uint16_t period, uint16_t prescaler)
     TIM_ITConfig(TIM17, TIM_IT_Update, ENABLE);
     TIM_Cmd(TIM17, ENABLE);
 }
-extern float yawErr;
+
 void TIM17_IRQHandler(void)
 {
     TIM_ClearITPendingBit(TIM17, TIM_FLAG_Update);
@@ -147,6 +146,8 @@ int main(void)
         if (ledBright > 10000 || ledBright == 1)
             ledBright--;
         TIM2->CCR3 = ledBright;
+        if (MPU_pitch == 0)
+            TIM2->CCR3 = 0;
 
         if (getSpeed(LEFT) >= DangerSpeed)
             // NVIC_SystemReset();
@@ -158,14 +159,16 @@ int main(void)
         //     NVIC_SystemReset();
         // if (getSpeed(RIGHT) <= -DangerSpeed)
         //     NVIC_SystemReset();
-        // printf("x%.2fy%.2f\n", position_x, position_y);
         // printf("v=%.2f\r\n", getVoltage());
         // printf("p=%.2f,r=%.2f,y=%.2f\r\n", MPU_pitch, MPU_roll, MPU_yaw);
         // printf("x=%d,y=%d,z=%d\r\n", gyro[0], gyro[1], gyro[2]);
         // printf("l=%d,r=%d\r\n", getSpeed(LEFT),getSpeed(RIGHT));
+        // printf("x%.2fy%.2f\n", position_x, position_y);
+        // printf("x=%.2f,y=%.2f\r\n", position_x, position_y);
+        // printf("r=%.2f,s=%.2f\r\n", getDistance2Center(), getLocationAngleErr()); // rou,theta
     }
 }
-// x:+-1500, y:2100
+// x:+-1500, y:-2100
 // 1: 1047,-232.69
 // 2: 1028,-887.87
 // 3: 917.95,-1576.82

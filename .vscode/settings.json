@@ -62,7 +62,9 @@
         "xloctime": "c",
         "xtree": "c",
         "xutility": "c",
-        "battery.h": "c"
+        "battery.h": "c",
+        "locate.h": "c",
+        "math.h": "c"
     },
     "cSpell.enableFiletypes": [
         "8051",

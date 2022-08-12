@@ -12,4 +12,5 @@ int getCircleCount(MotorChoose side);
 int getSpeed(MotorChoose side);
 extern float position_x;
 extern float position_y;
+extern float yawErr;
 #endif /* __WY_LIB_ ENCODER_H__*/

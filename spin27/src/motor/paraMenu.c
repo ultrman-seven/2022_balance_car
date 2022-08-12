@@ -348,9 +348,9 @@ void ph_car_home_start(void)
 void ph_car_home_cam_start(void)
 {
     setPidMode(balanceCarHomeMode);
-    turnPid.Kp = 114; // 76; // 60; // 90; // 41;
+    turnPid.Kp =  76;//114;  // 60; // 90; // 41;
     turnPid.Kd = 3;
-    turnPid.Ki = 6;
+    turnPid.Ki = 11;
     // baseSpeed = -115;
     baseSpeed = -150;
 }
