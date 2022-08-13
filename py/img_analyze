@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+import math
 
 
 def getData(name):
@@ -50,6 +51,17 @@ def least_square(X: np.array, Y: np.array):
     return theta
 
 
+def sim_pitch(p, y, ax):
+    p = np.array(p)
+    y = np.array(y)
+    one = np.ones(len(p))
+    X = np.c_[one, p]
+    theta = least_square(X, y)
+    r = X@theta
+    ax.scatter(p, r)
+    return theta
+
+
 if __name__ == '__main__':
     # plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
     # plt.rcParams['axes.unicode_minus'] = False #用来正常显示负号
@@ -64,9 +76,15 @@ if __name__ == '__main__':
     fig = plt.figure(0)
     ax = Axes3D(fig)
     x, y, z = getXYZ('img_posi06.txt')
-    ax.scatter3D(x, y, z)
-    x, y, z = getXYZ('img_posi05.txt', 'img_posi07.txt', 'img_posi08.txt')
-    ax.scatter3D(x, y, z)
+    # ax.scatter3D(x, y, z)
+    ax.scatter3D(z, y, x)
+    # x, y, z = getXYZ('img_posi05.txt', 'img_posi07.txt', 'img_posi08.txt')
+    x, y, z = getXYZ('img_posi05.txt')
+    ax.scatter3D(z, y, x)
+    x, y, z = getXYZ('img_posi07.txt')
+    ax.scatter3D(z, y, x)
+    x, y, z = getXYZ('img_posi08.txt')
+    ax.scatter3D(z, y, x)
 
     f1 = plt.figure(1)
     # plt.title(u'距离恒定时, $\\theta$与灯坐标关系')
@@ -84,6 +102,34 @@ if __name__ == '__main__':
     ax3.scatter(x, z)
     plt.xlabel('distance')
     plt.ylabel('y')
+    z1, z2, z3, z4, y1, y2, y3, y4 = [], [], [], [], [], [], [], []
+    for i in range(len(x)):
+        if(x[i] > 400 and x[i] < 600):
+            z1.append(z[i])
+            y1.append(y[i])
+            continue
+        if(x[i] > 600 and x[i] < 800):
+            z2.append(z[i])
+            y2.append(y[i])
+            continue
+        if(x[i] > 1000 and x[i] < 1200):
+            z3.append(z[i])
+            y3.append(y[i])
+            continue
+        if(x[i] > 1200 and x[i] < 1400):
+            z4.append(z[i])
+            y4.append(y[i])
+            continue
+    t1 = sim_pitch(y1, z1, ax1)
+    t2 = sim_pitch(y2, z2, ax1)
+    t3 = sim_pitch(y3, z3, ax1)
+    t4 = sim_pitch(y4, z4, ax1)
+    print('t1:', t1)
+    print('t2:', t2)
+    print('t3:', t3)
+    print('t4:', t4)
+    k_theta =  ((t1+t2+t3+t4)/4)[-1]
+    print('pitch-y 平均斜率:',k_theta)
 
     f2 = plt.figure(2)
     # plt.title('$\\theta$恒定时, 距离与灯坐标关系')
@@ -101,13 +147,90 @@ if __name__ == '__main__':
     ax3.scatter(x, z)
     plt.xlabel('distance')
     plt.ylabel('y')
-
-    x, y, z = getXYZ('img_posi06.txt','img_posi05.txt', 'img_posi07.txt', 'img_posi08.txt')
     one = np.ones(len(x))
-    X = np.c_[one,z,z**2, z**-1, z**-2, z**-3, y]
+    ave_pitch = sum(y)/len(y)
+    print('平均俯仰角: ',ave_pitch)
+    # X = np.c_[one,z**-1,z**-2, z, z**2, z**3,z**4]*math.cos(ave_pitch*math.pi/180)
+    X = np.c_[one,(z-k_theta*ave_pitch)**-1,(z-k_theta*ave_pitch)**-2]
+    theta = least_square(X, x)
+    print('距离：', theta)
+    t1 = theta
+    r = X@theta
+    ax3.scatter(r, z)
+    ax.scatter(z,y,r)
+
+    f3 = plt.figure(3)
+    # plt.title('$\\theta$恒定时, 距离与灯坐标关系')
+    # plt.title('θ is const, distance is variable')
+    x, y, z = getXYZ('img_posi07.txt')
+    ax1 = f3.add_subplot(1, 3, 1)
+    ax1.scatter(y, z)
+    plt.xlabel('pitch')
+    plt.ylabel('y')
+    ax2 = f3.add_subplot(1, 3, 2)
+    ax2.scatter(y, x)
+    plt.ylabel('distance')
+    plt.xlabel('pitch')
+    ax3 = f3.add_subplot(1, 3, 3)
+    ax3.scatter(x, z)
+    plt.xlabel('distance')
+    plt.ylabel('y')
+    one = np.ones(len(x))
+    ave_pitch = sum(y)/len(y)
+    print('平均俯仰角2: ',ave_pitch)
+    # X = np.c_[one,z**-1,z**-2, z, z**2, z**3,z**4]*math.cos(ave_pitch*math.pi/180)
+    X = np.c_[one,(z-k_theta*ave_pitch)**-1,(z-k_theta*ave_pitch)**-2]
+    theta = least_square(X, x)
+    t2 = theta
+    print('距离2:', theta)
+    r = X@theta
+    ax3.scatter(r, z)
+    ax.scatter(z,y,r)
+
+    f4 = plt.figure(4)
+    # plt.title('$\\theta$恒定时, 距离与灯坐标关系')
+    # plt.title('θ is const, distance is variable')
+    x, y, z = getXYZ('img_posi08.txt')
+    ax1 = f4.add_subplot(1, 3, 1)
+    ax1.scatter(y, z)
+    plt.xlabel('pitch')
+    plt.ylabel('y')
+    ax2 = f4.add_subplot(1, 3, 2)
+    ax2.scatter(y, x)
+    plt.ylabel('distance')
+    plt.xlabel('pitch')
+    ax3 = f4.add_subplot(1, 3, 3)
+    ax3.scatter(x, z)
+    plt.xlabel('distance')
+    plt.ylabel('y')
+    one = np.ones(len(x))
+    ave_pitch = sum(y)/len(y)
+    print('平均俯仰角3: ',ave_pitch)
+    # X = np.c_[one,z**-1,z**-2, z, z**2, z**3,z**4]*math.cos(ave_pitch*math.pi/180)
+    X = np.c_[one,(z-k_theta*ave_pitch)**-1,(z-k_theta*ave_pitch)**-2]
+    theta = least_square(X, x)
+    t3 = theta
+    print('距离3:', theta)
+    r = X@theta
+    ax3.scatter(r, z)
+    ax.scatter(z,y,r)
+
+    t = (t1+t2+t3)/3
+    print('平均 t: ',t) 
+    # x, y, z = getXYZ('img_posi08.txt')
+    # ave_pitch = sum(y)/len(y)
+    # print('平均俯仰角3: ',ave_pitch)
+    # X = np.c_[one,(z-k_theta*ave_pitch)**-1,(z-k_theta*ave_pitch)**-2]
+    # r = X@theta
+    # ax.scatter(z,y,r)
+
+    x, y, z = getXYZ('img_posi06.txt', 'img_posi05.txt',
+                     'img_posi07.txt', 'img_posi08.txt')
+    one = np.ones(len(x))
+    X = np.c_[one, z, z**2, z**-1, z**-2, z**-3, y]
     Y = x
     theta = least_square(X, Y)
-    print(theta)
+    # print(theta)
 
     # tz = []
     # ty = []
@@ -121,17 +244,24 @@ if __name__ == '__main__':
     y = np.arange(0.5, 36, 0.3)[:99]
     px, py = np.meshgrid(z, y)
     x = px[0]
-    print(x)
     one = np.ones(len(z))
-    x = np.c_[one,x,x**2, x**-1, x**-2, x**-3]
+    x = np.c_[one, x, x**2, x**-1, x**-2, x**-3]
     r = []
     for ey in py[0]:
         y = one*ey
         X = np.c_[x, y]
         r.append(X@theta)
     r = np.array(r)
-    ax.scatter(r, py, px)
+    # ax.scatter(r, py, px)
     # print(r.shape)
     # print(px.shape)
 
+    x = px[0]
+    r = []
+    for ey in py[0]:
+        y = one*ey
+        X = np.c_[one,  (x-k_theta*y)**-1, (x-k_theta*y)**-2]
+        r.append(X@t)
+    r = np.array(r)
+    # ax.scatter(px,py, r)
     plt.show()

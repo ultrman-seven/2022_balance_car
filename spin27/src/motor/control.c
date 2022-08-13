@@ -368,6 +368,7 @@ int32_t miss_waitTime = 100;
 int32_t reGet_waitTime = 20;
 
 int32_t reGet_TurnSpeed = 100;
+
 void variableListInit(void)
 {
     pushVariable("平衡点", &balancePoint);
@@ -390,6 +391,17 @@ void variableListInit(void)
     pushVariable("重见持续", &reGet_waitTime);
 
     pushVariable("重见转速", &reGet_TurnSpeed);
+}
+
+#define K_th 1.262485
+int32_t getRealDistance_lamp2car(uint16_t y)
+{
+    float tmp_y, db_tmp_y,result;
+    tmp_y = y + K_th * MPU_pitch;
+    db_tmp_y = tmp_y * tmp_y;
+
+    result = 5380.0 - 1172317.0 / tmp_y + 67179442.0 / db_tmp_y;
+    return result;
 }
 
 void pidUpdateFunction(void)
