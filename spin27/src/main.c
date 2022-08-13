@@ -132,13 +132,16 @@ void TIM17_IRQHandler(void)
 // #define DangerSpeed 1500
 void picProcess(void);
 void testStop(void);
+point getImgData(void);
+extern point imgPosition;
 int main(void)
 {
     int32_t ledBright = 0;
     globalInit();
 
-    __time17Init(30000, 0xffff);
-    // delayMs(2000);
+    // __time17Init(30000, 0xffff);
+    __time17Init(6000, 0xffff);
+    delayMs(5000);
     while (1)
     {
         // picProcess();
@@ -166,6 +169,9 @@ int main(void)
         // printf("x%.2fy%.2f\n", position_x, position_y);
         // printf("x=%.2f,y=%.2f\r\n", position_x, position_y);
         // printf("r=%.2f,s=%.2f\r\n", getDistance2Center(), getLocationAngleErr()); // rou,theta
+        imgPosition = getImgData();
+        printf("ix=%d,iy=%d,px=%.2f,py=%.2f,p=%.2f\r\n", imgPosition.x, imgPosition.y, position_x, position_y, MPU_pitch);
+        delayMs(15);
     }
 }
 // x:+-1500, y:-2100

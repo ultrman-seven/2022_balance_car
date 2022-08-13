@@ -319,9 +319,11 @@ enum pic_flags
 
 #define GET_PIC_FLAG(flag) ((pictureFlags >> (flag)) & 0x0001)
 #define PIC_FLAG_SET(flag) pictureFlags |= (0x0001 << (flag))
-#define PIC_FLAG_RESET(flag)             \
-    pictureFlags &= ~(0x0001 << (flag)); \
-    pictureCnts[flag] = 0
+#define PIC_FLAG_RESET(flag)                 \
+    {                                        \
+        pictureFlags &= ~(0x0001 << (flag)); \
+        pictureCnts[flag] = 0;               \
+    }
 
 #define IF_CONTINUE_RUNNING(flag, times)   \
     if ((pictureFlags >> (flag)) & 0x0001) \
@@ -349,19 +351,19 @@ enum pic_flags
 
 int32_t y_position2killLamp = 94;
 // int32_t y_position2changePara = 80;
-int32_t y_position2changePara = 81;
+int32_t y_position2changePara = 76; // 81;
 int32_t y_positionLampDie = 90;
 int32_t y_position2ChangeSpeed = 80;
-int32_t lampDieSpeed = 79;
+int32_t lampDieSpeed = 86; // 79;
 // int32_t speedMul1 = 520;
 int32_t speedMul1 = 500;
 int32_t speedMul2 = 120;
-int32_t basSpeedMul = 15;
+int32_t basSpeedMul = 16; // 15;
 
-int32_t paraMul = 24;
+int32_t paraMul = 26; // 24;
 
 // int32_t die_waitTime = 160;
-int32_t die_waitTime = 50;
+int32_t die_waitTime = 42; // 50;
 int32_t miss_waitTime = 100;
 int32_t reGet_waitTime = 20;
 
@@ -477,10 +479,6 @@ void pidUpdateFunction(void)
         imgLastPosition = imgPosition;
 
         IF_CONTINUE_RUNNING(pic_flag_reGet, reGet_waitTime)
-        // if ((getSpeed(RIGHT) - getSpeed(LEFT)) > 2)
-        //     img_x = -distortionList[46];
-        // else if ((getSpeed(LEFT) - getSpeed(RIGHT)) > 2)
-        //     img_x = distortionList[46];
         img_x = (turnDir ? -1 : 1) * reGet_TurnSpeed;
         END_CONTINUE_RUNNING(pic_flag_reGet)
 
@@ -491,17 +489,19 @@ void pidUpdateFunction(void)
         PIC_FLAG_RESET(pic_flag_lamp_miss);
         ph_car_home_speedPid_left.targetVal = baseSpeed * 0.7;
         if ((getSpeed(RIGHT) - getSpeed(LEFT)) > 2)
-            // img_x = distortionList[40];
             img_x = lampDieSpeed;
         else
-            // img_x = -distortionList[40];
             img_x = -lampDieSpeed;
         // END_CONTINUE_RUNNING(pic_flag_lamp_die)
         END_AND_GO_TO_NEXT_CONTINUE_RUNNING(pic_flag_lamp_die, pic_flag_lamp_miss);
 
         IF_CONTINUE_RUNNING(pic_flag_lamp_miss, miss_waitTime)
-        ph_car_home_speedPid_left.targetVal = baseSpeed * 0.5;
-        img_x = 0;
+        // ph_car_home_speedPid_left.targetVal = baseSpeed * 0.5;
+        // img_x = 0;
+        ph_car_home_speedPid_left.targetVal = baseSpeed * 0.8;
+        img_x = sqrt(getLocationAngleErr());
+        if (getDistance2Center() <= 100)
+            PIC_FLAG_RESET(pic_flag_lamp_miss);
         // END_AND_GO_TO_NEXT_CONTINUE_RUNNING(pic_flag_lamp_miss, pic_miss_plan1);
         END_AND_GO_TO_NEXT_CONTINUE_RUNNING(pic_flag_lamp_miss, pic_flag_lamp_die);
 
