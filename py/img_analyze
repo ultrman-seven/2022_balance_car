@@ -43,6 +43,13 @@ def getXYZ(*name):
     return [x, y, z]
 
 
+def least_square(X: np.array, Y: np.array):
+    A = (X.T)@X
+    B = (X.T)@Y
+    theta = np.linalg.solve(A, B)
+    return theta
+
+
 if __name__ == '__main__':
     # plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
     # plt.rcParams['axes.unicode_minus'] = False #用来正常显示负号
@@ -94,4 +101,37 @@ if __name__ == '__main__':
     ax3.scatter(x, z)
     plt.xlabel('distance')
     plt.ylabel('y')
+
+    x, y, z = getXYZ('img_posi06.txt','img_posi05.txt', 'img_posi07.txt', 'img_posi08.txt')
+    one = np.ones(len(x))
+    X = np.c_[one,z,z**2, z**-1, z**-2, z**-3, y]
+    Y = x
+    theta = least_square(X, Y)
+    print(theta)
+
+    # tz = []
+    # ty = []
+    # for i in range(len(z)):
+    #     if(i%10 == 0):
+    #         tz.append(z[i])
+    #         ty.append(y[i])
+    # z = np.array(tz)
+    # y = np.array(ty)
+    z = np.arange(31.0, 120.0, 0.8)[:99]
+    y = np.arange(0.5, 36, 0.3)[:99]
+    px, py = np.meshgrid(z, y)
+    x = px[0]
+    print(x)
+    one = np.ones(len(z))
+    x = np.c_[one,x,x**2, x**-1, x**-2, x**-3]
+    r = []
+    for ey in py[0]:
+        y = one*ey
+        X = np.c_[x, y]
+        r.append(X@theta)
+    r = np.array(r)
+    ax.scatter(r, py, px)
+    # print(r.shape)
+    # print(px.shape)
+
     plt.show()
