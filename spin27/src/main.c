@@ -133,6 +133,8 @@ void TIM17_IRQHandler(void)
 void picProcess(void);
 void testStop(void);
 point getImgData(void);
+int32_t getRealDistance_lamp2car(uint16_t y);
+
 extern point imgPosition;
 int main(void)
 {
@@ -169,8 +171,11 @@ int main(void)
         // printf("x%.2fy%.2f\n", position_x, position_y);
         // printf("x=%.2f,y=%.2f\r\n", position_x, position_y);
         // printf("r=%.2f,s=%.2f\r\n", getDistance2Center(), getLocationAngleErr()); // rou,theta
+
         imgPosition = getImgData();
         printf("ix=%d,iy=%d,px=%.2f,py=%.2f,p=%.2f\r\n", imgPosition.x, imgPosition.y, position_x, position_y, MPU_pitch);
+        // if (imgPosition.x && imgPosition.y >= 20)
+        //     printf("x=%d,y=%.2f,s=%.2f\r\n", imgPosition.y, getRealDistance_lamp2car(imgPosition.y) / 16.0, sqrt(position_x * position_x + position_y * position_y) / 16.0);
         delayMs(15);
     }
 }

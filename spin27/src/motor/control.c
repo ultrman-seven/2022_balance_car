@@ -293,7 +293,7 @@ uint8_t turnDir = 0;
 
 // const uint8_t distortionList[49]
 const uint8_t distortionList[] = {
-    0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+    0, 0, 1, 3, 4, 5, 6, 7, 8, 9,
     10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
     20, 21, 22, 23, 24, 25, 26, 27, 28, 30,
     32, 34, 36, 38, 41, 44, 48, 53, 57,
@@ -351,19 +351,19 @@ enum pic_flags
 
 int32_t y_position2killLamp = 94;
 // int32_t y_position2changePara = 80;
-int32_t y_position2changePara = 76; // 81;
-int32_t y_positionLampDie = 90;
-int32_t y_position2ChangeSpeed = 80;
-int32_t lampDieSpeed = 86; // 79;
+int32_t y_position2changePara = 100; // 76; // 81;
+int32_t y_positionLampDie = 40;      // 90;
+int32_t y_position2ChangeSpeed = 80; // 80;
+int32_t lampDieSpeed = 86;            // 79;
 // int32_t speedMul1 = 520;
-int32_t speedMul1 = 500;
-int32_t speedMul2 = 120;
+int32_t speedMul1 = 1000;
+int32_t speedMul2 = 240;
 int32_t basSpeedMul = 16; // 15;
 
 int32_t paraMul = 26; // 24;
 
 // int32_t die_waitTime = 160;
-int32_t die_waitTime = 42; // 50;
+int32_t die_waitTime = 35; // 42; // 50;
 int32_t miss_waitTime = 100;
 int32_t reGet_waitTime = 20;
 
@@ -396,14 +396,22 @@ void variableListInit(void)
 #define K_th 1.262485
 int32_t getRealDistance_lamp2car(uint16_t y)
 {
-    float tmp_y, db_tmp_y,result;
+    float tmp_y, db_tmp_y, result;
     tmp_y = y + K_th * MPU_pitch;
     db_tmp_y = tmp_y * tmp_y;
 
     result = 5380.0 - 1172317.0 / tmp_y + 67179442.0 / db_tmp_y;
-    return result;
+    if (result > 3500)
+        result = 3500;
+    // return 350 - result / 10;
+    return result / 10;
 }
-
+void lampDistanceTest(void)
+{
+    screenClear();
+    imgPosition = getImgData();
+    OLED_printf("d:%d", getRealDistance_lamp2car(imgPosition.y));
+}
 void pidUpdateFunction(void)
 {
     float y, r;
@@ -416,8 +424,9 @@ void pidUpdateFunction(void)
 
         if (++picCnt == 3)
         {
-            turnDir = (imgPosition.x < (PIC_COL / 2));
             imgPosition = getImgData();
+            turnDir = (imgPosition.x < (PIC_COL / 2));
+            imgPosition.y = getRealDistance_lamp2car(imgPosition.y);
             // imgPosition.x = PIC_COL / 2;
             // imgPosition.y = PIC_LINE / 2;
 
@@ -428,7 +437,7 @@ void pidUpdateFunction(void)
             jb_tmp *= img_sign;
             picCnt = 0;
 
-            if (imgPosition.y >= y_position2changePara)
+            if (imgPosition.y <= y_position2changePara)
                 jb_tmp = jb_tmp * paraMul / 10;
         }
 
@@ -464,12 +473,13 @@ void pidUpdateFunction(void)
         }
         else //有灯
         {
-            // ph_car_home_speedPid_left.targetVal = baseSpeed - (imgPosition.y * baseSpeed / 350);
-            if (imgPosition.y >= y_position2ChangeSpeed)
-                ph_car_home_speedPid_left.targetVal = baseSpeed - (imgPosition.y * baseSpeed / speedMul1);
+            ph_car_home_speedPid_left.targetVal = baseSpeed - (imgPosition.y * baseSpeed / 350);
+            if (imgPosition.y <= y_position2ChangeSpeed)
+                ph_car_home_speedPid_left.targetVal = baseSpeed + (imgPosition.y * baseSpeed / speedMul1);
             else
-                ph_car_home_speedPid_left.targetVal = baseSpeed * basSpeedMul / 10 - (imgPosition.y) * baseSpeed / speedMul2;
+                ph_car_home_speedPid_left.targetVal = baseSpeed * basSpeedMul / 10 + (imgPosition.y) * baseSpeed / speedMul2;
             // lampDieFlag = 0;
+            // ph_car_home_speedPid_left.targetVal = baseSpeed * basSpeedMul / 10;
             PIC_FLAG_RESET(pic_flag_lamp_die);
             // PIC_FLAG_RESET(pic_flag_reGet);
             // PIC_FLAG_RESET(pic_flag_lamp_miss);
@@ -479,7 +489,7 @@ void pidUpdateFunction(void)
                 PIC_FLAG_SET(pic_flag_reGet);
                 // beep100Ms();
             }
-            if (imgPosition.y >= y_position2killLamp)
+            if (imgPosition.y <= y_position2killLamp)
             {
                 if ((getSpeed(RIGHT) - getSpeed(LEFT)) > 2)
                     img_x = distortionList[45];

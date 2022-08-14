@@ -1,11 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-import math
 
 
-def getData(name):
-    with open('py/dat/8013/'+name) as f:
+def getData(name, date='8013/'):
+    with open('py/dat/'+date+name) as f:
         # ix,iy,px,py,p=[],[],[],[],[]
         data = [[], [], [], [], []]
         for l in f.readlines()[:-1]:
@@ -128,8 +127,8 @@ if __name__ == '__main__':
     print('t2:', t2)
     print('t3:', t3)
     print('t4:', t4)
-    k_theta =  ((t1+t2+t3+t4)/4)[-1]
-    print('pitch-y 平均斜率:',k_theta)
+    k_theta = ((t1+t2+t3+t4)/4)[-1]
+    print('pitch-y 平均斜率:', k_theta)
 
     f2 = plt.figure(2)
     # plt.title('$\\theta$恒定时, 距离与灯坐标关系')
@@ -149,15 +148,15 @@ if __name__ == '__main__':
     plt.ylabel('y')
     one = np.ones(len(x))
     ave_pitch = sum(y)/len(y)
-    print('平均俯仰角: ',ave_pitch)
+    print('平均俯仰角: ', ave_pitch)
     # X = np.c_[one,z**-1,z**-2, z, z**2, z**3,z**4]*math.cos(ave_pitch*math.pi/180)
-    X = np.c_[one,(z-k_theta*ave_pitch)**-1,(z-k_theta*ave_pitch)**-2]
+    X = np.c_[one, (z-k_theta*ave_pitch)**-1, (z-k_theta*ave_pitch)**-2]
     theta = least_square(X, x)
     print('距离：', theta)
     t1 = theta
     r = X@theta
     ax3.scatter(r, z)
-    ax.scatter(z,y,r)
+    ax.scatter(z, y, r)
 
     f3 = plt.figure(3)
     # plt.title('$\\theta$恒定时, 距离与灯坐标关系')
@@ -177,15 +176,15 @@ if __name__ == '__main__':
     plt.ylabel('y')
     one = np.ones(len(x))
     ave_pitch = sum(y)/len(y)
-    print('平均俯仰角2: ',ave_pitch)
+    print('平均俯仰角2: ', ave_pitch)
     # X = np.c_[one,z**-1,z**-2, z, z**2, z**3,z**4]*math.cos(ave_pitch*math.pi/180)
-    X = np.c_[one,(z-k_theta*ave_pitch)**-1,(z-k_theta*ave_pitch)**-2]
+    X = np.c_[one, (z-k_theta*ave_pitch)**-1, (z-k_theta*ave_pitch)**-2]
     theta = least_square(X, x)
     t2 = theta
     print('距离2:', theta)
     r = X@theta
     ax3.scatter(r, z)
-    ax.scatter(z,y,r)
+    ax.scatter(z, y, r)
 
     f4 = plt.figure(4)
     # plt.title('$\\theta$恒定时, 距离与灯坐标关系')
@@ -205,18 +204,18 @@ if __name__ == '__main__':
     plt.ylabel('y')
     one = np.ones(len(x))
     ave_pitch = sum(y)/len(y)
-    print('平均俯仰角3: ',ave_pitch)
+    print('平均俯仰角3: ', ave_pitch)
     # X = np.c_[one,z**-1,z**-2, z, z**2, z**3,z**4]*math.cos(ave_pitch*math.pi/180)
-    X = np.c_[one,(z-k_theta*ave_pitch)**-1,(z-k_theta*ave_pitch)**-2]
+    X = np.c_[one, (z-k_theta*ave_pitch)**-1, (z-k_theta*ave_pitch)**-2]
     theta = least_square(X, x)
     t3 = theta
     print('距离3:', theta)
     r = X@theta
     ax3.scatter(r, z)
-    ax.scatter(z,y,r)
+    ax.scatter(z, y, r)
 
     t = (t1+t2+t3)/3
-    print('平均 t: ',t) 
+    print('平均 t: ', t)
     # x, y, z = getXYZ('img_posi08.txt')
     # ave_pitch = sum(y)/len(y)
     # print('平均俯仰角3: ',ave_pitch)

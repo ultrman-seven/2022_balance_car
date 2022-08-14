@@ -5,8 +5,10 @@
 #include "MM32SPIN2xx_p.h"
 typedef struct
 {
-    uint16_t x;
-    uint16_t y;
+    // uint16_t x;
+    // uint16_t y;
+    int32_t x;
+    int32_t y;
 } point;
 typedef union
 {
