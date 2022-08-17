@@ -56,7 +56,7 @@ void arrayLoad(void)
     uint16_t tmp, cnt = currentIndex;
     uint32_t *buf = (uint32_t *)calloc(currentLen, sizeof(uint32_t));
     uint32_t *buf_cp = buf;
-    Flash_loadData(FlashPage_Variable, buf, currentLen);
+    Flash_loadData(FlashPage_Array, buf, currentLen);
     while (cnt--)
     {
         tmp = arraySizes[cnt];

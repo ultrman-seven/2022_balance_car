@@ -1,4 +1,4 @@
-#include "common.h"
+﻿#include "common.h"
 #include "oledio.h"
 #include "beep.h"
 #include "motor.h"
@@ -127,6 +127,7 @@ void TIM17_IRQHandler(void)
     TIM_ClearITPendingBit(TIM17, TIM_FLAG_Update);
     TIM_Cmd(TIM17, DISABLE);
     yawErr = MPU_yaw;
+    position_x = position_y = 0;
     beep100Ms();
 }
 // #define DangerSpeed 1500
@@ -139,6 +140,9 @@ extern point imgPosition;
 
 // #define __HOST_SHOW
 #include "fuzzy.h"
+#define Protect_LOG(name) \
+    screenClear();        \
+    OLED_printf("触发保护:\n%s", name)
 // #define fuzzy_lamp_position_size 7
 // float fuzzy_lamp_speed4test[7] = {20,40, 70, 75, 84, 95, 140};
 // float lamp_speed4test_fuzzy_rule[7] = {-300, -280, -260, -240, -210, -180, -150};
@@ -163,19 +167,32 @@ int main(void)
             TIM2->CCR3 = 0;
 
         if (getSpeed(LEFT) >= DangerSpeed)
-            // NVIC_SystemReset();
+        // NVIC_SystemReset();
+        {
             testStop();
+            Protect_LOG("过速");
+        }
         if (getSpeed(LEFT) <= -DangerSpeed)
-            // NVIC_SystemReset();
+        // NVIC_SystemReset();
+        {
             testStop();
+            Protect_LOG("过速");
+        }
         if (getSpeed(RIGHT) >= DangerSpeed)
+        {
             testStop();
+            Protect_LOG("过速");
+        }
         if (getSpeed(RIGHT) <= -DangerSpeed)
+        {
             testStop();
+            Protect_LOG("过速");
+        }
         if (TIM14->CNT >= 1000)
         {
             testStop();
             beep100Ms();
+            Protect_LOG("陀螺仪中断超时");
         }
 
         // printf("p=%.2f,r=%.2f,y=%.2f\r\n", MPU_pitch, MPU_roll, MPU_yaw);

@@ -37,6 +37,7 @@
 #include "hardware/beep.h"
 #include "menu.h"
 #include "locate.h"
+#include "stdlib.h"
 
 int32_t balancePoint = 95;
 // int32_t balancePoint = 155;
@@ -79,10 +80,10 @@ void setBaseSpeed(int32_t s)
 {
     baseSpeed = s;
 }
-PID_paraTypdef ph_car_home_anglePid = {
-    .Kp = 180, .Kd = 60, .Ki = 0, .targetVal = 0, .proportionLast = 0};
 // PID_paraTypdef ph_car_home_anglePid = {
-//     .Kp = 88, .Kd = 39, .Ki = 0, .targetVal = 0, .proportionLast = 0};
+//     .Kp = 180, .Kd = 60, .Ki = 0, .targetVal = 0, .proportionLast = 0};
+PID_paraTypdef ph_car_home_anglePid = {
+    .Kp = 160, .Kd = 60, .Ki = 0, .targetVal = 0, .proportionLast = 0};
 PID_paraTypdef ph_car_home_speedPid = {
     .Kp = 25, .Ki = 4, .Kd = 0, .targetVal = 0};
 
@@ -358,7 +359,8 @@ int32_t y_position2killLamp = 125; // 94;
 int32_t y_position2changePara = 66;  // 81;
 int32_t y_positionLampDie = 105;     // 90;
 int32_t y_position2ChangeSpeed = 80; // 80;
-int32_t lampDieSpeed = 90;           // 86;           // 79;
+int32_t lampDieSpeed = 95;           // 90;// 86;// 79;
+int32_t killSpeed = 120;
 // int32_t speedMul1 = 520;
 int32_t speedMul1 = 500;
 int32_t speedMul2 = 120;
@@ -370,30 +372,78 @@ int32_t paraMul = 26; // 24;
 int32_t die_waitTime = 42; // 50;
 int32_t miss_waitTime = 100;
 int32_t reGet_waitTime = 20;
-
+int32_t miss_speed = -160;
+int32_t toCenter_mul = 10;
 int32_t reGet_TurnSpeed = 100;
 
 #include "fuzzy.h"
 #define fuzzy_lamp_position_size 7
 int32_t fuzzy_lamp_position[7] = {20, 60, 72, 75, 84, 95, 140};
-int32_t lamp_speed_fuzzy_rule[7] = {-300, -260, -240, -200, -180, -160, -150};
-int32_t lamp_turnPara_fuzzy_rule[7] = {85, 96, 110, 125, 142, 145, 145};
+int32_t lamp_speed_fuzzy_rule[7] = {-300, -270, -255, -220, -190, -170, -150}; // {-300, -260, -240, -200, -180, -160, -150};
+int32_t lamp_turnPara_fuzzy_rule[7] = {90, 95, 120, 135, 145, 145, 145};       // {85, 96, 110, 125, 142, 145, 145};
 int32_t *arrayList[] = {fuzzy_lamp_position, lamp_speed_fuzzy_rule, lamp_turnPara_fuzzy_rule};
+#include "flash.h"
+void fuzzyArrayLoad(void)
+{
+    uint16_t tmp, cnt = 3;
+    uint32_t *buf = (uint32_t *)calloc(fuzzy_lamp_position_size * 3, sizeof(uint32_t));
+    uint32_t *ary, *buf_cp = buf;
+    Flash_loadData(FlashPage_Fuzzy_BLEuart, buf, fuzzy_lamp_position_size * 3);
+    while (cnt--)
+    {
+        ary = arrayList[cnt];
+        tmp = fuzzy_lamp_position_size;
+        while (tmp--)
+            arrayList[cnt][tmp] = *buf_cp++;
+    }
+    free(buf);
+}
+void fuzzyArraySave(void)
+{
+    uint16_t tmp, cnt = 3;
+    uint32_t *dat = (uint32_t *)calloc(fuzzy_lamp_position_size * 3, sizeof(uint32_t));
+    uint32_t *ary, *dat_cp = dat;
+    while (cnt--)
+    {
+        ary = arrayList[cnt];
+        tmp = fuzzy_lamp_position_size;
+        while (tmp--)
+            *dat_cp++ = arrayList[cnt][tmp];
+    }
+    Flash_saveData(FlashPage_Fuzzy_BLEuart, dat, fuzzy_lamp_position_size * 3);
+    free(dat);
+}
 void fuzzyArraySet(uint8_t idx, uint8_t len, uint8_t *dat)
 {
     u32_split tmp;
-    int32_t *ary = arrayList[idx];
-    screenClear();
-    while (len--)
+    if (idx == 0xff)
     {
-        tmp.unit[3] = *dat++;
-        tmp.unit[2] = *dat++;
-        tmp.unit[1] = *dat++;
-        tmp.unit[0] = *dat++;
-        *ary++ = tmp.sign_val;
-        OLED_printf("%d,", tmp.sign_val);
+        fuzzyArraySave();
+    }
+    else if (idx == 0xfe)
+    {
+        fuzzyArrayLoad();
+        screenClear();
+        idx = 7;
+        while (idx--)
+            OLED_printf("%d,", arrayList[0][idx]);
+    }
+    else
+    {
+        int32_t *ary = arrayList[idx];
+        screenClear();
+        while (len--)
+        {
+            tmp.unit[3] = *dat++;
+            tmp.unit[2] = *dat++;
+            tmp.unit[1] = *dat++;
+            tmp.unit[0] = *dat++;
+            *ary++ = tmp.sign_val;
+            OLED_printf("%d,", tmp.sign_val);
+        }
     }
 }
+
 void variableListInit(void)
 {
     pushVariable("平衡点", &balancePoint);
@@ -416,10 +466,37 @@ void variableListInit(void)
     pushVariable("重见持续", &reGet_waitTime);
 
     pushVariable("重见转速", &reGet_TurnSpeed);
+    pushVariable("丢灯转速", &miss_speed);
+    pushVariable("回中心速度", &toCenter_mul);
+    pushVariable("提前灭速", &killSpeed);
 
     pushArray("模糊论域:y", fuzzy_lamp_position, fuzzy_lamp_position_size);
     pushArray("规则表-速度", lamp_speed_fuzzy_rule, fuzzy_lamp_position_size);
     pushArray("规则表-参数", lamp_turnPara_fuzzy_rule, fuzzy_lamp_position_size);
+}
+
+void paraPlan1(void)
+{
+    y_position2killLamp = 116;
+    y_positionLampDie = 105;
+    lampDieSpeed = 105;
+
+    die_waitTime = 42;
+    miss_waitTime = 200;
+    reGet_waitTime = 20;
+    reGet_TurnSpeed = 100;
+    miss_speed = -160;
+    toCenter_mul = 15;
+    killSpeed = 80;
+
+    turnPid.Ki = 18;
+    turnPid.Kd = 12;
+
+    ph_car_home_anglePid.Kp = 160;
+    ph_car_home_anglePid.Kd = 60;
+    // int32_t fuzzy_lamp_position[7] = {20, 60, 72, 75, 84, 95, 140};
+    // int32_t lamp_speed_fuzzy_rule[7] = {-300, -270, -255, -220, -190, -170, -150};
+    // int32_t lamp_turnPara_fuzzy_rule[7] = {90, 95, 120, 135, 145, 145, 145};
 }
 
 #define K_th 1.262485
@@ -522,8 +599,8 @@ void pidUpdateFunction(void)
             // lampDieFlag = 0;
             // ph_car_home_speedPid_left.targetVal = baseSpeed * basSpeedMul / 10;
             PIC_FLAG_RESET(pic_flag_lamp_die);
-            // PIC_FLAG_RESET(pic_flag_reGet);
-            // PIC_FLAG_RESET(pic_flag_lamp_miss);
+            PIC_FLAG_RESET(pic_flag_reGet);
+            PIC_FLAG_RESET(pic_flag_lamp_miss);
             if (imgLastPosition.x == 0) //转的时候刚找到灯
             {
                 // img_reGet_flag = 1;
@@ -533,9 +610,10 @@ void pidUpdateFunction(void)
             if (imgPosition.y >= y_position2killLamp)
             {
                 if ((getSpeed(RIGHT) - getSpeed(LEFT)) > 2)
-                    img_x = distortionList[45];
+                    // img_x = distortionList[45];
+                    img_x = killSpeed;
                 else
-                    img_x = -distortionList[45];
+                    img_x = -killSpeed;
             }
             // beepSet(ENABLE);
         }
@@ -559,10 +637,11 @@ void pidUpdateFunction(void)
         END_AND_GO_TO_NEXT_CONTINUE_RUNNING(pic_flag_lamp_die, pic_flag_lamp_miss);
 
         IF_CONTINUE_RUNNING(pic_flag_lamp_miss, miss_waitTime)
-        // ph_car_home_speedPid_left.targetVal = baseSpeed * 0.5;
         // img_x = 0;
-        ph_car_home_speedPid_left.targetVal = baseSpeed * 0.8;
-        img_x = sqrt(getLocationAngleErr());
+        // ph_car_home_speedPid_left.targetVal = baseSpeed * 0.8;
+        ph_car_home_speedPid_left.targetVal = miss_speed;
+        // img_x = toCenter_mul * sqrt(getLocationAngleErr()) / 10.0;
+        img_x = toCenter_mul * sqrt(getSubmissLocationAngleErr((getSpeed(RIGHT) - getSpeed(LEFT)) > 2)) / 10.0;
         if (getDistance2Center() <= 100)
             PIC_FLAG_RESET(pic_flag_lamp_miss);
         // END_AND_GO_TO_NEXT_CONTINUE_RUNNING(pic_flag_lamp_miss, pic_miss_plan1);

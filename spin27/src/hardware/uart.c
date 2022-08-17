@@ -98,13 +98,15 @@ typedef enum
     Set_Variable,
     Get_Fuzzy,
     Get_Variable,
-    R_U_N
+    R_U_N,
+    S_T_O_P
 } UART_CMDs;
 
 uint8_t *bufPointer = rxBuf;
 uint8_t uartWaitCmdState = 1;
 void cameraInit(void);
 void cameraSetOn(void);
+void testStop(void);
 void ph_car_home_cam_start(void);
 void adjustVariable(uint8_t idx, uint8_t *val);
 void UART2_IRQHandler(void)
@@ -173,6 +175,9 @@ void UART2_IRQHandler(void)
                 break;
             case R_U_N:
                 ph_car_home_cam_start();
+                break;
+            case S_T_O_P:
+                testStop();
                 break;
             case Set_Fuzzy:
                 fuzzyArraySet(rxBuf[2], rxBuf[3], rxBuf + 4);

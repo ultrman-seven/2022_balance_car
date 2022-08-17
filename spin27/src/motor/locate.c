@@ -32,3 +32,29 @@ float getLocationAngleErr(void)
         theta += 360;
     return theta;
 }
+
+float getSubmissLocationAngleErr(uint8_t dir)
+{
+    int32_t dx, dy;
+    float theta;
+    dx = position_x - Center_X;
+    dy = position_y - Center_Y;
+    theta = atan2(dy, dx);
+    theta = theta * 180 / PI;
+    theta = 90 + MPU_yaw - theta - yawErr;
+    if (theta >= 360)
+        theta -= 360;
+    if (theta <= -360)
+        theta += 360;
+    if (dir)
+    {
+        if (theta < 0)
+            theta += 360;
+    }
+    else
+    {
+        if (theta > 0)
+            theta -= 360;
+    }
+    return theta;
+}
