@@ -3,10 +3,9 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/**",
-                "${workspaceFolder}/MM32SPIN2xx_p_LIB/Include",
-                "D:\\Program Files\\arm keil\\ARM\\**",
-                "${workspaceFolder}/src/oled"
+                // "${workspaceFolder}/**",
+                "${workspaceFolder}/spin27/**",
+                "D:\\Program Files\\arm keil\\ARM\\**"
             ],
             "defines": [
                 "_DEBUG",

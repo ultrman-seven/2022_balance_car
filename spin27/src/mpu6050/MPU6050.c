@@ -362,9 +362,30 @@ void mpuUpdate(void)
     Read_DMP(&MPU_pitch, &MPU_roll, &MPU_yaw);
     tim17Callback();
     pidUpdateFunction();
+    TIM14->CNT = 0;
+}
+void __time14Init(void)
+{
+    TIM_TimeBaseInitTypeDef time;
+
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM14, ENABLE);
+    time.TIM_ClockDivision = TIM_CKD_DIV1;
+    time.TIM_CounterMode = TIM_CounterMode_Up;
+    time.TIM_RepetitionCounter = 0;
+    time.TIM_Period = 0xffff;
+    time.TIM_Prescaler = 9599;
+    TIM_TimeBaseInit(TIM14, &time);
+
+    TIM_ClearFlag(TIM14, TIM_FLAG_Update);
+    TIM_Cmd(TIM14, ENABLE);
+    TIM14->CNT = 0;
 }
 void WY_EXTI_Init(const char *k, void (*callback)(void));
-void MPU6050_INT_Ini(void) { WY_EXTI_Init("d5", mpuUpdate); }
+void MPU6050_INT_Ini(void)
+{
+    WY_EXTI_Init("d5", mpuUpdate);
+    __time14Init();
+}
 
 #define MPU_INT_PORT GPIOD
 #define MPU_INT_RCC RCC_AHBPeriph_GPIOD

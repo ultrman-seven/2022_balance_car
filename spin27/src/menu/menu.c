@@ -15,6 +15,7 @@ void menuInit(void)
     screenClear();
     keyInterruptInit();
     variableMenuInit();
+    arrayMenuInit();
     menuManager.append(mainMenu);
     showMenu(menuManager.getCurrentMenu());
 }

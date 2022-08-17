@@ -38,7 +38,7 @@
 #include "menu.h"
 #include "locate.h"
 
-int32_t balancePoint = 120;
+int32_t balancePoint = 95;
 // int32_t balancePoint = 155;
 // int32_t balancePoint = 190;
 // int32_t balancePoint = 110;
@@ -233,24 +233,28 @@ float getBellFunc(int val)
 }
 
 // PID_paraTypdef turnPid = {.Kp = 10, .Kd = 2, .Ki = 0, .targetVal = 64};
-PID_paraTypdef turnPid = {.Kp = 0, .Kd = 0, .Ki = 1, .targetVal = 0, .integral = 0};
+PID_paraTypdef turnPid = {.Kp = 0, .Kd = 0, .Ki = 1, .targetVal = 0, .integral = 0, .proportionLast = 0};
 // int imgPosition = 64;
 point imgPosition = {0, 0};
 point imgLastPosition = {0, 0};
 int16_t img_x = 0;
 int cam_turn(int val, int16_t gyro, PID_paraTypdef *p)
 {
-    int err = p->targetVal - val;
+    int re, diff, err = p->targetVal - val;
     // if (err > -3 && err < 3)
     //     return (err * p->Kp) / 10 + (gyro * p->Kd) / 20;
     // else
-    p->integral *= 0.9;
+    p->integral *= 0.6;
     p->integral += err;
     if (p->integral >= 7000)
         p->integral = 7000;
     if (p->integral <= -7000)
         p->integral = -7000;
-    return (err * p->Kp + p->integral * p->Ki / 10) / 10;
+    diff = err - p->proportionLast;
+    p->proportionLast = err;
+    re = (err * p->Kp + p->integral * p->Ki / 10 + diff * p->Kd / 10) / 10;
+    // printf("x=%d,y=%d,s=%.1f\r\n", err, re, p->integral);
+    return re;
     // float kg = getBellFunc(err);
     // return err * p->Kp + (-gyro * p->Kd * kg) / 10;
 }
@@ -349,26 +353,47 @@ enum pic_flags
         pictureFlags &= ~(0x0001 << (flag));            \
     }
 
-int32_t y_position2killLamp = 94;
+int32_t y_position2killLamp = 125; // 94;
 // int32_t y_position2changePara = 80;
-int32_t y_position2changePara = 100; // 76; // 81;
-int32_t y_positionLampDie = 40;      // 90;
+int32_t y_position2changePara = 66;  // 81;
+int32_t y_positionLampDie = 105;     // 90;
 int32_t y_position2ChangeSpeed = 80; // 80;
-int32_t lampDieSpeed = 86;            // 79;
+int32_t lampDieSpeed = 90;           // 86;           // 79;
 // int32_t speedMul1 = 520;
-int32_t speedMul1 = 1000;
-int32_t speedMul2 = 240;
+int32_t speedMul1 = 500;
+int32_t speedMul2 = 120;
 int32_t basSpeedMul = 16; // 15;
 
 int32_t paraMul = 26; // 24;
 
 // int32_t die_waitTime = 160;
-int32_t die_waitTime = 35; // 42; // 50;
+int32_t die_waitTime = 42; // 50;
 int32_t miss_waitTime = 100;
 int32_t reGet_waitTime = 20;
 
 int32_t reGet_TurnSpeed = 100;
 
+#include "fuzzy.h"
+#define fuzzy_lamp_position_size 7
+int32_t fuzzy_lamp_position[7] = {20, 60, 72, 75, 84, 95, 140};
+int32_t lamp_speed_fuzzy_rule[7] = {-300, -260, -240, -200, -180, -160, -150};
+int32_t lamp_turnPara_fuzzy_rule[7] = {85, 96, 110, 125, 142, 145, 145};
+int32_t *arrayList[] = {fuzzy_lamp_position, lamp_speed_fuzzy_rule, lamp_turnPara_fuzzy_rule};
+void fuzzyArraySet(uint8_t idx, uint8_t len, uint8_t *dat)
+{
+    u32_split tmp;
+    int32_t *ary = arrayList[idx];
+    screenClear();
+    while (len--)
+    {
+        tmp.unit[3] = *dat++;
+        tmp.unit[2] = *dat++;
+        tmp.unit[1] = *dat++;
+        tmp.unit[0] = *dat++;
+        *ary++ = tmp.sign_val;
+        OLED_printf("%d,", tmp.sign_val);
+    }
+}
 void variableListInit(void)
 {
     pushVariable("平衡点", &balancePoint);
@@ -376,10 +401,10 @@ void variableListInit(void)
 
     pushVariable("变参倍率", &paraMul);
 
-    pushVariable("变参时机", &y_position2changePara);
-    pushVariable("转弯时机", &y_position2killLamp);
-    pushVariable("灭灯标记", &y_positionLampDie);
-    pushVariable("加减速点", &y_position2ChangeSpeed);
+    pushVariable("y:变参", &y_position2changePara);
+    pushVariable("y:转弯", &y_position2killLamp);
+    pushVariable("y:灭灯", &y_positionLampDie);
+    pushVariable("y:加减速", &y_position2ChangeSpeed);
     pushVariable("灭后转速", &lampDieSpeed);
 
     pushVariable("速度倍数", &basSpeedMul);
@@ -391,20 +416,28 @@ void variableListInit(void)
     pushVariable("重见持续", &reGet_waitTime);
 
     pushVariable("重见转速", &reGet_TurnSpeed);
+
+    pushArray("模糊论域:y", fuzzy_lamp_position, fuzzy_lamp_position_size);
+    pushArray("规则表-速度", lamp_speed_fuzzy_rule, fuzzy_lamp_position_size);
+    pushArray("规则表-参数", lamp_turnPara_fuzzy_rule, fuzzy_lamp_position_size);
 }
 
 #define K_th 1.262485
+#define K_th2 0.6531915
 int32_t getRealDistance_lamp2car(uint16_t y)
 {
-    float tmp_y, db_tmp_y, result;
+    float tmp_y; //, db_tmp_y, result;
     tmp_y = y + K_th * MPU_pitch;
-    db_tmp_y = tmp_y * tmp_y;
+    // if (tmp_y >= 102)
+    //     tmp_y = y + K_th2 * MPU_pitch;
+    // db_tmp_y = tmp_y * tmp_y;
 
-    result = 5380.0 - 1172317.0 / tmp_y + 67179442.0 / db_tmp_y;
-    if (result > 3500)
-        result = 3500;
+    // result = 5380.0 - 1172317.0 / tmp_y + 67179442.0 / db_tmp_y;
+    // if (result > 3500)
+    //     result = 3500;
     // return 350 - result / 10;
-    return result / 10;
+    return tmp_y;
+    // return result / 10;
 }
 void lampDistanceTest(void)
 {
@@ -412,6 +445,7 @@ void lampDistanceTest(void)
     imgPosition = getImgData();
     OLED_printf("d:%d", getRealDistance_lamp2car(imgPosition.y));
 }
+
 void pidUpdateFunction(void)
 {
     float y, r;
@@ -425,6 +459,8 @@ void pidUpdateFunction(void)
         if (++picCnt == 3)
         {
             imgPosition = getImgData();
+            if (imgPosition.x == 0xffff)
+                return;
             turnDir = (imgPosition.x < (PIC_COL / 2));
             imgPosition.y = getRealDistance_lamp2car(imgPosition.y);
             // imgPosition.x = PIC_COL / 2;
@@ -435,10 +471,13 @@ void pidUpdateFunction(void)
             jb_tmp *= img_sign;
             jb_tmp = distortionList[jb_tmp];
             jb_tmp *= img_sign;
+            // printf("x=%d\r\n", jb_tmp);
+            // jb_tmp += 5;
             picCnt = 0;
 
-            if (imgPosition.y <= y_position2changePara)
-                jb_tmp = jb_tmp * paraMul / 10;
+            // if (imgPosition.y >= y_position2changePara)
+            //     jb_tmp = jb_tmp * paraMul / 10;
+            turnPid.Kp = fuzzy_1_dimensional(imgPosition.y, fuzzy_lamp_position_size, lamp_turnPara_fuzzy_rule, fuzzy_lamp_position);
         }
 
         // imgPosition.x = PIC_COL / 2;
@@ -473,11 +512,13 @@ void pidUpdateFunction(void)
         }
         else //有灯
         {
-            ph_car_home_speedPid_left.targetVal = baseSpeed - (imgPosition.y * baseSpeed / 350);
-            if (imgPosition.y <= y_position2ChangeSpeed)
-                ph_car_home_speedPid_left.targetVal = baseSpeed + (imgPosition.y * baseSpeed / speedMul1);
-            else
-                ph_car_home_speedPid_left.targetVal = baseSpeed * basSpeedMul / 10 + (imgPosition.y) * baseSpeed / speedMul2;
+            // ph_car_home_speedPid_left.targetVal = baseSpeed - (imgPosition.y * baseSpeed / 350);
+            // if (imgPosition.y >= y_position2ChangeSpeed)
+            //     ph_car_home_speedPid_left.targetVal = baseSpeed + (imgPosition.y * baseSpeed / speedMul1);
+            // else
+            //     ph_car_home_speedPid_left.targetVal = baseSpeed * basSpeedMul / 10 + (imgPosition.y) * baseSpeed / speedMul2;
+            ph_car_home_speedPid_left.targetVal = fuzzy_1_dimensional(imgPosition.y, fuzzy_lamp_position_size, lamp_speed_fuzzy_rule, fuzzy_lamp_position);
+            // printf("s=%d\r\n", ph_car_home_speedPid_left.targetVal);
             // lampDieFlag = 0;
             // ph_car_home_speedPid_left.targetVal = baseSpeed * basSpeedMul / 10;
             PIC_FLAG_RESET(pic_flag_lamp_die);
@@ -489,7 +530,7 @@ void pidUpdateFunction(void)
                 PIC_FLAG_SET(pic_flag_reGet);
                 // beep100Ms();
             }
-            if (imgPosition.y <= y_position2killLamp)
+            if (imgPosition.y >= y_position2killLamp)
             {
                 if ((getSpeed(RIGHT) - getSpeed(LEFT)) > 2)
                     img_x = distortionList[45];
@@ -716,7 +757,7 @@ void sendPara(uint8_t p)
     }
 }
 
-PID_paraTypdef *pidList[] = {&anglePid, &speedPidLeft, &speedPidRight};
+PID_paraTypdef *pidList[] = {&ph_car_home_anglePid, &ph_car_home_speedPid_left, &turnPid};
 void adjustPara(uint8_t num, uint8_t *pidPara)
 {
     uint16_t tmp;

@@ -3,8 +3,9 @@
 #include "oledio.h"
 #include "motor/control.h"
 #include "uart.h"
+#include "beep.h"
 
-#define UART_RX_BUF_SIZE 15
+#define UART_RX_BUF_SIZE 64
 uint8_t rxBuf[UART_RX_BUF_SIZE] = {0};
 
 void uartInit(void)
@@ -92,13 +93,20 @@ typedef enum
     Set_Angle,
     Set_Turn,
     Set_Balance,
-    Get_Para
+    Get_Para,
+    Set_Fuzzy,
+    Set_Variable,
+    Get_Fuzzy,
+    Get_Variable,
+    R_U_N
 } UART_CMDs;
 
 uint8_t *bufPointer = rxBuf;
 uint8_t uartWaitCmdState = 1;
 void cameraInit(void);
 void cameraSetOn(void);
+void ph_car_home_cam_start(void);
+void adjustVariable(uint8_t idx, uint8_t *val);
 void UART2_IRQHandler(void)
 {
     if (UART_GetITStatus(UART2, UART_IT_RXIEN) == SET)
@@ -140,6 +148,7 @@ void UART2_IRQHandler(void)
                 break;
             case Para_Adj:
                 adjustPara(rxBuf[2], rxBuf + 3);
+                beep100Ms();
                 // printf("num:%d\n",rxBuf[2]);
                 break;
             case Set_Angle:
@@ -160,6 +169,18 @@ void UART2_IRQHandler(void)
                 sendPara(rxBuf[2]);
                 uart1SendByte(CMD_END_0);
                 uart1SendByte(CMD_END_1);
+                beep100Ms();
+                break;
+            case R_U_N:
+                ph_car_home_cam_start();
+                break;
+            case Set_Fuzzy:
+                fuzzyArraySet(rxBuf[2], rxBuf[3], rxBuf + 4);
+                beep100Ms();
+                break;
+            case Set_Variable:
+                adjustVariable(rxBuf[2], rxBuf + 3);
+                beep100Ms();
                 break;
             default:
                 break;

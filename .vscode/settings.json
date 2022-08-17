@@ -64,7 +64,21 @@
         "xutility": "c",
         "battery.h": "c",
         "locate.h": "c",
-        "math.h": "c"
+        "math.h": "c",
+        "fuzzy.h": "c",
+        "typeinfo": "c",
+        "__bit_reference": "c",
+        "__functional_base": "c",
+        "__node_handle": "c",
+        "algorithm": "c",
+        "deque": "c",
+        "__memory": "c",
+        "optional": "c",
+        "ratio": "c",
+        "tuple": "c",
+        "xlocnum": "c",
+        "xtr1common": "c",
+        "beep.h": "c"
     },
     "cSpell.enableFiletypes": [
         "8051",

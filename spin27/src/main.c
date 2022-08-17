@@ -136,6 +136,12 @@ point getImgData(void);
 int32_t getRealDistance_lamp2car(uint16_t y);
 
 extern point imgPosition;
+
+// #define __HOST_SHOW
+#include "fuzzy.h"
+// #define fuzzy_lamp_position_size 7
+// float fuzzy_lamp_speed4test[7] = {20,40, 70, 75, 84, 95, 140};
+// float lamp_speed4test_fuzzy_rule[7] = {-300, -280, -260, -240, -210, -180, -150};
 int main(void)
 {
     int32_t ledBright = 0;
@@ -143,7 +149,9 @@ int main(void)
 
     // __time17Init(30000, 0xffff);
     __time17Init(6000, 0xffff);
+#ifdef __HOST_SHOW
     delayMs(5000);
+#endif
     while (1)
     {
         // picProcess();
@@ -160,23 +168,33 @@ int main(void)
         if (getSpeed(LEFT) <= -DangerSpeed)
             // NVIC_SystemReset();
             testStop();
-        // if (getSpeed(RIGHT) >= DangerSpeed)
-        //     NVIC_SystemReset();
-        // if (getSpeed(RIGHT) <= -DangerSpeed)
-        //     NVIC_SystemReset();
-        // printf("v=%.2f\r\n", getVoltage());
+        if (getSpeed(RIGHT) >= DangerSpeed)
+            testStop();
+        if (getSpeed(RIGHT) <= -DangerSpeed)
+            testStop();
+        if (TIM14->CNT >= 1000)
+        {
+            testStop();
+            beep100Ms();
+        }
+
         // printf("p=%.2f,r=%.2f,y=%.2f\r\n", MPU_pitch, MPU_roll, MPU_yaw);
         // printf("x=%d,y=%d,z=%d\r\n", gyro[0], gyro[1], gyro[2]);
         // printf("l=%d,r=%d\r\n", getSpeed(LEFT),getSpeed(RIGHT));
         // printf("x%.2fy%.2f\n", position_x, position_y);
         // printf("x=%.2f,y=%.2f\r\n", position_x, position_y);
         // printf("r=%.2f,s=%.2f\r\n", getDistance2Center(), getLocationAngleErr()); // rou,theta
-
+        // imgPosition = getImgData();
+        // imgPosition.y = getRealDistance_lamp2car(imgPosition.y);
+        // printf("s=%.2f,x=%d\r\n", -fuzzy_1_dimensional(imgPosition.y, 7, lamp_speed4test_fuzzy_rule, fuzzy_lamp_speed4test), imgPosition.y);
+#ifdef __HOST_SHOW
         imgPosition = getImgData();
-        printf("ix=%d,iy=%d,px=%.2f,py=%.2f,p=%.2f\r\n", imgPosition.x, imgPosition.y, position_x, position_y, MPU_pitch);
-        // if (imgPosition.x && imgPosition.y >= 20)
-        //     printf("x=%d,y=%.2f,s=%.2f\r\n", imgPosition.y, getRealDistance_lamp2car(imgPosition.y) / 16.0, sqrt(position_x * position_x + position_y * position_y) / 16.0);
-        delayMs(15);
+        // printf("ix=%d,iy=%d,px=%.2f,py=%.2f,p=%.2f\r\n", imgPosition.x, imgPosition.y, position_x, position_y, MPU_pitch);
+        if (imgPosition.x && imgPosition.y >= 20)
+            // printf("x=%d,y=%.2f,s=%.2f\r\n", imgPosition.y, getRealDistance_lamp2car(imgPosition.y) / 16.0, sqrt(position_x * position_x + position_y * position_y) / 16.0);
+            printf("x=%d,y=%d\r\n", imgPosition.y, getRealDistance_lamp2car(imgPosition.y));
+        delayMs(25);
+#endif
     }
 }
 

@@ -65,4 +65,8 @@ void valueAdjust_u16(KeyChoose key, uint16_t *val, uint64_t maxVal,uint8_t step,
 void variableMenuInit(void);
 void gotoVariableMenu(void);
 void pushVariable(const char *name, int32_t *val);
+
+void arrayMenuInit(void);
+void gotoArrayMenu(void);
+void pushArray(char *name, int32_t *a, uint8_t len);
 #endif /* __WY_LIB_MENU_H__ */

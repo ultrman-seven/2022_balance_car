@@ -19,6 +19,7 @@ typedef union
 typedef union
 {
     uint32_t val;
+    int32_t sign_val;
     uint8_t unit[4];
 } u32_split;
 

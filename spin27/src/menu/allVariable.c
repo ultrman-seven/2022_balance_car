@@ -1,14 +1,36 @@
 ﻿#include "menu.h"
 #include "stdlib.h"
 #include "stdio.h"
+#include "oledio.h"
 
 #define MAX_PARA_NUM 32
-uint16_t currentIndex = 0;
+static uint16_t currentIndex = 0;
 MenuTypedef variableMenu[MAX_PARA_NUM + 4];
 int32_t *variables[MAX_PARA_NUM] = {NULL};
 const char *variableNames[MAX_PARA_NUM] = {NULL};
 char variableCaption[32][MAX_PARA_NUM];
 int32_t badVal = 0;
+void VariableSave(void);
+void VariableLoad(void);
+void adjustVariable(uint8_t idx, uint8_t *val)
+{
+    if (idx == 0xff)
+        VariableSave();
+    if (idx == 0xfe)
+        VariableLoad();
+    if (idx < MAX_PARA_NUM)
+    {
+        u32_split tmp;
+        tmp.unit[3] = *val++;
+        tmp.unit[2] = *val++;
+        tmp.unit[1] = *val++;
+        tmp.unit[0] = *val++;
+        *variables[idx] = tmp.sign_val;
+        screenClear();
+        OLED_printf("%s:%d", variableNames[idx], tmp.sign_val);
+    }
+}
+
 void pushVariable(const char *name, int32_t *val)
 {
     if (currentIndex < MAX_PARA_NUM)

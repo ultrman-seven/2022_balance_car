@@ -50,14 +50,25 @@ point getImgData(void)
     while (!GPIO_ReadInputDataBit(OK_PORT, OK_PIN) && max_wait)
         max_wait--;
     p.x = GPIO_ReadInputData(DATA_PORT);
+    if (!max_wait)
+        goto dataErr;
     max_wait = 50;
     while (GPIO_ReadInputDataBit(OK_PORT, OK_PIN) && max_wait)
         max_wait--;
+    if (!max_wait)
+        goto dataErr;
     max_wait = 20;
     while (!GPIO_ReadInputDataBit(OK_PORT, OK_PIN) && max_wait)
         max_wait--;
     p.y = GPIO_ReadInputData(DATA_PORT);
+    if (!max_wait)
+        goto dataErr;
     GPIO_SetBits(REQUEST_PORT, REQUEST_PIN);
+    return p;
+
+dataErr:
+    GPIO_SetBits(REQUEST_PORT, REQUEST_PIN);
+    p.x = p.y = 0xffff;
     return p;
 }
 // int16_t getImgData(void)

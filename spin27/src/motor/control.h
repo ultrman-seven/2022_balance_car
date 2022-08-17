@@ -32,5 +32,6 @@ void setAngularVelocity(int8_t speed);
 void setBalance(uint8_t *dat);
 void sendPara(uint8_t p);
 void setBaseSpeed(int32_t s);
+void fuzzyArraySet(uint8_t idx, uint8_t len, uint8_t *dat);
 extern int32_t balancePoint;
 #endif /* __WY_LIB_CTRL_H__ */

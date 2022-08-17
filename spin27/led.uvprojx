@@ -643,6 +643,16 @@
               <FileType>1</FileType>
               <FilePath>.\src\motor\locate.c</FilePath>
             </File>
+            <File>
+              <FileName>fuzzy.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\motor\fuzzy.c</FilePath>
+            </File>
+            <File>
+              <FileName>arrayVariable.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\menu\arrayVariable.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
