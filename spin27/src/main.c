@@ -97,7 +97,8 @@ void globalInit(void)
     delayMs(1000);
     communicateInit();
 }
-#define DangerSpeed 1200
+// #define DangerSpeed 1200
+#define DangerSpeed 1500
 
 void __time17Init(uint16_t period, uint16_t prescaler)
 {
@@ -166,23 +167,23 @@ int main(void)
         if (MPU_pitch == 0)
             TIM2->CCR3 = 0;
 
-        if (getSpeed(LEFT) >= DangerSpeed)
-        // NVIC_SystemReset();
-        {
-            testStop();
-            Protect_LOG("过速");
-        }
+        // if (getSpeed(LEFT) >= DangerSpeed)
+        // // NVIC_SystemReset();
+        // {
+        //     testStop();
+        //     Protect_LOG("过速");
+        // }
         if (getSpeed(LEFT) <= -DangerSpeed)
         // NVIC_SystemReset();
         {
             testStop();
             Protect_LOG("过速");
         }
-        if (getSpeed(RIGHT) >= DangerSpeed)
-        {
-            testStop();
-            Protect_LOG("过速");
-        }
+        // if (getSpeed(RIGHT) >= DangerSpeed)
+        // {
+        //     testStop();
+        //     Protect_LOG("过速");
+        // }
         if (getSpeed(RIGHT) <= -DangerSpeed)
         {
             testStop();

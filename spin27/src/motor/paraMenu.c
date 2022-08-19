@@ -348,9 +348,9 @@ void ph_car_home_start(void)
 }
 void ph_car_home_cam_start(void)
 {
-    turnPid.Kp = 100; // 114;  // 60; // 90; // 41;
-    turnPid.Kd = 12;   //    100;            // 3;
-    turnPid.Ki = 18;   // 11;
+    // turnPid.Kp = 100; // 114;  // 60; // 90; // 41;
+    // turnPid.Kd = 12;   //    100;            // 3;
+    // turnPid.Ki = 18;   // 11;
     // baseSpeed = -115;
     baseSpeed = -150;
     position_x = position_y = 0;

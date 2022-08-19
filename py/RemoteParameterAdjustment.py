@@ -9,13 +9,13 @@ PIDs = ['b', 's', 't']
 
 Fs = ['lamp', 'speed', 'para']
 Vs = ['balance', 'speed', 'pamul', 'ypara', 'ykill', 'ydie', 'ycs', 'sdie', 'basemul',
-      'decmul', 'spmul', 'tdie', 'tmiss', 'tre', 'sre', 'smiss', 'scen', 'skill']
+      'decmul', 'spmul', 'tdie', 'tmiss', 'tre', 'sre', 'smiss', 'scen', 'skill','imul','xmodi']
 helpList = {'cmd': CMDs, 'pid': PIDs, 'f': Fs,
             'fuzzy': Fs, 'v': Vs, 'variable': Vs}
 
 
 def main():
-    car = openCom('com4', 115200)
+    car = openCom('com3', 115200)
     f_name = './paraLog.txt'
     t = time.localtime()
     if os.path.exists(f_name):
@@ -58,6 +58,14 @@ def main():
             car.write(bytes(dat))
         elif c == 'f':
             dat = [0x97, idx]
+            if cmd[1] == 'save':
+                dat += [0xff, 0xf0, 0xa5]
+                car.write(bytes(dat))
+                continue
+            if cmd[1] == 'load':
+                dat += [0xfe, 0xf0, 0xa5]
+                car.write(bytes(dat))
+                continue
             f = Fs.index(cmd[1])
             dat.append(f)
 
